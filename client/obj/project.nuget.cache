@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "u/LbPZWXcymZcXqlUQRDzYBJwxz5EvwTaIaf4P7IFRctFbif72LwfFwhA2qE4sN2OzLERbZDp8W3gVGsyipFHQ==",
+  "success": true,
+  "projectFilePath": "C:\\Users\\Jacob\\Documents\\Documents\\wrk\\Game Dev\\jm-ns-game\\client\\client.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\Jacob\\.nuget\\packages\\monogame.framework.desktopgl\\3.8.1.303\\monogame.framework.desktopgl.3.8.1.303.nupkg.sha512"
+  ],
+  "logs": []
+}
