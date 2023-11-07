@@ -3,9 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "jm-ns-game", "IO\jm-ns-game.csproj", "{88C3EB9D-5DD0-4534-B143-C28EB7A1F87D}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client", "client\client.csproj", "{7E83246D-2D4F-4501-9EEE-B95C010A4B19}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client", "client\client.csproj", "{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -16,13 +14,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{88C3EB9D-5DD0-4534-B143-C28EB7A1F87D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{88C3EB9D-5DD0-4534-B143-C28EB7A1F87D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{88C3EB9D-5DD0-4534-B143-C28EB7A1F87D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{88C3EB9D-5DD0-4534-B143-C28EB7A1F87D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{7E83246D-2D4F-4501-9EEE-B95C010A4B19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7E83246D-2D4F-4501-9EEE-B95C010A4B19}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7E83246D-2D4F-4501-9EEE-B95C010A4B19}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7E83246D-2D4F-4501-9EEE-B95C010A4B19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace jm_ns_game.Interfaces;
+namespace client.Interfaces;
 
 public interface IRenderable
 {

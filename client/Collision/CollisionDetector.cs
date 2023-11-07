@@ -1,8 +1,8 @@
 ﻿using System;
-using jm_ns_game.Interfaces;
+using client.Interfaces;
 using Microsoft.Xna.Framework;
 
-namespace jm_ns_game.Collision;
+namespace client.Collision;
 
 public static class CollisionDetector
 {

@@ -1,7 +1,7 @@
-﻿using jm_ns_game.Interfaces;
+﻿using client.Interfaces;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace jm_ns_game.Extensions;
+namespace client.Extensions;
 
 internal static class SpriteBatchExtensions
 {
