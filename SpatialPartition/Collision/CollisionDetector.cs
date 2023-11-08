@@ -1,16 +1,17 @@
 ﻿using System;
-using client.Interfaces;
 using Microsoft.Xna.Framework;
 
-namespace client.Collision;
+namespace SpatialPartition.Collision;
 
-public static class CollisionDetector
+internal static class CollisionDetector
 {
-    public static bool TryRadialCollision(IRenderable entity1, IRenderable entity2, out Vector2? collisionLocation)
+    internal static bool TryRadialCollision(ICollidable entity1, ICollidable entity2, out Vector2? collisionLocation)
     {
         // Calculate the center of the bounding circles for both entities
-        var center1 = new Vector2(entity1.Destination.X + entity1.Destination.Width / 2, entity1.Destination.Y + entity1.Destination.Height / 2);
-        var center2 = new Vector2(entity2.Destination.X + entity2.Destination.Width / 2, entity2.Destination.Y + entity2.Destination.Height / 2);
+        var center1 = new Vector2(entity1.Destination.X + entity1.Destination.Width / 2,
+            entity1.Destination.Y + entity1.Destination.Height / 2);
+        var center2 = new Vector2(entity2.Destination.X + entity2.Destination.Width / 2,
+            entity2.Destination.Y + entity2.Destination.Height / 2);
 
         // Calculate the radius of the bounding circles for both entities (assuming they are circular)
         var radius1 = Math.Max(entity1.Destination.Width, entity1.Destination.Height) / 2f;
@@ -32,7 +33,7 @@ public static class CollisionDetector
         return false;
     }
 
-    public static bool TryBoundingBoxCollision(IRenderable entity1, IRenderable entity2, out Vector2? collisionLocation)
+    internal static bool TryBoundingBoxCollision(ICollidable entity1, ICollidable entity2, out Vector2? collisionLocation)
     {
         // Create rectangles for the entities' collision areas
         var rect1 = entity1.Destination;
@@ -51,8 +52,8 @@ public static class CollisionDetector
         return false;
     }
 
-    
-    public static bool TryPixelPerfect(IRenderable entity1, IRenderable entity2, out Vector2? collisionCoordinate)
+
+    internal static bool TryPixelPerfect(ICollidable entity1, ICollidable entity2, out Vector2? collisionCoordinate)
     {
         // Create rectangles for the entities' collision areas
         var rect1 = entity1.Destination;
@@ -67,7 +68,7 @@ public static class CollisionDetector
             collisionCoordinate = null;
             return false;
         }
-        
+
         // Get the textures of the entities
         var texture1 = entity1.Texture;
         var texture2 = entity2.Texture;
@@ -85,18 +86,16 @@ public static class CollisionDetector
 
         // Iterate through the intersection area and check for pixel-perfect collision
         for (var x = 0; x < intersection.Width; x++)
+        for (var y = 0; y < intersection.Height; y++)
         {
-            for (var y = 0; y < intersection.Height; y++)
-            {
-                var index1 = (int)(relativePosition.Y + y) * rect1.Width + (int)(relativePosition.X + x);
-                var index2 = (int)(intersection.Y - rect2.Y + y) * rect2.Width + (int)(intersection.X - rect2.X + x);
+            var index1 = (int)(relativePosition.Y + y) * rect1.Width + (int)(relativePosition.X + x);
+            var index2 = (intersection.Y - rect2.Y + y) * rect2.Width + (intersection.X - rect2.X + x);
 
-                // Check if the pixels at the current position are not transparent for both entities
-                if (data1[index1].A == 0 || data2[index2].A == 0) continue;
-                // Calculate the collision point relative to entity1
-                collisionCoordinate = new Vector2(rect1.X + relativePosition.X + x, rect1.Y + relativePosition.Y + y);
-                return true;
-            }
+            // Check if the pixels at the current position are not transparent for both entities
+            if (data1[index1].A == 0 || data2[index2].A == 0) continue;
+            // Calculate the collision point relative to entity1
+            collisionCoordinate = new Vector2(rect1.X + relativePosition.X + x, rect1.Y + relativePosition.Y + y);
+            return true;
         }
 
         // No collision detected
@@ -104,5 +103,3 @@ public static class CollisionDetector
         return false;
     }
 }
-
-

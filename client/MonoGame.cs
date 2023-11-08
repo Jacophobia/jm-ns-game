@@ -1,8 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using client.Interfaces;
-using client.Extensions;
+using IO.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -11,13 +10,13 @@ namespace client;
 
 public class MonoGame : Game
 {
-    private readonly IEnumerable<IRenderable> _drawables;
+    private readonly IEnumerable<IRenderable> _renderables;
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
     public MonoGame()
     {
-        _drawables = Array.Empty<IRenderable>();
+        _renderables = Array.Empty<IRenderable>();
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
@@ -32,7 +31,7 @@ public class MonoGame : Game
     {
         return names.Select(name => Content.Load<Texture2D>(name));
     }
-    
+
     protected override void Initialize()
     {
         // TODO: Add your initialization logic here
@@ -47,27 +46,17 @@ public class MonoGame : Game
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
 
-        var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
-        
-        
 
         base.Update(gameTime);
     }
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.CornflowerBlue);
-
-        _spriteBatch.Begin();
-
-        foreach (var drawable in _drawables)
-        {
-            _spriteBatch.Draw(drawable);
-        }
-
-        _spriteBatch.End();
+        
+        base.Draw(gameTime);
     }
 }

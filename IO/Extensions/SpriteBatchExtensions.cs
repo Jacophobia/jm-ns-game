@@ -1,7 +1,7 @@
-﻿using client.Interfaces;
+﻿using IO.Interfaces;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace client.Extensions;
+namespace IO.Extensions;
 
 internal static class SpriteBatchExtensions
 {
