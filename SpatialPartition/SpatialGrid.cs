@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.Tuple;
 using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
@@ -9,7 +10,7 @@ namespace SpatialPartition;
 
 public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IComparable<T>
 {
-    private readonly Dictionary<int, List<T>> _partitions;
+    private readonly Dictionary<Tuple<int, int>, HashSet<T>> _partitions;
 
     public SpatialGrid(int partitionCountX, int partitionCountY)
     {
@@ -20,38 +21,42 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, ICompa
 
         PartitionCountX = partitionCountX;
         PartitionCountY = partitionCountY;
-        _partitions = new Dictionary<int, List<T>>();
+        _partitions = new Dictionary<Tuple<int, int>, HashSet<T>>();
     }
 
     private int PartitionCountX { get; }
     private int PartitionCountY { get; }
 
-    public int Count => _partitions.Values.Sum(list => list.Count);
+    public int Count => _partitions.Values.Sum(partition => partition.Count);
 
     public bool IsReadOnly => false;
 
     public void Add(T item)
     {
-        var partitionIndex = GetPartitionIndex(item);
-        if (!_partitions.ContainsKey(partitionIndex))
+        foreach (var partitionIndex in GetPartitionIndices(item))
         {
-            _partitions[partitionIndex] = new List<T>();
-        }
+            if (!_partitions.TryGetValue(partitionIndex, out var partition))
+            {
+                partition = new HashSet<T>();
+                _partitions[partitionIndex] = partition;
+            }
 
-        _partitions[partitionIndex].Add(item);
+            partition.Add(item);
+        }
     }
 
     public bool Remove(T item)
     {
-        var partitionIndex = GetPartitionIndex(item);
-        if (!_partitions.TryGetValue(partitionIndex, out var partition))
+        bool removed = false;
+        foreach (var partitionIndex in GetPartitionIndices(item))
         {
-            return false;
+            if (_partitions.TryGetValue(partitionIndex, out var partition))
+            {
+                removed |= partition.Remove(item);
+            }
         }
-        
-        partition.Remove(item);
-        return true;
 
+        return removed;
     }
 
     public void Clear()
@@ -61,16 +66,25 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, ICompa
 
     public bool Contains(T item)
     {
-        var partitionIndex = GetPartitionIndex(item);
-        return _partitions.TryGetValue(partitionIndex, out var partition) && partition.Contains(item);
+        foreach (var partitionIndex in GetPartitionIndices(item))
+        {
+            if (_partitions.TryGetValue(partitionIndex, out var partition) && partition.Contains(item))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void CopyTo(T[] array, int arrayIndex)
     {
         foreach (var partition in _partitions.Values)
         {
-            partition.CopyTo(array, arrayIndex);
-            arrayIndex += partition.Count;
+            foreach (var item in partition)
+            {
+                array[arrayIndex] = item;
+                arrayIndex++;
+            }
         }
     }
 
@@ -84,15 +98,26 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, ICompa
         return GetEnumerator();
     }
 
-    public void CheckCollisions()
+    public void Update()
     {
         foreach (var partition in _partitions.Values)
         {
-            for (var i = 0; i < partition.Count; i++)
+            foreach (var item in partition.ToList())
             {
-                for (var j = i + 1; j < partition.Count; j++)
+                var previousPartitionIndices = GetPartitionIndices(item).ToSet();
+
+                // Update the item (e.g., move it)
+                item.Update();
+
+                var currentPartitionIndices = GetPartitionIndices(item).ToSet();
+
+                // Handle transitions between partitions
+                HandlePartitionTransitions(item, previousPartitionIndices, currentPartitionIndices);
+
+                // Check for collisions in the current partition
+                foreach (var other in partition)
                 {
-                    if (partition[i].CollidesWith(partition[j], out var location))
+                    if (!item.Equals(other) && item.CollidesWith(other))
                     {
                         // Handle collision, e.g., call a method or trigger an event.
                     }
@@ -101,10 +126,50 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, ICompa
         }
     }
 
-    private int GetPartitionIndex(T item)
+    private void HandlePartitionTransitions(T item, ISet<Tuple<int, int>> previousIndices, ISet<Tuple<int, int>> currentIndices)
     {
-        var x = (int)(item.Position.X / (PartitionCountX * 1.0));
-        var y = (int)(item.Position.Y / (PartitionCountY * 1.0));
-        return x + y * PartitionCountX;
+        // Calculate the intersection between previous and current indices
+        var intersection = previousIndices.Intersect(currentIndices).ToArray();
+        
+        // Calculate the unused indices (previous - intersection)
+        previousIndices.ExceptWith(intersection);
+    
+        // Remove all unused indices
+        foreach (var indexToRemove in previousIndices)
+        {
+            _partitions[indexToRemove].Remove(item);
+        }
+    
+        // Calculate the new indices (current - intersection)
+        currentIndices.ExceptWith(intersection);
+    
+        // Add the item to the new indices
+        foreach (var currentIndex in currentIndices)
+        {
+            if (!_partitions.TryGetValue(currentIndex, out var partition))
+            {
+                partition = new HashSet<T>();
+                _partitions[currentIndex] = partition;
+            }
+    
+            partition.Add(item);
+        }
+    }
+
+    private IEnumerable<Tuple<int, int>> GetPartitionIndices(T item)
+    {
+        var minX = (int)((item.Position.X - item.Width / 2) / (PartitionCountX * 1.0));
+        var maxX = (int)((item.Position.X + item.Width / 2) / (PartitionCountX * 1.0));
+        var minY = (int)((item.Position.Y - item.Height / 2) / (PartitionCountY * 1.0));
+        var maxY = (int)((item.Position.Y + item.Height / 2) / (PartitionCountY * 1.0));
+
+        for (int x = minX; x <= maxX; x++)
+        {
+            for (int y = minY; y <= maxY; y++)
+            {
+                yield return new Tuple<int, int>(x, y);
+            }
+        }
     }
 }
+
