@@ -104,12 +104,12 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, ICompa
         {
             foreach (var item in partition.ToList())
             {
-                var previousPartitionIndices = GetPartitionIndices(item).ToSet();
+                var previousPartitionIndices = GetPartitionIndices(item).ToHashSet();
 
                 // Update the item (e.g., move it)
                 item.Update();
 
-                var currentPartitionIndices = GetPartitionIndices(item).ToSet();
+                var currentPartitionIndices = GetPartitionIndices(item).ToHashSet();
 
                 // Handle transitions between partitions
                 HandlePartitionTransitions(item, previousPartitionIndices, currentPartitionIndices);
