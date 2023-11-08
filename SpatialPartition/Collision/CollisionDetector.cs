@@ -5,17 +5,17 @@ namespace SpatialPartition.Collision;
 
 internal static class CollisionDetector
 {
-    internal static bool TryRadialCollision(ICollidable entity1, ICollidable entity2, out Vector2? collisionLocation)
+    internal static bool TryRadialCollision(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionLocation)
     {
         // Calculate the center of the bounding circles for both entities
-        var center1 = new Vector2(entity1.Destination.X + entity1.Destination.Width / 2,
-            entity1.Destination.Y + entity1.Destination.Height / 2);
-        var center2 = new Vector2(entity2.Destination.X + entity2.Destination.Width / 2,
-            entity2.Destination.Y + entity2.Destination.Height / 2);
+        var center1 = new Vector2(collidable1.Destination.X + collidable1.Destination.Width / 2,
+            collidable1.Destination.Y + collidable1.Destination.Height / 2);
+        var center2 = new Vector2(collidable2.Destination.X + collidable2.Destination.Width / 2,
+            collidable2.Destination.Y + collidable2.Destination.Height / 2);
 
         // Calculate the radius of the bounding circles for both entities (assuming they are circular)
-        var radius1 = Math.Max(entity1.Destination.Width, entity1.Destination.Height) / 2f;
-        var radius2 = Math.Max(entity2.Destination.Width, entity2.Destination.Height) / 2f;
+        var radius1 = Math.Max(collidable1.Destination.Width, collidable1.Destination.Height) / 2f;
+        var radius2 = Math.Max(collidable2.Destination.Width, collidable2.Destination.Height) / 2f;
 
         // Calculate the distance between the centers of the bounding circles
         var distance = Vector2.Distance(center1, center2);
@@ -33,11 +33,11 @@ internal static class CollisionDetector
         return false;
     }
 
-    internal static bool TryBoundingBoxCollision(ICollidable entity1, ICollidable entity2, out Vector2? collisionLocation)
+    internal static bool TryBoundingBoxCollision(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionLocation)
     {
         // Create rectangles for the entities' collision areas
-        var rect1 = entity1.Destination;
-        var rect2 = entity2.Destination;
+        var rect1 = collidable1.Destination;
+        var rect2 = collidable2.Destination;
 
         // Check for collision based on bounding boxes
         if (rect1.Intersects(rect2))
@@ -53,11 +53,11 @@ internal static class CollisionDetector
     }
 
 
-    internal static bool TryPixelPerfect(ICollidable entity1, ICollidable entity2, out Vector2? collisionCoordinate)
+    internal static bool TryPixelPerfect(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionCoordinate)
     {
         // Create rectangles for the entities' collision areas
-        var rect1 = entity1.Destination;
-        var rect2 = entity2.Destination;
+        var rect1 = collidable1.Destination;
+        var rect2 = collidable2.Destination;
 
         // Calculate the intersection rectangle
         var intersection = Rectangle.Intersect(rect1, rect2);
@@ -70,8 +70,8 @@ internal static class CollisionDetector
         }
 
         // Get the textures of the entities
-        var texture1 = entity1.Texture;
-        var texture2 = entity2.Texture;
+        var texture1 = collidable1.Texture;
+        var texture2 = collidable2.Texture;
 
         // Create arrays to hold the pixel data of the textures
         var data1 = new Color[texture1.Width * texture1.Height];
@@ -93,7 +93,7 @@ internal static class CollisionDetector
 
             // Check if the pixels at the current position are not transparent for both entities
             if (data1[index1].A == 0 || data2[index2].A == 0) continue;
-            // Calculate the collision point relative to entity1
+            // Calculate the collision point relative to collidable1
             collisionCoordinate = new Vector2(rect1.X + relativePosition.X + x, rect1.Y + relativePosition.Y + y);
             return true;
         }
