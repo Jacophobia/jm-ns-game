@@ -13,4 +13,10 @@ public sealed class BaseEntity : Entity
     public override Vector2 Origin { get; set; }
     public override SpriteEffects Effect { get; set; }
     public override float Depth { get; set; }
+
+    public override void Update(GameTime _)
+    {
+        // We don't do anything. Update behavior will be handled by the 
+        //  decorators.
+    }
 }

@@ -24,11 +24,11 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Arena" />
-    <Folder Include="Decorators" />
     <Folder Include="Overworld" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\IO\IO.csproj" />
+    <ProjectReference Include="..\SpatialPartition\SpatialPartition.csproj" />
   </ItemGroup>
   <Target Name="RestoreDotnetTools" BeforeTargets="Restore">
     <Message Text="Restoring dotnet tools" Importance="High" />

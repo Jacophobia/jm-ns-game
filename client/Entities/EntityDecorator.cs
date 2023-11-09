@@ -7,9 +7,9 @@ public abstract class EntityDecorator : Entity
 {
     private readonly Entity _base;
 
-    protected EntityDecorator(Entity baseEntity)
+    protected EntityDecorator(Entity @base)
     {
-        _base = baseEntity;
+        _base = @base;
     }
 
     public sealed override Texture2D Texture
@@ -59,4 +59,11 @@ public abstract class EntityDecorator : Entity
         get => _base.Depth;
         set => _base.Depth = value;
     }
+
+    public sealed override void Update(GameTime gameTime)
+    {
+        OnUpdate(gameTime);
+    }
+
+    protected abstract void OnUpdate(GameTime gameTime);
 }

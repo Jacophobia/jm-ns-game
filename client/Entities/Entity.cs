@@ -1,4 +1,5 @@
-﻿using IO.Interfaces;
+﻿using System;
+using IO.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -14,4 +15,19 @@ public abstract class Entity : IRenderable
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
     public abstract float Depth { get; set; }
+    public abstract void Update(GameTime gameTime);
+
+    private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
+    {
+        var @params = new object[parameters.Length + 1];
+        @params[0] = this;
+        parameters.CopyTo(@params, 1);
+        
+        return (T)Activator.CreateInstance(typeof(T), @params);
+    }
+
+    public static void AddDecorator<T>(ref Entity entity, params object[] parameters) where T : EntityDecorator
+    {
+        entity = entity.AddDecorator<T>(parameters);
+    }
 }
