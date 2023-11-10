@@ -1,12 +1,27 @@
-﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
+﻿using IO.Sprites;
+using Microsoft.Xna.Framework;
 
 namespace SpatialPartition.Collision;
 
 public interface ICollidable
 {
-    public Texture2D Texture { get; }
+    public Sprite Sprite { get; }
     public Rectangle Destination { get; }
-    public Vector2 Position { get; }
-    public bool CollidesWith(ICollidable rhs, out Vector2 collisionLocation);
+    public Point Position => Destination.Center;
+    public int Width => Destination.Width;
+    public int Height => Destination.Height;
+    public Vector2 Velocity { get; set; }
+    public void Update();
+    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation);
+
+    public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation)
+    {
+        if (Sprite.Overlaps(Destination, rhs.Destination, out var overlap) && overlap.HasValue)
+        {
+            return Sprite.Collides(Sprite, Destination, rhs.Sprite, rhs.Destination, overlap.Value, out collisionLocation);
+        }
+        
+        collisionLocation = null;
+        return false;
+    }
 }

@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Arena" />
+    <Folder Include="Metadata" />
     <Folder Include="Overworld" />
   </ItemGroup>
   <ItemGroup>

@@ -1,25 +1,17 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using IO.Interfaces;
+﻿using SpatialPartition;
+using SpatialPartition.Collision;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using SpatialPartition;
-using SpatialPartition.Collision;
+using System;
+using IO.Sprites;
 
 namespace client;
-
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
-using Microsoft.Xna.Framework.Input;
-using System;
-using System.Collections.Generic;
 
 public class Game1 : Game
 {
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private SpriteFactory _spriteFactory;
 
     private SpatialGrid<Ball> _spatialGrid;
     private Random _random;
@@ -36,7 +28,7 @@ public class Game1 : Game
     protected override void Initialize()
     {
         // Initialize the spatial grid with 10x10 partitions
-        _spatialGrid = new SpatialGrid<Ball>(200, 200);
+        _spatialGrid = new SpatialGrid<Ball>(12, 7);
         _random = new Random();
 
         base.Initialize();
@@ -45,12 +37,13 @@ public class Game1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _spriteFactory = new SpriteFactory(Content);
 
         // Load textures for the balls
         var ballTexture = Content.Load<Texture2D>("Test/ball");
 
         // Create and add some balls to the spatial grid
-        for (var i = 0; i < 400; i++)
+        for (var i = 0; i < 1000; i++)
         {
             var ball = new Ball(ballTexture, new Rectangle(_random.Next(2560), _random.Next(1440), 10, 10));
             _spatialGrid.Add(ball);
@@ -59,7 +52,7 @@ public class Game1 : Game
 
     protected override void Update(GameTime gameTime)
     {
-        // Update the spatial grid, which will automatically update the balls
+        // Update the spatial grid, which will automatically update the balls 
         _spatialGrid.Update();
 
         base.Update(gameTime);
@@ -74,7 +67,7 @@ public class Game1 : Game
         // Draw each ball
         foreach (var ball in _spatialGrid)
         {
-            _spriteBatch.Draw(ball.Texture, ball.Destination, ball.Color);
+            _spriteBatch.Draw(ball.Sprite.Texture, ball.Destination, ball.Color);
         }
 
         _spriteBatch.End();
@@ -85,46 +78,52 @@ public class Game1 : Game
 
 public class Ball : ICollidable
 {
-    public Texture2D Texture { get; }
+    public Sprite Sprite { get; }
     public Rectangle Destination { get; private set; }
 
     public Color Color { get; private set; } = Color.Gray;
 
-    private int _xOffset;
-    private int _yOffset;
+
+    private Vector2 _velocity;
+    public Vector2 Velocity
+    {
+        get => _velocity;
+        set => _velocity = value;
+    }
 
     public Ball(Texture2D texture, Rectangle destination)
     {
-        Texture = texture;
+        Sprite = new Sprite(texture);
         Destination = destination;
         var random = new Random();
-        _xOffset = random.Next(1, 6);
-        _yOffset = random.Next(1, 4);
+        Velocity = new Vector2(random.Next(1, 6), random.Next(1, 4));
     }
 
     public void Update()
     {
         // Move the ball (simplified movement for illustration purposes)
-        var x = Destination.X + 1 * _xOffset;
-        var y = Destination.Y + 1 * _yOffset;
+        var x = Destination.X + 1 * _velocity.X;
+        var y = Destination.Y + 1 * _velocity.Y;
 
         if (x is > 2560 or < 0)
         {
-            _xOffset *= -1;
+            _velocity.X *= -1;
         }
         if (y is > 1440 or < 0)
         {
-            _yOffset *= -1;
+            _velocity.Y *= -1;
         }
         
         
-        Destination = new Rectangle(x, y, Destination.Width, Destination.Height);
+        Destination = new Rectangle((int)x, (int)y, Destination.Width, Destination.Height);
     }
 
-    public void HandleCollisionWith(ICollidable collidable)
+    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation)
     {
         // Handle collision logic, e.g., change color
         Color = Color.Red;
+
+        _velocity = Vector2.Zero;
     }
 }
 

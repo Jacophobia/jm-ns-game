@@ -33,73 +33,75 @@ internal static class CollisionDetector
         return false;
     }
 
-    internal static bool TryBoundingBoxCollision(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionLocation)
-    {
-        // Create rectangles for the entities' collision areas
-        var rect1 = collidable1.Destination;
-        var rect2 = collidable2.Destination;
+    // internal static bool TryBoundingBoxCollision(ICollidable collidable1, ICollidable collidable2, out Rectangle? overlap)
+    // {
+    //     // Create rectangles for the entities' collision areas
+    //     var rect1 = collidable1.Destination;
+    //     var rect2 = collidable2.Destination;
+    //
+    //     // Find the intersection rectangle
+    //     overlap = Rectangle.Intersect(rect1, rect2);
+    //
+    //     // Check if there is an intersection
+    //     if (overlap is not { IsEmpty: true })
+    //     {
+    //         // Calculate the collision location as the center of the intersection rectangle
+    //         return true;
+    //     }
+    //
+    //     // No collision
+    //     overlap = null;
+    //     return false;
+    // }
 
-        // Check for collision based on bounding boxes
-        if (rect1.Intersects(rect2))
-        {
-            // Calculate the collision location as the point of intersection
-            collisionLocation = new Vector2(Math.Max(rect1.Left, rect2.Left), Math.Max(rect1.Top, rect2.Top));
-            return true;
-        }
-
-        // No collision
-        collisionLocation = null;
-        return false;
-    }
-
-
-    internal static bool TryPixelPerfect(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionCoordinate)
-    {
-        // Create rectangles for the entities' collision areas
-        var rect1 = collidable1.Destination;
-        var rect2 = collidable2.Destination;
-
-        // Calculate the intersection rectangle
-        var intersection = Rectangle.Intersect(rect1, rect2);
-
-        // Check if there is a collision
-        if (intersection.IsEmpty)
-        {
-            collisionCoordinate = null;
-            return false;
-        }
-
-        // Get the textures of the entities
-        var texture1 = collidable1.Texture;
-        var texture2 = collidable2.Texture;
-
-        // Create arrays to hold the pixel data of the textures
-        var data1 = new Color[texture1.Width * texture1.Height];
-        var data2 = new Color[texture2.Width * texture2.Height];
-
-        // Get the pixel data from the textures
-        texture1.GetData(data1);
-        texture2.GetData(data2);
-
-        // Calculate the relative position of the intersection rectangle within the entities
-        var relativePosition = new Vector2(intersection.X - rect1.X, intersection.Y - rect1.Y);
-
-        // Iterate through the intersection area and check for pixel-perfect collision
-        for (var x = 0; x < intersection.Width; x++)
-        for (var y = 0; y < intersection.Height; y++)
-        {
-            var index1 = (int)(relativePosition.Y + y) * rect1.Width + (int)(relativePosition.X + x);
-            var index2 = (intersection.Y - rect2.Y + y) * rect2.Width + (intersection.X - rect2.X + x);
-
-            // Check if the pixels at the current position are not transparent for both entities
-            if (data1[index1].A == 0 || data2[index2].A == 0) continue;
-            // Calculate the collision point relative to collidable1
-            collisionCoordinate = new Vector2(rect1.X + relativePosition.X + x, rect1.Y + relativePosition.Y + y);
-            return true;
-        }
-
-        // No collision detected
-        collisionCoordinate = null;
-        return false;
-    }
+    // public static bool TryPixelPerfect(ICollidable collidable1, ICollidable collidable2, Rectangle overlap, out Vector2? collisionCoordinate)
+    // {
+    //     Debug.Assert(!overlap.IsEmpty, "Overlap cannot be empty. A value must be provided.");
+    //
+    //     // Create rectangles for the entities' collision areas
+    //     var rect1 = collidable1.Destination;
+    //     var rect2 = collidable2.Destination;
+    //
+    //     // Get the textures of the entities
+    //     var texture1 = collidable1.Sprite;
+    //     var texture2 = collidable2.Sprite;
+    //
+    //     // Get the pixel data from the textures
+    //     var data1 = new Color[texture1.Width * texture1.Height];
+    //     var data2 = new Color[texture2.Width * texture2.Height];
+    //     texture1.GetData(data1);
+    //     texture2.GetData(data2);
+    //
+    //     // Iterate through the intersection area and check for pixel-perfect collision
+    //     for (var x = overlap.Left; x <= overlap.Right; x++)
+    //     {
+    //         for (var y = overlap.Top; y <= overlap.Bottom; y++)
+    //         {
+    //             // Calculate the pixel coordinates within the textures
+    //             var texCoord1 = new Vector2((x - rect1.Left) * texture1.Width / rect1.Width,
+    //                 (y - rect1.Top) * texture1.Height / rect1.Height);
+    //             var texCoord2 = new Vector2((x - rect2.Left) * texture2.Width / rect2.Width,
+    //                 (y - rect2.Top) * texture2.Height / rect2.Height);
+    //
+    //             // Get the pixel indices
+    //             var index1 = (int)(texCoord1.X + texCoord1.Y * texture1.Width);
+    //             var index2 = (int)(texCoord2.X + texCoord2.Y * texture2.Width);
+    //
+    //             // Check if the pixels at the current position are not transparent for both entities
+    //             var pixel1 = data1[Math.Clamp(index1, 0, data1.Length - 1)];
+    //             var pixel2 = data2[Math.Clamp(index2, 0, data2.Length - 1)];
+    //
+    //             if (pixel1.A == byte.MaxValue && pixel2.A == byte.MaxValue)
+    //             {
+    //                 // Calculate the collision point
+    //                 collisionCoordinate = new Vector2(x, y);
+    //                 return true;
+    //             }
+    //         }
+    //     }
+    //
+    //     // No collision detected
+    //     collisionCoordinate = null;
+    //     return false;
+    // }
 }

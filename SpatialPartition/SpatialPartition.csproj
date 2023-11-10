@@ -7,4 +7,7 @@
       <PrivateAssets>All</PrivateAssets>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\IO\IO.csproj" />
+  </ItemGroup>
 </Project>
