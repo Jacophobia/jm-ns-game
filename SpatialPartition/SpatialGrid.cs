@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using SpatialPartition.Collision;
@@ -8,60 +9,135 @@ using SpatialPartition.Interfaces;
 
 namespace SpatialPartition;
 
-public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable
+public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
 {
-    private readonly Dictionary<Vector2, HashSet<T>> _partitions;
+    private Dictionary<Vector2, HashSet<T>> _partitions;
     private readonly List<T> _elements;
+    private readonly ObjectPool<HashSet<Vector2>> _hashSetPool;
+    private readonly ObjectPool<Vector2> _vector2Pool;
+    private double _averageWidth;
+    private double _averageHeight;
+    private int _partitionSizeX;
+    private int _partitionSizeY;
 
-    public SpatialGrid(int partitionCountX, int partitionCountY)
+    #if DEBUG
+    private readonly Stopwatch _totalRuntimeStopwatch = new Stopwatch();
+    private int _updateCallCount = 0;
+    #endif
+
+    public SpatialGrid()
     {
-        if (partitionCountX <= 0 || partitionCountY <= 0)
-        {
-            throw new ArgumentException("Partition counts must be greater than zero.");
-        }
-
-        PartitionCountX = partitionCountX;
-        PartitionCountY = partitionCountY;
-        _partitions = new Dictionary<Vector2, HashSet<T>>();
         _elements = new List<T>();
+        _hashSetPool = new ObjectPool<HashSet<Vector2>>(() => new HashSet<Vector2>());
+        _vector2Pool = new ObjectPool<Vector2>(() => new Vector2());
+        RecalculatePartitionSizes();
+
+        #if DEBUG
+        _totalRuntimeStopwatch.Start();
+        #endif
     }
 
-    private int PartitionCountX { get; }
-    private int PartitionCountY { get; }
+    public SpatialGrid(IEnumerable<T> elements) : this()
+    {
+        Add(elements);
+    }
 
-    public int Count => _partitions.Values.Sum(partition => partition.Count);
+    private Dictionary<Vector2, HashSet<T>> Partitions => _partitions ??= new Dictionary<Vector2, HashSet<T>>();
+
+    public int Count => Partitions.Values.Sum(partition => partition.Count);
 
     public bool IsReadOnly => false;
 
     public void Add(T item)
     {
-        foreach (var partitionIndex in GetPartitionIndices(item))
+        _elements.Add(item);
+        UpdateAverages(item);
+        CheckAndOptimize();
+
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var partitionIndex in indices)
         {
-            if (!_partitions.TryGetValue(partitionIndex, out var partition))
+            if (!Partitions.TryGetValue(partitionIndex, out var partition))
             {
                 partition = new HashSet<T>();
-                _partitions[partitionIndex] = partition;
+                Partitions[partitionIndex] = partition;
             }
-
             partition.Add(item);
         }
-        
-        _elements.Add(item);
+        _hashSetPool.Return(indices);
+    }
+
+    public void Add(IEnumerable<T> items)
+    {
+        var itemList = items.ToList();
+        if (!itemList.Any()) return;
+
+        // Calculate new averages with the batch of items
+        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Destination.Width);
+        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Destination.Height);
+        var newCount = _elements.Count + itemList.Count;
+        _averageWidth = totalWidth / newCount;
+        _averageHeight = totalHeight / newCount;
+
+        CheckAndOptimize();
+
+        foreach (var item in itemList)
+        {
+            var indices = _hashSetPool.Get();
+            GetPartitionIndices(item, indices);
+            foreach (var partitionIndex in indices)
+            {
+                if (!Partitions.TryGetValue(partitionIndex, out var partition))
+                {
+                    partition = new HashSet<T>();
+                    Partitions[partitionIndex] = partition;
+                }
+                partition.Add(item);
+            }
+            _hashSetPool.Return(indices);
+            _elements.Add(item);
+        }
     }
 
     public bool Remove(T item)
     {
-        var removed = false;
-        foreach (var partitionIndex in GetPartitionIndices(item))
+        if (!_elements.Remove(item))
         {
-            if (_partitions.TryGetValue(partitionIndex, out var partition))
+            // Item not found, no need to update averages or remove from partitions
+            return false;
+        }
+    
+        // Update averages
+        if (_elements.Count > 0)
+        {
+            _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
+            _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
+        }
+        else
+        {
+            _averageWidth = 0;
+            _averageHeight = 0;
+        }
+    
+        // Check and optimize if necessary
+        CheckAndOptimize();
+    
+        // Remove item from partitions
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var partitionIndex in indices)
+        {
+            if (Partitions.TryGetValue(partitionIndex, out var partition))
             {
-                removed |= partition.Remove(item);
+                partition.Remove(item);
             }
         }
-
-        return removed;
+        _hashSetPool.Return(indices);
+    
+        return true;
     }
+
 
     public void Clear()
     {
@@ -70,14 +146,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable
 
     public bool Contains(T item)
     {
-        foreach (var partitionIndex in GetPartitionIndices(item))
-        {
-            if (_partitions.TryGetValue(partitionIndex, out var partition) && partition.Contains(item))
-            {
-                return true;
-            }
-        }
-        return false;
+        return _elements.Contains(item);
     }
 
     public void CopyTo(T[] array, int arrayIndex)
@@ -98,69 +167,82 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable
     {
         return GetEnumerator();
     }
-
+    
     public void Update()
     {
+        #if DEBUG
+        _updateCallCount++;
+        #endif
+
         foreach (var element in _elements)
         {
-            var previousPartitionIndices = GetPartitionIndices(element);
-            
-            // Update the element (e.g., move it)
+            var previousIndices = _hashSetPool.Get();
+            var currentIndices = _hashSetPool.Get();
+
+            GetPartitionIndices(element, previousIndices);
+
             element.Update();
 
-            var partitionIndices = GetPartitionIndices(element);
+            GetPartitionIndices(element, currentIndices);
 
-            // Handle transitions between partitions
-            HandlePartitionTransitions(element, previousPartitionIndices, partitionIndices);
-            
-            // Check for collisions in the current partition
-            foreach (var index in partitionIndices)
+            HandlePartitionTransitions(element, previousIndices, currentIndices);
+
+            CheckForCollisions(element, currentIndices);
+
+            _hashSetPool.Return(previousIndices);
+            _hashSetPool.Return(currentIndices);
+        }
+    }
+
+    private void CheckForCollisions(T element, HashSet<Vector2> indices)
+    {
+        foreach (var index in indices)
+        {
+            if (Partitions.TryGetValue(index, out var partition))
             {
-                foreach (var other in _partitions[index])
+                foreach (var other in partition)
                 {
                     if (!element.Equals(other) && element.CollidesWith(other, out var location))
                     {
                         element.HandleCollisionWith(other, location);
                     }
                 }
-                
             }
         }
     }
 
-    private void HandlePartitionTransitions(T item, ISet<Vector2> previousIndices, ISet<Vector2> currentIndices)
+    private void HandlePartitionTransitions(T item, HashSet<Vector2> previousIndices, HashSet<Vector2> currentIndices)
     {
-        // Calculate the intersection between previous and current indices
-        var intersection = previousIndices.Intersect(currentIndices).ToHashSet();
-    
-        // Remove all unused indices
-        foreach (var indexToRemove in previousIndices.Where(index => !intersection.Contains(index)))
+        foreach (var index in previousIndices)
         {
-            _partitions[indexToRemove].Remove(item);
-        }
-    
-        // Add the item to the new indices
-        foreach (var currentIndex in currentIndices.Where(index => !intersection.Contains(index)))
-        {
-            if (!_partitions.TryGetValue(currentIndex, out var partition))
+            if (!currentIndices.Contains(index))
             {
-                partition = new HashSet<T>();
-                _partitions[currentIndex] = partition;
+                Partitions[index].Remove(item);
             }
-    
-            partition.Add(item);
+        }
+
+        foreach (var index in currentIndices)
+        {
+            if (!previousIndices.Contains(index))
+            {
+                if (!Partitions.TryGetValue(index, out var partition))
+                {
+                    partition = new HashSet<T>();
+                    Partitions[index] = partition;
+                }
+                partition.Add(item);
+            }
         }
     }
 
-    private ISet<Vector2> GetPartitionIndices(T item)
+    private void GetPartitionIndices(T item, HashSet<Vector2> indices)
     {
-        var minX = (int)((item.Position.X - item.Width / 2) / (PartitionCountX * 1f));
-        var maxX = (int)((item.Position.X + item.Width / 2) / (PartitionCountX * 1f));
-        var minY = (int)((item.Position.Y - item.Height / 2) / (PartitionCountY * 1f));
-        var maxY = (int)((item.Position.Y + item.Height / 2) / (PartitionCountY * 1f));
+        indices.Clear();
+        var minX = (int)((item.Center.X - item.Width / 2) / (PartitionCountX * 1f));
+        var maxX = (int)((item.Center.X + item.Width / 2) / (PartitionCountX * 1f));
+        var minY = (int)((item.Center.Y - item.Height / 2) / (PartitionCountY * 1f));
+        var maxY = (int)((item.Center.Y + item.Height / 2) / (PartitionCountY * 1f));
 
-        var indices = new HashSet<Vector2>();
-        
         for (var x = minX; x <= maxX; x++)
         {
             for (var y = minY; y <= maxY; y++)
@@ -168,8 +250,81 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable
                 indices.Add(new Vector2(x, y));
             }
         }
+    }
 
-        return indices;
+    private void UpdateAverages(T item)
+    {
+        _averageWidth = (_averageWidth * (_elements.Count - 1) + item.Destination.Width) / _elements.Count;
+        _averageHeight = (_averageHeight * (_elements.Count - 1) + item.Destination.Height) / _elements.Count;
+    }
+
+    private void CheckAndOptimize()
+    {
+        const double threshold = 0.1;
+        var idealPartitionSizeX = 3 * _averageWidth;
+        var idealPartitionSizeY = 3 * _averageHeight;
+
+        if (Math.Abs(_partitionSizeX - idealPartitionSizeX) > threshold * idealPartitionSizeX ||
+            Math.Abs(_partitionSizeY - idealPartitionSizeY) > threshold * idealPartitionSizeY)
+        {
+            Optimize();
+        }
+    }
+
+    private void Optimize()
+    {
+        _partitionSizeX = (int)(3 * _averageWidth);
+        _partitionSizeY = (int)(3 * _averageHeight);
+
+        _partitions?.Clear();
+        foreach (var element in _elements)
+        {
+            var indices = _hashSetPool.Get();
+            GetPartitionIndices(element, indices);
+            foreach (var index in indices)
+            {
+                if (!Partitions.TryGetValue(index, out var partition))
+                {
+                    partition = new HashSet<T>();
+                    Partitions[index] = partition;
+                }
+                partition.Add(element);
+            }
+            _hashSetPool.Return(indices);
+        }
+    }
+
+    public void Dispose()
+    {
+        #if DEBUG
+        _totalRuntimeStopwatch.Stop();
+        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
+        if (totalSeconds > 0)
+        {
+            var updatesPerSecond = _updateCallCount / totalSeconds;
+            Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+        }
+        #endif
+    }
+
+    private class ObjectPool<TPooled>
+    {
+        private readonly Stack<TPooled> _items = new Stack<TPooled>();
+        private readonly Func<TPooled> _createFunc;
+
+        public ObjectPool(Func<TPooled> createFunc)
+        {
+            _createFunc = createFunc ?? throw new ArgumentNullException(nameof(createFunc));
+        }
+
+        public TPooled Get()
+        {
+            return _items.Count > 0 ? _items.Pop() : _createFunc();
+        }
+
+        public void Return(TPooled item)
+        {
+            _items.Push(item);
+        }
     }
 }
-
