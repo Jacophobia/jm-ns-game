@@ -37,6 +37,16 @@ public class Sprite
     {
         Debug.Assert(!overlap.IsEmpty, "Overlap cannot be empty. A value must be provided.");
 
+        if ((lhsDestination.Width  < 11 && overlap.Width  >= lhsDestination.Width  / 9f) || 
+            (lhsDestination.Height < 11 && overlap.Height >= lhsDestination.Height / 9f) || 
+            (rhsDestination.Width  < 11 && overlap.Width  >= rhsDestination.Width  / 9f) || 
+            (rhsDestination.Height < 11 && overlap.Height >= rhsDestination.Height / 9f))
+        {
+            collisionCoordinate = overlap.Center.ToVector2();
+            return true;
+        }
+            
+
         // Create rectangles for the entities' collision areas
         var rect1 = lhsDestination;
         var rect2 = rhsDestination;
@@ -51,10 +61,12 @@ public class Sprite
             for (var y = overlap.Top; y <= overlap.Bottom; y++)
             {
                 // Calculate the pixel coordinates within the textures
-                var texCoord1 = new Vector2((x - rect1.Left) * texture1.Width / rect1.Width,
-                    (y - rect1.Top) * texture1.Height / rect1.Height);
-                var texCoord2 = new Vector2((x - rect2.Left) * texture2.Width / rect2.Width,
-                    (y - rect2.Top) * texture2.Height / rect2.Height);
+                var texCoord1 = new Vector2(
+                    (int)Math.Round((float)((x - rect1.Left) * texture1.Width) / rect1.Width),
+                    (int)Math.Round((float)((y - rect1.Top) * texture1.Height) / rect1.Height));
+                var texCoord2 = new Vector2(
+                    (int)Math.Round((float)((x - rect2.Left) * texture2.Width) / rect2.Width),
+                    (int)Math.Round((float)((y - rect2.Top) * texture2.Height) / rect2.Height));
 
                 // Check if the pixels at the current position are not transparent for both entities
                 if (lhs._collisionData.IsCollidableCoord(texCoord1) && rhs._collisionData.IsCollidableCoord(texCoord2))
@@ -63,7 +75,6 @@ public class Sprite
                     collisionCoordinate = new Vector2(x, y);
                     return true;
                 }
-                
             }
         }
 

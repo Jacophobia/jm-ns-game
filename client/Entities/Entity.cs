@@ -17,6 +17,8 @@ public abstract class Entity : IRenderable
     public abstract float Depth { get; set; }
     public abstract Vector2 Velocity { get; set; }
     public abstract void Update(GameTime gameTime);
+    // public abstract void HandleCollisionWith(Entity rhs);
+    // public abstract void HandleCollisionFrom(Entity rhs);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

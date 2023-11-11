@@ -7,12 +7,13 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SpatialPartition;
 using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Controllers;
 
 public class Test2 : Game
 {
-    private readonly SpatialGrid<Ball> _spatialGrid;
+    private readonly ISpatialPartition<Ball> _spatialGrid;
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
@@ -49,22 +50,31 @@ public class Test2 : Game
         return randomNum;
     }
 
+    private static int GetOddRandom(int min, int max)
+    {
+        Debug.Assert(min != max || min % 2 == 1);
+        var random = new Random();
+        var randomNum = 0;
+        while (randomNum % 2 != 1) randomNum = random.Next(min, max);
+        return randomNum;
+    }
+
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         var ballTexture = Content.Load<Texture2D>("Test/ball");
 
         var random = new Random();
-        const int maxBallSize = 5;
+        const int maxBallSize = 1;
 
-        for (var i = 0; i < 1000; i++)
+        for (var i = 0; i < 10000; i++)
         {
             var ballPosition =
                 new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
 
             var ball = new Ball(ballTexture, ballPosition, random.Next(1, 2),
                 new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)), 
-                random.Next(maxBallSize, maxBallSize));
+                GetOddRandom(1, maxBallSize));
             _spatialGrid.Add(ball);
         }
     }
