@@ -1,80 +1,68 @@
-﻿using SpatialPartition;
-using SpatialPartition.Collision;
+﻿using System;
+using client.Extensions;
+using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using System;
-using IO.Sprites;
 using Microsoft.Xna.Framework.Input;
+using SpatialPartition;
+using SpatialPartition.Collision;
 
 namespace client;
 
 public class Game1 : Game
 {
-    private readonly GraphicsDeviceManager _graphics;
+    private readonly SpatialGrid<Ball> _spatialGrid;
+    private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
-    private SpriteFactory _spriteFactory;
-
-    private SpatialGrid<Ball> _spatialGrid;
-    private Random _random;
 
     public Game1()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        IsMouseVisible = true;
+        _spatialGrid = new SpatialGrid<Ball>();
         Window.AllowUserResizing = true;
-        
-        using var adapter = GraphicsAdapter.DefaultAdapter;
-
-        // Get the current display mode of the primary monitor
-        var displayMode = adapter.CurrentDisplayMode;
-
-        _graphics.PreferredBackBufferWidth = displayMode.Width;
-        _graphics.PreferredBackBufferHeight = displayMode.Height;
-
-        // Set fullscreen mode
-        _graphics.IsFullScreen = true;
+        IsMouseVisible = true;
     }
 
     protected override void Initialize()
     {
-        // Initialize the spatial grid with 10x10 partitions
-        _spatialGrid = new SpatialGrid<Ball>(12, 7);
-        _random = new Random();
-
         base.Initialize();
+    }
+
+    private static int GetNonZeroRandom(int min, int max)
+    {
+        var random = new Random();
+        var randomNum = 0;
+        while (randomNum == 0) randomNum = random.Next(min, max);
+        return randomNum;
     }
 
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _spriteFactory = new SpriteFactory(Content);
+        var ballTexture = Content.Load<Texture2D>("Test/ball");
 
-        // Load textures for the balls
-        var ballTexture = Content.Load<Texture2D>("Test/ball");// Get the primary graphics adapter
-        
-        using var adapter = GraphicsAdapter.DefaultAdapter;
+        var random = new Random();
 
-        // Get the current display mode of the primary monitor
-        var displayMode = adapter.CurrentDisplayMode;
-
-        // Create and add some balls to the spatial grid
-        for (var i = 0; i < 10000; i++)
+        for (var i = 0; i < 10; i++)
         {
-            var ball = new Ball(ballTexture, displayMode.Width, displayMode.Height, 2, 2);
+            var ballPosition =
+                new Vector2(random.Next(2560 - ballTexture.Width), random.Next(1440 - ballTexture.Height));
+
+            var ball = new Ball(ballTexture, ballPosition, random.Next(6),
+                new Vector2(GetNonZeroRandom(-10, 10), GetNonZeroRandom(-10, 10)), 
+                random.Next(1, 10));
             _spatialGrid.Add(ball);
         }
     }
 
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
-            || Keyboard.GetState().IsKeyDown(Keys.Escape))
-        {
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
-        }
-        // Update the spatial grid, which will automatically update the balls 
-        _spatialGrid.Update();
+
+        _spatialGrid.Update(gameTime); // This will call Update on each Ball and handle spatial partitioning
 
         base.Update(gameTime);
     }
@@ -84,13 +72,7 @@ public class Game1 : Game
         GraphicsDevice.Clear(Color.Black);
 
         _spriteBatch.Begin();
-
-        // Draw each ball
-        foreach (var ball in _spatialGrid)
-        {
-            _spriteBatch.Draw(ball.Sprite.Texture, ball.Destination, ball.Color);
-        }
-
+        foreach (var ball in _spatialGrid) ball.Draw(_spriteBatch);
         _spriteBatch.End();
 
         base.Draw(gameTime);
@@ -99,124 +81,45 @@ public class Game1 : Game
 
 public class Ball : ICollidable
 {
-    public Sprite Sprite { get; }
-    public Rectangle Destination { get; private set; }
+    private readonly float _speed;
+    private Color _color;
+    private Vector2 _direction;
 
-    public Color Color { get; private set; } = Color.Gray;
-
-
-    private Vector2 _velocity;
-    public Vector2 Velocity
-    {
-        get => _velocity;
-        set => _velocity = value;
-    }
-
-    private readonly int _screenWidth;
-    private readonly int _screenHeight;
-
-    public Ball(Texture2D texture, int screenWidth, int screenHeight, int width, int height)
+    public Ball(Texture2D texture, Vector2 position, float speed, Vector2 direction, int size)
     {
         Sprite = new Sprite(texture);
-        var random1 = new Random();
-        _screenWidth = screenWidth;
-        _screenHeight = screenHeight;
-        Destination = new Rectangle(random1.Next(_screenWidth), random1.Next(_screenHeight), width, height);
-        Velocity = new Vector2(GetRandomNonZero(-6, 6), GetRandomNonZero(-4, 4));
+        Destination = new Rectangle((int)position.X, (int)position.Y, size, size);
+        _speed = speed;
+        _direction = direction;
+        _color = Color.White;
     }
 
-    private static int GetRandomNonZero(int min, int max)
+    public Sprite Sprite { get; }
+    public Rectangle Destination { get; private set; }
+    public Vector2 Velocity { get; set; }
+
+    public void Update(GameTime gameTime)
     {
-        var number = 0;
-        
-        while (number == 0)
-        {
-            number = new Random().Next(min, max);
-        }
+        // Example collision detection with screen bounds
+        if (Destination.X < 0 || Destination.X > 2560 - Destination.Width) // Assuming screen width is 2560
+            _direction.X *= -1;
+        if (Destination.Y < 0 || Destination.Y > 1440 - Destination.Height) // Assuming screen height is 1440
+            _direction.Y *= -1;
 
-        return number;
-    }
-
-    public void Update()
-    {
-        // Move the ball (simplified movement for illustration purposes)
-        var x = Destination.X + 1 * _velocity.X;
-        var y = Destination.Y + 1 * _velocity.Y;
-
-        if (x is > 2560 or < 0)
-        {
-            _velocity.X *= -1;
-        }
-        if (y is > 1440 or < 0)
-        {
-            _velocity.Y *= -1;
-        }
-        
-        
-        Destination = new Rectangle((int)x, (int)y, Destination.Width, Destination.Height);
+        var newDestination = Destination;
+        newDestination.X += (int)(_direction.X * _speed);// * gameTime.DeltaTime());
+        newDestination.Y += (int)(_direction.Y * _speed);// * gameTime.DeltaTime());
+        Destination = newDestination;
     }
 
     public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation)
     {
-        // Handle collision logic, e.g., change color
-        Color = Color.Red;
+        _color = Color.Red;
+        Velocity = Vector2.Zero;
+    }
 
-        _velocity = Vector2.Zero;
+    public void Draw(SpriteBatch spriteBatch)
+    {
+        spriteBatch.Draw(Sprite.Texture, Destination, _color);
     }
 }
-
-
-// public class MonoGame : Game
-// {
-//     private readonly IEnumerable<IRenderable> _renderables;
-//     private GraphicsDeviceManager _graphics;
-//     private SpriteBatch _spriteBatch;
-//
-//     public MonoGame()
-//     {
-//         _renderables = Array.Empty<IRenderable>();
-//         _graphics = new GraphicsDeviceManager(this);
-//         Content.RootDirectory = "Content";
-//         IsMouseVisible = true;
-//     }
-//
-//     private Texture2D GetTexture(string name)
-//     {
-//         return Content.Load<Texture2D>(name);
-//     }
-//
-//     private IEnumerable<Texture2D> GetTextures(IEnumerable<string> names)
-//     {
-//         return names.Select(name => Content.Load<Texture2D>(name));
-//     }
-//
-//     protected override void Initialize()
-//     {
-//         // TODO: Add your initialization logic here
-//
-//         base.Initialize();
-//     }
-//
-//     protected override void LoadContent()
-//     {
-//         _spriteBatch = new SpriteBatch(GraphicsDevice);
-//     }
-//
-//     protected override void Update(GameTime gameTime)
-//     {
-//         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-//             Keyboard.GetState().IsKeyDown(Keys.Escape))
-//         {
-//             Exit();
-//         }
-//
-//
-//         base.Update(gameTime);
-//     }
-//
-//     protected override void Draw(GameTime gameTime)
-//     {
-//         
-//         base.Draw(gameTime);
-//     }
-// }

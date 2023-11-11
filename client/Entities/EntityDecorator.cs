@@ -60,6 +60,12 @@ public abstract class EntityDecorator : Entity
         set => _base.Depth = value;
     }
 
+    public sealed override Vector2 Velocity
+    {
+        get => _base.Velocity;
+        set => _base.Velocity = value;
+    }
+
     public sealed override void Update(GameTime gameTime)
     {
         OnUpdate(gameTime);

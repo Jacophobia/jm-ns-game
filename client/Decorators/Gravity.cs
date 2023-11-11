@@ -5,15 +5,12 @@ namespace client.Decorators;
 
 public class Gravity : EntityDecorator
 {
-    private readonly float _amount;
-    
-    public Gravity(Entity @base, float amount) : base(@base)
+    public Gravity(Entity @base) : base(@base)
     {
-        _amount = amount;
     }
 
     protected override void OnUpdate(GameTime gameTime)
     {
-        Origin = new Vector2(Origin.X, Origin.Y - _amount);
+        Velocity = new Vector2(Velocity.X, Velocity.Y - 9.8f);
     }
 }

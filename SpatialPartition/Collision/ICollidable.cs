@@ -11,7 +11,7 @@ public interface ICollidable
     public int Width => Destination.Width;
     public int Height => Destination.Height;
     public Vector2 Velocity { get; set; }
-    public void Update();
+    public void Update(GameTime gameTime);
     public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation);
 
     public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation)

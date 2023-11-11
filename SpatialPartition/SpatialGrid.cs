@@ -21,7 +21,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private int _partitionSizeY;
 
     #if DEBUG
-    private readonly Stopwatch _totalRuntimeStopwatch = new Stopwatch();
+    private readonly Stopwatch _totalRuntimeStopwatch = new();
     private int _updateCallCount = 0;
     #endif
 
@@ -30,8 +30,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _elements = new List<T>();
         _hashSetPool = new ObjectPool<HashSet<Vector2>>(() => new HashSet<Vector2>());
         _vector2Pool = new ObjectPool<Vector2>(() => new Vector2());
-        RecalculatePartitionSizes();
-
+        _partitionSizeX = 0;
+        _partitionSizeY = 0;
+        
         #if DEBUG
         _totalRuntimeStopwatch.Start();
         #endif
@@ -168,7 +169,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         return GetEnumerator();
     }
     
-    public void Update()
+    public void Update(GameTime gameTime)
     {
         #if DEBUG
         _updateCallCount++;
@@ -181,7 +182,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             GetPartitionIndices(element, previousIndices);
 
-            element.Update();
+            element.Update(gameTime);
 
             GetPartitionIndices(element, currentIndices);
 
@@ -235,13 +236,13 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
-    private void GetPartitionIndices(T item, HashSet<Vector2> indices)
+    private void GetPartitionIndices(T item, ISet<Vector2> indices)
     {
         indices.Clear();
-        var minX = (int)((item.Center.X - item.Width / 2) / (PartitionCountX * 1f));
-        var maxX = (int)((item.Center.X + item.Width / 2) / (PartitionCountX * 1f));
-        var minY = (int)((item.Center.Y - item.Height / 2) / (PartitionCountY * 1f));
-        var maxY = (int)((item.Center.Y + item.Height / 2) / (PartitionCountY * 1f));
+        var minX = (int)((item.Destination.Center.X - item.Width / 2) / (_partitionSizeX * 1f));
+        var maxX = (int)((item.Destination.Center.X + item.Width / 2) / (_partitionSizeX * 1f));
+        var minY = (int)((item.Destination.Center.Y - item.Height / 2) / (_partitionSizeY * 1f));
+        var maxY = (int)((item.Destination.Center.Y + item.Height / 2) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
         {
@@ -299,17 +300,19 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         #if DEBUG
         _totalRuntimeStopwatch.Stop();
         var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
-        if (totalSeconds > 0)
+        if (!(totalSeconds > 0))
         {
-            var updatesPerSecond = _updateCallCount / totalSeconds;
-            Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+            return;
         }
+        var updatesPerSecond = _updateCallCount / totalSeconds;
+        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+        GC.SuppressFinalize(this);
         #endif
     }
 
     private class ObjectPool<TPooled>
     {
-        private readonly Stack<TPooled> _items = new Stack<TPooled>();
+        private readonly Stack<TPooled> _items = new();
         private readonly Func<TPooled> _createFunc;
 
         public ObjectPool(Func<TPooled> createFunc)

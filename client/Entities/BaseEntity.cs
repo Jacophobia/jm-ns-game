@@ -13,6 +13,7 @@ public sealed class BaseEntity : Entity
     public override Vector2 Origin { get; set; }
     public override SpriteEffects Effect { get; set; }
     public override float Depth { get; set; }
+    public override Vector2 Velocity { get; set; }
 
     public override void Update(GameTime _)
     {
