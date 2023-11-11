@@ -7,10 +7,8 @@ public interface ICollidable
 {
     public Sprite Sprite { get; }
     public Rectangle Destination { get; }
-    public Point Position => Destination.Center;
     public int Width => Destination.Width;
     public int Height => Destination.Height;
-    public Vector2 Velocity { get; set; }
     public void Update(GameTime gameTime);
     public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation);
 

@@ -1,3 +1,5 @@
-﻿using var game = new client.Game1();
-// using var game = new client.MonoGame();
+﻿using client.Controllers;
+
+using var game = new Test1();
+// using var game = new Test2();
 game.Run();

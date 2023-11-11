@@ -1,5 +1,6 @@
 ﻿using System;
-using client.Extensions;
+using System.Collections.Generic;
+using System.Diagnostics;
 using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -7,21 +8,32 @@ using Microsoft.Xna.Framework.Input;
 using SpatialPartition;
 using SpatialPartition.Collision;
 
-namespace client;
+namespace client.Controllers;
 
-public class Game1 : Game
+public class Test2 : Game
 {
     private readonly SpatialGrid<Ball> _spatialGrid;
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
 
-    public Game1()
+    public Test2()
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         _spatialGrid = new SpatialGrid<Ball>();
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
+        
+        using var adapter = GraphicsAdapter.DefaultAdapter;
+
+        // Get the current display mode of the primary monitor
+        var displayMode = adapter.CurrentDisplayMode;
+
+        _graphics.PreferredBackBufferWidth = displayMode.Width;
+        _graphics.PreferredBackBufferHeight = displayMode.Height;
+
+        // Set fullscreen mode
+        _graphics.IsFullScreen = true;
     }
 
     protected override void Initialize()
@@ -43,15 +55,16 @@ public class Game1 : Game
         var ballTexture = Content.Load<Texture2D>("Test/ball");
 
         var random = new Random();
+        const int maxBallSize = 5;
 
-        for (var i = 0; i < 10; i++)
+        for (var i = 0; i < 1000; i++)
         {
             var ballPosition =
-                new Vector2(random.Next(2560 - ballTexture.Width), random.Next(1440 - ballTexture.Height));
+                new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
 
-            var ball = new Ball(ballTexture, ballPosition, random.Next(6),
-                new Vector2(GetNonZeroRandom(-10, 10), GetNonZeroRandom(-10, 10)), 
-                random.Next(1, 10));
+            var ball = new Ball(ballTexture, ballPosition, random.Next(1, 2),
+                new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)), 
+                random.Next(maxBallSize, maxBallSize));
             _spatialGrid.Add(ball);
         }
     }
@@ -81,41 +94,57 @@ public class Game1 : Game
 
 public class Ball : ICollidable
 {
-    private readonly float _speed;
     private Color _color;
-    private Vector2 _direction;
+    private readonly Sprite _sprite;
+    private Rectangle _destination;
+    private Vector2 _velocity;
 
     public Ball(Texture2D texture, Vector2 position, float speed, Vector2 direction, int size)
     {
-        Sprite = new Sprite(texture);
+        _sprite = new Sprite(texture);
         Destination = new Rectangle((int)position.X, (int)position.Y, size, size);
-        _speed = speed;
-        _direction = direction;
+        Velocity = direction * speed;
         _color = Color.White;
     }
 
-    public Sprite Sprite { get; }
-    public Rectangle Destination { get; private set; }
-    public Vector2 Velocity { get; set; }
+    public Sprite Sprite => _sprite;
+    public Color Color => _color;
+
+    public Rectangle Destination
+    {
+        get => _destination;
+        private init => _destination = value;
+    }
+
+    public Vector2 Velocity
+    {
+        get => _velocity;
+        set => _velocity = value;
+    }
 
     public void Update(GameTime gameTime)
     {
         // Example collision detection with screen bounds
         if (Destination.X < 0 || Destination.X > 2560 - Destination.Width) // Assuming screen width is 2560
-            _direction.X *= -1;
+            _velocity.X *= -1;
         if (Destination.Y < 0 || Destination.Y > 1440 - Destination.Height) // Assuming screen height is 1440
-            _direction.Y *= -1;
+            _velocity.Y *= -1;
 
-        var newDestination = Destination;
-        newDestination.X += (int)(_direction.X * _speed);// * gameTime.DeltaTime());
-        newDestination.Y += (int)(_direction.Y * _speed);// * gameTime.DeltaTime());
-        Destination = newDestination;
+        _destination.X += (int)Velocity.X;// * gameTime.DeltaTime());
+        _destination.Y += (int)Velocity.Y;// * gameTime.DeltaTime());
     }
 
+    private static readonly HashSet<int> _collisions = new HashSet<int>();
     public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation)
     {
         _color = Color.Red;
         Velocity = Vector2.Zero;
+        
+        if (!_collisions.Contains(Destination.Width))
+        {
+            Debug.WriteLine("Width = " + Destination.Width);
+            _collisions.Add(Destination.Width);
+        }
     }
 
     public void Draw(SpriteBatch spriteBatch)

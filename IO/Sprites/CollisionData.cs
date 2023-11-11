@@ -49,8 +49,8 @@ public class CollisionData
         for (var y = 0; y < texture.Height; y++)
         {
             var color = data1.Get(x, y, texture.Width);
-
-            if (color.A == byte.MaxValue && HasTransparentNeighbor(data1, x, y, texture.Width, texture.Height, (texture.Width + texture.Height) / 50))
+            var range = (texture.Width + texture.Height) / 50;
+            if (color.A == byte.MaxValue && HasTransparentNeighbor(data1, x, y, texture.Width, texture.Height, range))
             {
                 Data.Add(new Vector2(x, y));
             }

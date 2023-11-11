@@ -1,3 +1,5 @@
+// ReSharper disable ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -11,31 +13,24 @@ namespace SpatialPartition;
 
 public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
 {
-    private Dictionary<Vector2, HashSet<T>> _partitions;
     private readonly List<T> _elements;
     private readonly ObjectPool<HashSet<Vector2>> _hashSetPool;
-    private readonly ObjectPool<Vector2> _vector2Pool;
-    private double _averageWidth;
     private double _averageHeight;
+    private double _averageWidth;
+    private Dictionary<Vector2, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
-
-    #if DEBUG
-    private readonly Stopwatch _totalRuntimeStopwatch = new();
-    private int _updateCallCount = 0;
-    #endif
 
     public SpatialGrid()
     {
         _elements = new List<T>();
-        _hashSetPool = new ObjectPool<HashSet<Vector2>>(() => new HashSet<Vector2>());
-        _vector2Pool = new ObjectPool<Vector2>(() => new Vector2());
+        _hashSetPool = new ObjectPool<HashSet<Vector2>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
-        
-        #if DEBUG
+
+#if DEBUG
         _totalRuntimeStopwatch.Start();
-        #endif
+#endif
     }
 
     public SpatialGrid(IEnumerable<T> elements) : this()
@@ -44,6 +39,18 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     }
 
     private Dictionary<Vector2, HashSet<T>> Partitions => _partitions ??= new Dictionary<Vector2, HashSet<T>>();
+
+    public void Dispose()
+    {
+#if DEBUG
+        _totalRuntimeStopwatch.Stop();
+        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
+        if (!(totalSeconds > 0)) return;
+        var updatesPerSecond = _updateCallCount / totalSeconds;
+        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+        Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+#endif
+    }
 
     public int Count => Partitions.Values.Sum(partition => partition.Count);
 
@@ -64,54 +71,23 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                 partition = new HashSet<T>();
                 Partitions[partitionIndex] = partition;
             }
+
             partition.Add(item);
         }
+
         _hashSetPool.Return(indices);
-    }
-
-    public void Add(IEnumerable<T> items)
-    {
-        var itemList = items.ToList();
-        if (!itemList.Any()) return;
-
-        // Calculate new averages with the batch of items
-        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Destination.Width);
-        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Destination.Height);
-        var newCount = _elements.Count + itemList.Count;
-        _averageWidth = totalWidth / newCount;
-        _averageHeight = totalHeight / newCount;
-
-        CheckAndOptimize();
-
-        foreach (var item in itemList)
-        {
-            var indices = _hashSetPool.Get();
-            GetPartitionIndices(item, indices);
-            foreach (var partitionIndex in indices)
-            {
-                if (!Partitions.TryGetValue(partitionIndex, out var partition))
-                {
-                    partition = new HashSet<T>();
-                    Partitions[partitionIndex] = partition;
-                }
-                partition.Add(item);
-            }
-            _hashSetPool.Return(indices);
-            _elements.Add(item);
-        }
     }
 
     public bool Remove(T item)
     {
         if (!_elements.Remove(item))
-        {
             // Item not found, no need to update averages or remove from partitions
             return false;
-        }
-    
+
         // Update averages
         if (_elements.Count > 0)
         {
+            Debug.Assert(item != null, nameof(item) + " should not be null");
             _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
             _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
         }
@@ -120,22 +96,18 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             _averageWidth = 0;
             _averageHeight = 0;
         }
-    
+
         // Check and optimize if necessary
         CheckAndOptimize();
-    
+
         // Remove item from partitions
         var indices = _hashSetPool.Get();
         GetPartitionIndices(item, indices);
         foreach (var partitionIndex in indices)
-        {
             if (Partitions.TryGetValue(partitionIndex, out var partition))
-            {
                 partition.Remove(item);
-            }
-        }
         _hashSetPool.Return(indices);
-    
+
         return true;
     }
 
@@ -168,12 +140,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     {
         return GetEnumerator();
     }
-    
+
     public void Update(GameTime gameTime)
     {
-        #if DEBUG
+#if DEBUG
         _updateCallCount++;
-        #endif
+#endif
 
         foreach (var element in _elements)
         {
@@ -195,35 +167,63 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
+    public void Add(IEnumerable<T> items)
+    {
+        var itemList = items.ToList();
+        if (!itemList.Any()) return;
+
+        // Calculate new averages with the batch of items
+        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Destination.Width);
+        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Destination.Height);
+        var newCount = _elements.Count + itemList.Count;
+        _averageWidth = totalWidth / newCount;
+        _averageHeight = totalHeight / newCount;
+
+        CheckAndOptimize();
+
+        foreach (var item in itemList)
+        {
+            var indices = _hashSetPool.Get();
+            GetPartitionIndices(item, indices);
+            foreach (var partitionIndex in indices)
+            {
+                if (!Partitions.TryGetValue(partitionIndex, out var partition))
+                {
+                    partition = new HashSet<T>();
+                    Partitions[partitionIndex] = partition;
+                }
+
+                partition.Add(item);
+            }
+
+            _hashSetPool.Return(indices);
+            _elements.Add(item);
+        }
+    }
+
     private void CheckForCollisions(T element, HashSet<Vector2> indices)
     {
         foreach (var index in indices)
-        {
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                {
                     if (!element.Equals(other) && element.CollidesWith(other, out var location))
-                    {
                         element.HandleCollisionWith(other, location);
-                    }
-                }
             }
-        }
+            else
+            {
+                Debug.Assert(false,
+                    "The partition index that was checked does not exist. There is likely an issue with HandlePartitionTransitions");
+            }
     }
 
     private void HandlePartitionTransitions(T item, HashSet<Vector2> previousIndices, HashSet<Vector2> currentIndices)
     {
         foreach (var index in previousIndices)
-        {
             if (!currentIndices.Contains(index))
-            {
                 Partitions[index].Remove(item);
-            }
-        }
 
         foreach (var index in currentIndices)
-        {
             if (!previousIndices.Contains(index))
             {
                 if (!Partitions.TryGetValue(index, out var partition))
@@ -233,7 +233,6 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                 }
                 partition.Add(item);
             }
-        }
     }
 
     private void GetPartitionIndices(T item, ISet<Vector2> indices)
@@ -245,12 +244,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         var maxY = (int)((item.Destination.Center.Y + item.Height / 2) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
-        {
-            for (var y = minY; y <= maxY; y++)
-            {
-                indices.Add(new Vector2(x, y));
-            }
-        }
+        for (var y = minY; y <= maxY; y++)
+            indices.Add(new Vector2(x, y));
     }
 
     private void UpdateAverages(T item)
@@ -267,9 +262,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         if (Math.Abs(_partitionSizeX - idealPartitionSizeX) > threshold * idealPartitionSizeX ||
             Math.Abs(_partitionSizeY - idealPartitionSizeY) > threshold * idealPartitionSizeY)
-        {
             Optimize();
-        }
     }
 
     private void Optimize()
@@ -289,40 +282,21 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                     partition = new HashSet<T>();
                     Partitions[index] = partition;
                 }
+
                 partition.Add(element);
             }
+
             _hashSetPool.Return(indices);
         }
     }
 
-    public void Dispose()
-    {
-        #if DEBUG
-        _totalRuntimeStopwatch.Stop();
-        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
-        if (!(totalSeconds > 0))
-        {
-            return;
-        }
-        var updatesPerSecond = _updateCallCount / totalSeconds;
-        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-        GC.SuppressFinalize(this);
-        #endif
-    }
-
-    private class ObjectPool<TPooled>
+    private class ObjectPool<TPooled> where TPooled : new()
     {
         private readonly Stack<TPooled> _items = new();
-        private readonly Func<TPooled> _createFunc;
-
-        public ObjectPool(Func<TPooled> createFunc)
-        {
-            _createFunc = createFunc ?? throw new ArgumentNullException(nameof(createFunc));
-        }
 
         public TPooled Get()
         {
-            return _items.Count > 0 ? _items.Pop() : _createFunc();
+            return _items.Count > 0 ? _items.Pop() : new TPooled();
         }
 
         public void Return(TPooled item)
@@ -330,4 +304,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             _items.Push(item);
         }
     }
+
+#if DEBUG
+    private readonly Stopwatch _totalRuntimeStopwatch = new();
+    private int _updateCallCount;
+#endif
 }
