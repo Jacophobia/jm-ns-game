@@ -4,12 +4,13 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using IO.Sprites;
+using Microsoft.Xna.Framework.Input;
 
 namespace client;
 
 public class Game1 : Game
 {
-    private GraphicsDeviceManager _graphics;
+    private readonly GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
     private SpriteFactory _spriteFactory;
 
@@ -23,6 +24,16 @@ public class Game1 : Game
         IsMouseVisible = true;
         Window.AllowUserResizing = true;
         
+        using var adapter = GraphicsAdapter.DefaultAdapter;
+
+        // Get the current display mode of the primary monitor
+        var displayMode = adapter.CurrentDisplayMode;
+
+        _graphics.PreferredBackBufferWidth = displayMode.Width;
+        _graphics.PreferredBackBufferHeight = displayMode.Height;
+
+        // Set fullscreen mode
+        _graphics.IsFullScreen = true;
     }
 
     protected override void Initialize()
@@ -40,18 +51,28 @@ public class Game1 : Game
         _spriteFactory = new SpriteFactory(Content);
 
         // Load textures for the balls
-        var ballTexture = Content.Load<Texture2D>("Test/ball");
+        var ballTexture = Content.Load<Texture2D>("Test/ball");// Get the primary graphics adapter
+        
+        using var adapter = GraphicsAdapter.DefaultAdapter;
+
+        // Get the current display mode of the primary monitor
+        var displayMode = adapter.CurrentDisplayMode;
 
         // Create and add some balls to the spatial grid
-        for (var i = 0; i < 1000; i++)
+        for (var i = 0; i < 10000; i++)
         {
-            var ball = new Ball(ballTexture, new Rectangle(_random.Next(2560), _random.Next(1440), 10, 10));
+            var ball = new Ball(ballTexture, displayMode.Width, displayMode.Height, 2, 2);
             _spatialGrid.Add(ball);
         }
     }
 
     protected override void Update(GameTime gameTime)
     {
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed 
+            || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        {
+            Exit();
+        }
         // Update the spatial grid, which will automatically update the balls 
         _spatialGrid.Update();
 
@@ -91,12 +112,29 @@ public class Ball : ICollidable
         set => _velocity = value;
     }
 
-    public Ball(Texture2D texture, Rectangle destination)
+    private readonly int _screenWidth;
+    private readonly int _screenHeight;
+
+    public Ball(Texture2D texture, int screenWidth, int screenHeight, int width, int height)
     {
         Sprite = new Sprite(texture);
-        Destination = destination;
-        var random = new Random();
-        Velocity = new Vector2(random.Next(1, 6), random.Next(1, 4));
+        var random1 = new Random();
+        _screenWidth = screenWidth;
+        _screenHeight = screenHeight;
+        Destination = new Rectangle(random1.Next(_screenWidth), random1.Next(_screenHeight), width, height);
+        Velocity = new Vector2(GetRandomNonZero(-6, 6), GetRandomNonZero(-4, 4));
+    }
+
+    private static int GetRandomNonZero(int min, int max)
+    {
+        var number = 0;
+        
+        while (number == 0)
+        {
+            number = new Random().Next(min, max);
+        }
+
+        return number;
     }
 
     public void Update()
