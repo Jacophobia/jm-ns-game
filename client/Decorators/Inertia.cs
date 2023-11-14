@@ -1,5 +1,4 @@
 ﻿using client.Entities;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
@@ -7,9 +6,9 @@ using SpatialPartition.Collision;
 
 namespace client.Decorators;
 
-public class Gravity : EntityDecorator
+public class Inertia : EntityDecorator
 {
-    public Gravity(Entity @base) : base(@base)
+    public Inertia(Entity @base) : base(@base)
     {
         // no new behavior to add
     }
@@ -26,6 +25,6 @@ public class Gravity : EntityDecorator
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        Velocity = new Vector2(Velocity.X, Velocity.Y - 9.8f * gameTime.DeltaTime());
+        
     }
 }

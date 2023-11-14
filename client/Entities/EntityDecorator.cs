@@ -1,15 +1,16 @@
-﻿using Microsoft.Xna.Framework;
+﻿using IO.Input;
+using IO.Sprites;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace client.Entities;
 
 public abstract class EntityDecorator : Entity
 {
-    private readonly Entity _base;
-
-    protected EntityDecorator(Entity @base)
+    public sealed override Sprite Sprite
     {
-        _base = @base;
+        get => _base.Sprite; 
+        set => _base.Sprite = value;
     }
 
     public sealed override Texture2D Texture
@@ -66,10 +67,17 @@ public abstract class EntityDecorator : Entity
         set => _base.Velocity = value;
     }
 
-    public sealed override void Update(GameTime gameTime)
+    private readonly Entity _base;
+    
+    protected EntityDecorator(Entity @base)
     {
-        OnUpdate(gameTime);
+        _base = @base;
     }
 
-    protected abstract void OnUpdate(GameTime gameTime);
+    public sealed override void Update(GameTime gameTime, Controls controls)
+    {
+        OnUpdate(gameTime, controls);
+    }
+
+    protected abstract void OnUpdate(GameTime gameTime, Controls controls);
 }

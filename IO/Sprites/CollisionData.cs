@@ -35,11 +35,15 @@ public class CollisionData
 
         _collisionData.TryAdd(_name, new HashSet<Vector2>());
 
-        if (Directory.Exists(texture.GetCollisionDataFilepath()))
+        var relativePath = texture.GetCollisionDataFilepath();
+        var fullPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
+
+        if (System.IO.File.Exists(fullPath))
         {
-            Load(texture.GetCollisionDataFilepath());
+            Load(fullPath);
             return;
         }
+        
         
         // Get the pixel data from the textures
         var data1 = new Color[texture.Width * texture.Height];
@@ -49,7 +53,7 @@ public class CollisionData
         for (var y = 0; y < texture.Height; y++)
         {
             var color = data1.Get(x, y, texture.Width);
-            var range = (texture.Width + texture.Height) / 50;
+            var range = (texture.Width + texture.Height) / 2;
             if (color.A == byte.MaxValue && HasTransparentNeighbor(data1, x, y, texture.Width, texture.Height, range))
             {
                 Data.Add(new Vector2(x, y));
@@ -61,7 +65,7 @@ public class CollisionData
     
     private static bool HasTransparentNeighbor(Color[] image, int x, int y, int width, int height, int range)
     {
-        for (var dx = x - range; dx < x + range; dx++)
+        for (var dx = x - range; dx < x + range; dx++) // TODO: See if you can just check the furthest possible distance in a box around the pixel
         for (var dy = y - range; dy < y + range; dy++)
         {
             if (image.TryGet(dx, dy, width, height, out var color) && color.A != byte.MaxValue)

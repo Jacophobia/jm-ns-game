@@ -5,7 +5,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using IO.Extensions;
+using IO.Input;
+using IO.Output;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
@@ -114,7 +118,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     public void Clear()
     {
-        _partitions.Clear();
+        _partitions?.Clear();
     }
 
     public bool Contains(T item)
@@ -141,12 +145,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         return GetEnumerator();
     }
 
-    public void Update(GameTime gameTime)
+    public void Update(GameTime gameTime, Controls controls)
     {
-#if DEBUG
-        _updateCallCount++;
-#endif
-
         foreach (var element in _elements)
         {
             var previousIndices = _hashSetPool.Get();
@@ -154,7 +154,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             GetPartitionIndices(element, previousIndices);
 
-            element.Update(gameTime);
+            element.Update(gameTime, controls);
 
             GetPartitionIndices(element, currentIndices);
 
@@ -162,9 +162,27 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             CheckForCollisions(element, currentIndices);
 
-            _hashSetPool.Return(previousIndices);
-            _hashSetPool.Return(currentIndices);
+            _hashSetPool.Return(previousIndices, currentIndices);
         }
+        
+#if DEBUG
+        _updateCallCount++;
+#endif
+    }
+
+    public void Draw(SpriteBatch spriteBatch, Camera camera, GameTime gameTime)
+    {
+        var indices = _hashSetPool.Get();
+
+        foreach (var element in _elements)
+        {
+            if (element.Destination.Intersects(camera.View))
+            {
+                spriteBatch.Draw(element, camera);
+            }
+        }
+        
+        _hashSetPool.Return(indices);
     }
 
     public void Add(IEnumerable<T> items)
@@ -207,13 +225,28 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.CollidesWith(other, out var location))
-                        element.HandleCollisionWith(other, location);
+                    if (!element.Equals(other) && element.CollidesWith(other, out var location, out var overlap))
+                    {
+                        var beforeIndices = _hashSetPool.Get();
+                        var afterIndices = _hashSetPool.Get();
+                        
+                        GetPartitionIndices(other, beforeIndices);
+                        
+                        element.HandleCollisionWith(other, location, overlap);
+                        
+                        GetPartitionIndices(other, afterIndices);
+                        
+                        HandlePartitionTransitions(other, beforeIndices, afterIndices);
+                        
+                        _hashSetPool.Return(beforeIndices, afterIndices);
+                    }
             }
             else
             {
                 Debug.Assert(false,
-                    "The partition index that was checked does not exist. There is likely an issue with HandlePartitionTransitions");
+                    "The partition index that was checked does not " +
+                    "exist. There is likely an issue with " +
+                    "HandlePartitionTransitions");
             }
     }
 
@@ -221,8 +254,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     {
         foreach (var index in previousIndices)
             if (!currentIndices.Contains(index))
-                Partitions[index].Remove(item);
-
+                if (Partitions.TryGetValue(index, out var partition))
+                    partition.Remove(item);
+        
         foreach (var index in currentIndices)
             if (!previousIndices.Contains(index))
             {
@@ -235,17 +269,22 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
     }
 
-    private void GetPartitionIndices(T item, ISet<Vector2> indices)
+    private void AddIndices(Rectangle rectangle, ISet<Vector2> indices)
     {
         indices.Clear();
-        var minX = (int)((item.Destination.Center.X - item.Width / 2) / (_partitionSizeX * 1f));
-        var maxX = (int)((item.Destination.Center.X + item.Width / 2) / (_partitionSizeX * 1f));
-        var minY = (int)((item.Destination.Center.Y - item.Height / 2) / (_partitionSizeY * 1f));
-        var maxY = (int)((item.Destination.Center.Y + item.Height / 2) / (_partitionSizeY * 1f));
+        var minX = (int)((rectangle.Center.X - rectangle.Width / 2) / (_partitionSizeX * 1f));
+        var maxX = (int)((rectangle.Center.X + rectangle.Width / 2) / (_partitionSizeX * 1f));
+        var minY = (int)((rectangle.Center.Y - rectangle.Height / 2) / (_partitionSizeY * 1f));
+        var maxY = (int)((rectangle.Center.Y + rectangle.Height / 2) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
             indices.Add(new Vector2(x, y));
+    }
+
+    private void GetPartitionIndices(T item, ISet<Vector2> indices)
+    {
+        AddIndices(item.Destination, indices);
     }
 
     private void UpdateAverages(T item)
@@ -299,9 +338,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             return _items.Count > 0 ? _items.Pop() : new TPooled();
         }
 
-        public void Return(TPooled item)
+        public void Return(params TPooled[] items)
         {
-            _items.Push(item);
+            foreach (var item in items)
+            {
+                _items.Push(item);
+            }
         }
     }
 

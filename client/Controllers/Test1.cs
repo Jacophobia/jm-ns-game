@@ -1,11 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using IO.Sprites;
+using IO.Input;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SpatialPartition;
-using SpatialPartition.Collision;
 
 namespace client.Controllers;
 
@@ -14,6 +14,7 @@ public class Test1 : Game
     private readonly GraphicsDeviceManager _graphics;
     private SpatialGrid<Ball> _spatialGrid;
     private SpriteBatch _spriteBatch;
+    private Listener _listener;
 
     public Test1()
     {
@@ -63,6 +64,7 @@ public class Test1 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
+        _listener = new Listener(new Dictionary<Buttons, Controls>());
 
         // Load textures for the balls
         var ballTexture = Content.Load<Texture2D>("Test/ball"); // Get the primary graphics adapter
@@ -90,7 +92,7 @@ public class Test1 : Game
             || Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         // Update the spatial grid, which will automatically update the balls 
-        _spatialGrid.Update(gameTime);
+        _spatialGrid.Update(gameTime, _listener.GetInputState());
 
         base.Update(gameTime);
     }
@@ -107,60 +109,5 @@ public class Test1 : Game
         _spriteBatch.End();
 
         base.Draw(gameTime);
-    }
-}
-
-public class Ball1 : ICollidable
-{
-    private readonly int _screenHeight;
-
-    private readonly int _screenWidth;
-    private Rectangle _destination;
-
-    private Vector2 _velocity;
-
-    public Ball1(Texture2D texture, int screenWidth, int screenHeight, int width, int height)
-    {
-        Sprite = new Sprite(texture);
-        var random1 = new Random();
-        _screenWidth = screenWidth;
-        _screenHeight = screenHeight;
-        _destination = new Rectangle(random1.Next(_screenWidth), random1.Next(_screenHeight), width, height);
-        _velocity = new Vector2(GetRandomNonZero(-6, 6), GetRandomNonZero(-4, 4));
-    }
-
-    public Color Color { get; private set; } = Color.Gray;
-    public Sprite Sprite { get; }
-
-    public Rectangle Destination => _destination;
-
-    public void Update(GameTime gameTime)
-    {
-        // Move the ball (simplified movement for illustration purposes)
-        var x = Destination.X * _velocity.X;
-        var y = Destination.Y * _velocity.Y;
-
-        if (x is > 2560 or < 0) _velocity.X *= -1;
-        if (y is > 1440 or < 0) _velocity.Y *= -1;
-
-        _destination.X = (int)x;
-        _destination.Y = (int)y;
-    }
-
-    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation)
-    {
-        // Handle collision logic, e.g., change color
-        Color = Color.Red;
-
-        _velocity = Vector2.Zero;
-    }
-
-    private static int GetRandomNonZero(int min, int max)
-    {
-        var number = 0;
-
-        while (number == 0) number = new Random().Next(min, max);
-
-        return number;
     }
 }

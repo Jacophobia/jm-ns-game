@@ -45,7 +45,6 @@ public class Sprite
             collisionCoordinate = overlap.Center.ToVector2();
             return true;
         }
-            
 
         // Create rectangles for the entities' collision areas
         var rect1 = lhsDestination;
@@ -81,10 +80,5 @@ public class Sprite
         // No collision detected
         collisionCoordinate = null;
         return false;
-    }
-
-    public void Draw(Action<Texture2D> draw)
-    {
-        draw(Texture);
     }
 }

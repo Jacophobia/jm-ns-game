@@ -17,13 +17,13 @@ public class Renderer
         _spriteBatch = spriteBatch;
     }
 
-    public void Render(IEnumerable<IRenderable> renderables)
+    public void Render(IEnumerable<IRenderable> renderables, Camera camera)
     {
         _graphicsDevice.Clear(Color.CornflowerBlue);
 
         _spriteBatch.Begin();
 
-        foreach (var renderable in renderables) _spriteBatch.Draw(renderable);
+        foreach (var renderable in renderables) _spriteBatch.Draw(renderable, camera);
 
         _spriteBatch.End();
     }

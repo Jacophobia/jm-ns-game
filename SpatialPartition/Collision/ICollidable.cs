@@ -1,20 +1,20 @@
-﻿using IO.Sprites;
+﻿using IO.Input;
+using IO.Interfaces;
+using IO.Sprites;
 using Microsoft.Xna.Framework;
 
 namespace SpatialPartition.Collision;
 
-public interface ICollidable
+public interface ICollidable : IRenderable
 {
     public Sprite Sprite { get; }
-    public Rectangle Destination { get; }
-    public int Width => Destination.Width;
-    public int Height => Destination.Height;
-    public void Update(GameTime gameTime);
-    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation);
+    public Vector2 Velocity { get; set; }
+    public void Update(GameTime gameTime, Controls controls);
+    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap);
 
-    public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation)
+    public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation, out Rectangle? overlap)
     {
-        if (Sprite.Overlaps(Destination, rhs.Destination, out var overlap) && overlap.HasValue)
+        if (Sprite.Overlaps(Destination, rhs.Destination, out overlap) && overlap.HasValue)
         {
             return Sprite.Collides(Sprite, Destination, rhs.Sprite, rhs.Destination, overlap.Value, out collisionLocation);
         }

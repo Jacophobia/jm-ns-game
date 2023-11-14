@@ -1,6 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 
-namespace client.Extensions;
+namespace IO.Extensions;
 
 public static class GameTimeExtensions
 {

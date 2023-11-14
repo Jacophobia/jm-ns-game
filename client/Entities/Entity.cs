@@ -1,11 +1,14 @@
 ﻿using System;
-using IO.Interfaces;
+using IO.Input;
+using IO.Output;
+using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SpatialPartition.Collision;
 
 namespace client.Entities;
 
-public abstract class Entity : IRenderable
+public abstract class Entity : ICollidable
 {
     public abstract Texture2D Texture { get; set; }
     public abstract Rectangle Destination { get; set; }
@@ -15,10 +18,11 @@ public abstract class Entity : IRenderable
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
     public abstract float Depth { get; set; }
+    public abstract Sprite Sprite { get; set; }
     public abstract Vector2 Velocity { get; set; }
-    public abstract void Update(GameTime gameTime);
-    // public abstract void HandleCollisionWith(Entity rhs);
-    // public abstract void HandleCollisionFrom(Entity rhs);
+    public abstract void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap);
+    public abstract void Update(GameTime gameTime, Controls controls);
+    public abstract void Draw(Camera camera);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

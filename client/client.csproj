@@ -24,6 +24,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Arena" />
+    <Folder Include="Extensions" />
     <Folder Include="Overworld" />
   </ItemGroup>
   <ItemGroup>
