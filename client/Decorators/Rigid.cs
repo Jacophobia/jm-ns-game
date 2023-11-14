@@ -20,22 +20,15 @@ public class Rigid : EntityDecorator
         return Vector2.Normalize(to - from); // Normalizing to get a unit vector
     }
 
-    private void RewindOneFrame(ICollidable collidable)
-    {
-        Position -= Velocity;
-        collidable.Position -= collidable.Velocity;
-    }
-
-    public override void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
     {
         Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
         Debug.Assert(overlap != null, "This method should not be called if overlap is null");
 
-        RewindOneFrame(collidable);
+        // Rewind(collidable);
 
         var velocity = Velocity;
         var otherVelocity = collidable.Velocity;
-
         
         // Skip processing if both objects are static
         if (IsStatic && collidable.IsStatic)
@@ -44,22 +37,19 @@ public class Rigid : EntityDecorator
         }
 
         // Calculate the normal (n) and tangential (t) direction vectors
-        float nx = collidable.Destination.Center.X - Destination.Center.X;
-        float ny = collidable.Destination.Center.Y - Destination.Center.Y;
-        var distance = MathF.Sqrt(nx * nx + ny * ny);
-        nx /= distance; // Normalize
-        ny /= distance; // Normalize
+        var n = collidable.Position - Position;
+        n.Normalize();
 
         // Decompose velocities into normal and tangential components
-        var v1N = Velocity.X * nx + Velocity.Y * ny; // Dot product
-        var v1T = -Velocity.X * ny + Velocity.Y * nx; // Perpendicular dot product
+        var v1N = Velocity.X * n.X + Velocity.Y * n.Y; // Dot product
+        var v1T = -Velocity.X * n.Y + Velocity.Y * n.X; // Perpendicular dot product
 
         if (IsStatic)
         {
             // If this object is static, only adjust the other object's velocity
-            var newV2N = -collidable.RestitutionCoefficient * (collidable.Velocity.X * nx + collidable.Velocity.Y * ny);
-            otherVelocity.X = newV2N * nx - (-collidable.Velocity.X * ny + collidable.Velocity.Y * nx) * ny;
-            otherVelocity.Y = newV2N * ny + (-collidable.Velocity.X * ny + collidable.Velocity.Y * nx) * nx;
+            var newV2N = -collidable.RestitutionCoefficient * (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
+            otherVelocity.X = newV2N * n.X - (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.Y;
+            otherVelocity.Y = newV2N * n.Y + (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.X;
         }
         else if (collidable.IsStatic)
         {
@@ -67,14 +57,14 @@ public class Rigid : EntityDecorator
             var newV1N = -RestitutionCoefficient * v1N;
 
             // Recompose velocity for the dynamic object
-            velocity.X = newV1N * nx - v1T * ny;
-            velocity.Y = newV1N * ny + v1T * nx;
+            velocity.X = newV1N * n.X - v1T * n.Y;
+            velocity.Y = newV1N * n.Y + v1T * n.X;
         }
         else
         {
             // Collision with another dynamic object
-            var v2N = collidable.Velocity.X * nx + collidable.Velocity.Y * ny;
-            var v2T = -collidable.Velocity.X * ny + collidable.Velocity.Y * nx;
+            var v2N = collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y;
+            var v2T = -collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X;
 
             // Apply the restitution coefficient
             var combinedRestitution = (RestitutionCoefficient + collidable.RestitutionCoefficient) / 2;
@@ -86,44 +76,45 @@ public class Rigid : EntityDecorator
                          (Mass + collidable.Mass);
 
             // Recompose velocities for both objects
-            velocity.X = newV1N * nx - v1T * ny;
-            velocity.Y = newV1N * ny + v1T * nx;
-            otherVelocity.X = newV2N * nx - v2T * ny;
-            otherVelocity.Y = newV2N * ny + v2T * nx;
+            velocity.X = newV1N * n.X - v1T * n.Y;
+            velocity.Y = newV1N * n.Y + v1T * n.X;
+            otherVelocity.X = newV2N * n.X - v2T * n.Y;
+            otherVelocity.Y = newV2N * n.Y + v2T * n.X;
         }
         
         // Positional correction
-        var correctionDirection = CalculateDirection(Destination.Center.ToVector2(), collidable.Destination.Center.ToVector2());
-        var penetrationDepth = MathF.Min(overlap.Value.Width, overlap.Value.Height);
-        const float positionalCorrectionFactor = 0.4f; // Adjust this factor as needed
-
+        var correctionDirection = CalculateDirection(Position, collidable.Position);
+        var otherCorrectionDirection = CalculateDirection(collidable.Position, Position);
+        var penetrationDepth = MathF.Sqrt(overlap.Value.Width * overlap.Value.Width + overlap.Value.Height * overlap.Value.Height);
+        const float positionalCorrectionFactor = 0.1f; // Adjust this factor as needed
+        
         // Calculate inverse mass (0 for static objects)
-        float inverseMassThis = IsStatic ? 0 : 1 / Mass;
-        float inverseMassOther = collidable.IsStatic ? 0 : 1 / collidable.Mass;
+        var inverseMassThis = IsStatic ? 0f : 1f / Mass;
+        var inverseMassOther = collidable.IsStatic ? 0f : 1f / collidable.Mass;
         var totalInverseMass = inverseMassThis + inverseMassOther;
-
-        // Skip correction if total inverse mass is zero (both objects are static)
-        if (totalInverseMass > 0)
+        var correction = correctionDirection * penetrationDepth * positionalCorrectionFactor / totalInverseMass * inverseMassThis;
+        var otherCorrection = otherCorrectionDirection * penetrationDepth * positionalCorrectionFactor / totalInverseMass * inverseMassOther;
+        
+        if (!IsStatic)
         {
-            // The amount each object is moved is proportional to its inverse mass
-            var correctionAmount = correctionDirection * penetrationDepth * positionalCorrectionFactor / totalInverseMass;
-
-            if (!IsStatic)
-            {
-                Position += correctionAmount * inverseMassThis;
-            }
-
-            if (!collidable.IsStatic)
-            {
-                collidable.Position -= correctionAmount * inverseMassOther;
-            }
+            Position += correction;
+        }
+    
+        if (!collidable.IsStatic)
+        {
+            collidable.Position += otherCorrection;
         }
 
         Velocity = velocity;
         collidable.Velocity = otherVelocity;
     }
 
-    public override void Draw(Camera camera)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    {
+        // no new behavior to add
+    }
+
+    protected override void OnDraw(Camera camera)
     {
         // no new behavior to add
     }

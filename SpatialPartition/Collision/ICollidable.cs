@@ -14,7 +14,8 @@ public interface ICollidable : IRenderable
     public bool IsStatic { get; set; }
     public int Mass { get; }
     public void Update(GameTime gameTime, Controls controls);
-    public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap);
+    public void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
+    public void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
 
     public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation, out Rectangle? overlap)
     {

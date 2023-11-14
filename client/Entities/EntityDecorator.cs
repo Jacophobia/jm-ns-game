@@ -1,7 +1,9 @@
 ﻿using IO.Input;
+using IO.Output;
 using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using SpatialPartition.Collision;
 
 namespace client.Entities;
 
@@ -94,7 +96,32 @@ public abstract class EntityDecorator : Entity
     public sealed override void Update(GameTime gameTime, Controls controls)
     {
         OnUpdate(gameTime, controls);
+        _base.Update(gameTime, controls);
+    }
+    
+    protected abstract void OnUpdate(GameTime gameTime, Controls controls);
+
+    public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    {
+        OnHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
+        _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
     }
 
-    protected abstract void OnUpdate(GameTime gameTime, Controls controls);
+    protected abstract void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
+    
+    public sealed override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    {
+        OnHandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
+        _base.HandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
+    }
+
+    protected abstract void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
+
+    public sealed override void Draw(Camera camera)
+    {
+        OnDraw(camera);
+        _base.Draw(camera);
+    }
+
+    protected abstract void OnDraw(Camera camera);
 }

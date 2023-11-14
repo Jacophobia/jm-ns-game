@@ -44,18 +44,46 @@ public class EntityBuilder
     }
     private bool VelocitySet
     {
+        set => _requiredFields[8] = value;
+    }
+    private bool PositionSet
+    {
+        get => _requiredFields[9];
         set => _requiredFields[9] = value;
     }
 
-    private readonly bool[] _requiredFields = new bool[10];
+    private bool WidthSet
+    {
+        get => _requiredFields[10];
+        set => _requiredFields[10] = value;
+    }
+
+    private bool HeightSet
+    {
+        get => _requiredFields[11];
+        set => _requiredFields[11] = value;
+    }
+
+    private bool RestitutionCoefficientSet
+    {
+        get => _requiredFields[12];
+        set => _requiredFields[12] = value;
+    }
+
+    private readonly bool[] _requiredFields = new bool[13];
     private readonly ICollection<Action> _addDecorators;
     private Entity _entity;
 
-    public EntityBuilder(Texture2D texture = null, Rectangle? destination = null, Rectangle? source = null,
+    private int _width;
+    private int _height;
+
+    public EntityBuilder(Texture2D texture = null, Vector2? position = null, int? width = null, int? height = null,
+        Rectangle? source = null,
         Color? color = null, float? rotation = null, Point? origin = null, SpriteEffects? effect = null,
-        float? depth = null, Vector2? velocity = null)
+        float? depth = null, Vector2? velocity = null, float? restitutionCoefficient = null)
     {
         _entity = new BaseEntity();
+        _addDecorators = new List<Action>();
 
         if (texture != null)
         {
@@ -64,10 +92,16 @@ public class EntityBuilder
             TextureSet = true;
         }
 
-        if (destination.HasValue)
+        if (position.HasValue)
         {
-            _entity.Destination = destination.Value;
-            DestinationSet = true;
+            _entity.Position = position.Value;
+            PositionSet = true;
+
+            if (width.HasValue && height.HasValue)
+            {
+                _entity.Destination = new Rectangle((int)position.Value.X, (int)position.Value.Y, width.Value, height.Value);
+                DestinationSet = true;
+            }
         }
 
         if (source.HasValue)
@@ -111,6 +145,12 @@ public class EntityBuilder
             _entity.Velocity = velocity.Value;
             VelocitySet = true;
         }
+
+        if (restitutionCoefficient.HasValue)
+        {
+            _entity.RestitutionCoefficient = restitutionCoefficient.Value;
+            RestitutionCoefficientSet = true;
+        }
     }
     
     public EntityBuilder SetTexture(Texture2D texture)
@@ -121,10 +161,38 @@ public class EntityBuilder
         return this;
     }
 
-    public EntityBuilder SetDestination(Rectangle destination)
+    private void TrySetDestination()
     {
-        _entity.Destination = destination;
+        if (!PositionSet || !WidthSet || !HeightSet)
+        {
+            return;
+        }
+        
+        _entity.Destination = new Rectangle((int)_entity.Position.X, (int)_entity.Position.Y, _width, _height);
         DestinationSet = true;
+    }
+
+    public EntityBuilder SetPosition(Vector2 position)
+    {
+        _entity.Position = position;
+        PositionSet = true;
+        TrySetDestination();
+        return this;
+    }
+
+    public EntityBuilder SetWidth(int width)
+    {
+        _width = width;
+        WidthSet = true;
+        TrySetDestination();
+        return this;
+    }
+
+    public EntityBuilder SetHeight(int height)
+    {
+        _height = height;
+        HeightSet = true;
+        TrySetDestination();
         return this;
     }
 
@@ -174,6 +242,13 @@ public class EntityBuilder
     {
         _entity.Velocity = velocity;
         VelocitySet = true;
+        return this;
+    }
+
+    public EntityBuilder SetRestitutionCoefficient(float restitutionCoefficient)
+    {
+        _entity.RestitutionCoefficient = restitutionCoefficient;
+        RestitutionCoefficientSet = true;
         return this;
     }
 

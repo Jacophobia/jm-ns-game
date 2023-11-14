@@ -14,12 +14,17 @@ public class Inertia : EntityDecorator
         // no new behavior to add
     }
 
-    public override void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
     {
         // no new behavior to add
     }
 
-    public override void Draw(Camera camera)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    {
+        // no new behavior to add
+    }
+
+    protected override void OnDraw(Camera camera)
     {
         // no new behavior to add
     }

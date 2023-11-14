@@ -7,16 +7,23 @@ using SpatialPartition.Collision;
 
 namespace client.Decorators;
 
-public class Gravity : EntityDecorator
+public class Drag : EntityDecorator
 {
-    public Gravity(Entity @base) : base(@base)
+    private readonly float _rate;
+    
+    public Drag(Entity @base, float rate) : base(@base)
     {
-        // no new behavior to add
+        _rate = rate;
+    }
+
+    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    {
+        Velocity -= Velocity * _rate * gameTime.DeltaTime();
     }
 
     protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
     {
-        // no new behavior to add
+        Velocity -= Velocity * _rate * 2 * gameTime.DeltaTime();
     }
 
     protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
@@ -27,10 +34,5 @@ public class Gravity : EntityDecorator
     protected override void OnDraw(Camera camera)
     {
         // no new behavior to add
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
-    {
-        Velocity = new Vector2(Velocity.X, Velocity.Y - 9.8f * gameTime.DeltaTime());
     }
 }

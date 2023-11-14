@@ -1,4 +1,5 @@
-﻿using client.Entities;
+﻿using System;
+using client.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
@@ -15,12 +16,17 @@ public class Bound : EntityDecorator
         _bounds = bounds;
     }
 
-    public override void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
     {
         // no new behavior to add
     }
 
-    public override void Draw(Camera camera)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    {
+        // no new behavior to add
+    }
+
+    protected override void OnDraw(Camera camera)
     {
         // no new behavior to add
     }
@@ -29,10 +35,14 @@ public class Bound : EntityDecorator
     {
         var velocity = Velocity;
         
-        if ((Destination.Left < _bounds.Left && velocity.X < 0) || (Destination.Right > _bounds.Right && velocity.X > 0))
-            velocity.X = 0f;
-        if ((Destination.Bottom < _bounds.Bottom && velocity.Y < 0) || (Destination.Top > _bounds.Top && velocity.Y > 0))
-            velocity.Y = 0f;
+        if (Destination.X < _bounds.Left)
+            velocity.X = MathF.Abs(velocity.X);
+        if (Destination.X > _bounds.Right - Destination.Width)
+            velocity.X = MathF.Abs(velocity.X) * -1;
+        if (Destination.Y < _bounds.Top)
+            velocity.Y = MathF.Abs(velocity.Y);
+        if (Destination.Y > _bounds.Bottom - Destination.Height)
+            velocity.Y = MathF.Abs(velocity.Y) * -1;
 
         Velocity = velocity;
     }

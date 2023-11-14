@@ -160,7 +160,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             HandlePartitionTransitions(element, previousIndices, currentIndices);
 
-            CheckForCollisions(element, currentIndices);
+            CheckForCollisions(element, gameTime, currentIndices);
 
             _hashSetPool.Return(previousIndices, currentIndices);
         }
@@ -219,7 +219,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
-    private void CheckForCollisions(T element, HashSet<Vector2> indices)
+    private void CheckForCollisions(T element, GameTime gameTime, HashSet<Vector2> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
@@ -232,7 +232,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                         
                         GetPartitionIndices(other, beforeIndices);
                         
-                        element.HandleCollisionWith(other, location, overlap);
+                        element.HandleCollisionWith(other, gameTime, location, overlap);
                         
                         GetPartitionIndices(other, afterIndices);
                         

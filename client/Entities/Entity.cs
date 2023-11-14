@@ -25,7 +25,8 @@ public abstract class Entity : ICollidable
     public abstract bool IsStatic { get; set; }
     public int Mass => Destination.Width * Destination.Height;
     
-    public abstract void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap);
+    public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
+    public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
     public abstract void Update(GameTime gameTime, Controls controls);
     public abstract void Draw(Camera camera);
 
