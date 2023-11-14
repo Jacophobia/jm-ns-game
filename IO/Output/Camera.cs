@@ -1,4 +1,5 @@
-﻿using IO.Extensions;
+﻿using System;
+using IO.Extensions;
 using IO.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -11,8 +12,8 @@ public class Camera
     {
         get
         {
-            _view.X = (int)_position.X;
-            _view.Y = (int)_position.Y;
+            _view.X = (int)MathF.Round(_position.X);
+            _view.Y = (int)MathF.Round(_position.Y);
             return _view;
         }
     }

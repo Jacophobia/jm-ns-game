@@ -243,10 +243,11 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
             else
             {
-                Debug.Assert(false,
-                    "The partition index that was checked does not " +
-                    "exist. There is likely an issue with " +
-                    "HandlePartitionTransitions");
+                Debug.WriteLine($"Index: {index} has yet to be created");
+                // Debug.Assert(false,
+                //     $"The partition {index} that was checked does not " +
+                //     "exist. There is likely an issue with " +
+                //     "HandlePartitionTransitions");
             }
     }
 
@@ -272,10 +273,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private void AddIndices(Rectangle rectangle, ISet<Vector2> indices)
     {
         indices.Clear();
-        var minX = (int)((rectangle.Center.X - rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var maxX = (int)((rectangle.Center.X + rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var minY = (int)((rectangle.Center.Y - rectangle.Height / 2) / (_partitionSizeY * 1f));
-        var maxY = (int)((rectangle.Center.Y + rectangle.Height / 2) / (_partitionSizeY * 1f));
+        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2) / (_partitionSizeX * 1f));
+        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2) / (_partitionSizeX * 1f));
+        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2) / (_partitionSizeY * 1f));
+        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)

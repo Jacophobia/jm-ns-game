@@ -61,10 +61,27 @@ public abstract class EntityDecorator : Entity
         set => _base.Depth = value;
     }
 
+    public override Vector2 Position
+    {
+        get => _base.Position;
+        set => _base.Position = value;
+    }
+
     public sealed override Vector2 Velocity
     {
         get => _base.Velocity;
         set => _base.Velocity = value;
+    }
+
+    public sealed override float RestitutionCoefficient
+    {
+        get => _base.RestitutionCoefficient;
+        set => _base.RestitutionCoefficient = value;
+    }
+    public sealed override bool IsStatic
+    {
+        get => _base.IsStatic;
+        set => _base.IsStatic = value;
     }
 
     private readonly Entity _base;

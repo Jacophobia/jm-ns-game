@@ -1,5 +1,4 @@
 ﻿using client.Entities;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
@@ -7,11 +6,11 @@ using SpatialPartition.Collision;
 
 namespace client.Decorators;
 
-public class Inertia : EntityDecorator
+public class Static : EntityDecorator
 {
-    public Inertia(Entity @base) : base(@base)
+    public Static(Entity @base) : base(@base)
     {
-        // no new behavior to add
+        IsStatic = true;
     }
 
     public override void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap)
@@ -26,6 +25,6 @@ public class Inertia : EntityDecorator
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        Position += Velocity * gameTime.DeltaTime();
+        // no new behavior to add
     }
 }

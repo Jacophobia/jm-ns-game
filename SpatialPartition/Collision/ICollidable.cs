@@ -8,7 +8,11 @@ namespace SpatialPartition.Collision;
 public interface ICollidable : IRenderable
 {
     public Sprite Sprite { get; }
+    public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
+    public float RestitutionCoefficient { get; set; }
+    public bool IsStatic { get; set; }
+    public int Mass { get; }
     public void Update(GameTime gameTime, Controls controls);
     public void HandleCollisionWith(ICollidable collidable, Vector2? collisionLocation, Rectangle? overlap);
 
