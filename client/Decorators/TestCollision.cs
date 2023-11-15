@@ -104,7 +104,7 @@ public class TestCollision : EntityDecorator
         collidable.HandleCollisionFrom(this, gameTime, collisionLocation, overlap);
     }
 
-    protected override void OnDraw(Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera camera)
     {
         // no new behavior to add
     }

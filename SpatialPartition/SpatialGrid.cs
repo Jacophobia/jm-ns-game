@@ -5,11 +5,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
@@ -170,7 +168,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 #endif
     }
 
-    public void Draw(SpriteBatch spriteBatch, Camera camera, GameTime gameTime)
+    public void Draw(Renderer renderer, Camera camera, GameTime gameTime)
     {
         var indices = _hashSetPool.Get();
 
@@ -178,7 +176,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         {
             if (element.Destination.Intersects(camera.View))
             {
-                spriteBatch.Draw(element, camera);
+                renderer.Render(element, camera);
             }
         }
         

@@ -6,12 +6,10 @@ using client.Entities;
 using IO.Extensions;
 using IO.Input;
 using IO.Output;
-using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using SpatialPartition;
-using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
 namespace client.Controllers;
@@ -21,6 +19,7 @@ public class Test2 : Game
     private readonly ISpatialPartition<Entity> _spatialGrid;
     private GraphicsDeviceManager _graphics;
     private SpriteBatch _spriteBatch;
+    private Renderer _renderer;
     private Listener _listener;
     private Camera _camera;
     private Texture2D _background;
@@ -74,6 +73,7 @@ public class Test2 : Game
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
         _listener = new Listener(new Dictionary<Buttons, Controls>()); // TODO: Put in the actual control mappings
+        _renderer = new Renderer(GraphicsDevice, _spriteBatch);
         _background = new Texture2D(GraphicsDevice, 1, 1);
         _background.SetData(new[] { Color.Black }); // Set the pixel to black
         var ballTexture = Content.Load<Texture2D>("Test/ball");
@@ -134,12 +134,10 @@ public class Test2 : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        GraphicsDevice.Clear(Color.White);
-
-        _spriteBatch.Begin();
+        _renderer.Begin();
         _spriteBatch.Draw(_background, _backgroundSize, Color.Black, _camera);
-        _spatialGrid.Draw(_spriteBatch, _camera, gameTime);
-        _spriteBatch.End();
+        _spatialGrid.Draw(_renderer, _camera, gameTime);
+        _renderer.End();
 
         base.Draw(gameTime);
     }
