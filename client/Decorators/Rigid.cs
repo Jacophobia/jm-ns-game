@@ -27,14 +27,15 @@ public class Rigid : EntityDecorator
 
         // Rewind(collidable);
 
-        var velocity = Velocity;
-        var otherVelocity = collidable.Velocity;
         
         // Skip processing if both objects are static
         if (IsStatic && collidable.IsStatic)
         {
             return;
         }
+        
+        var velocity = Velocity;
+        var otherVelocity = collidable.Velocity;
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var n = collidable.Position - Position;
@@ -80,29 +81,6 @@ public class Rigid : EntityDecorator
             velocity.Y = newV1N * n.Y + v1T * n.X;
             otherVelocity.X = newV2N * n.X - v2T * n.Y;
             otherVelocity.Y = newV2N * n.Y + v2T * n.X;
-        }
-        
-        // Positional correction
-        var correctionDirection = CalculateDirection(Position, collidable.Position);
-        var otherCorrectionDirection = CalculateDirection(collidable.Position, Position);
-        var penetrationDepth = MathF.Sqrt(overlap.Value.Width * overlap.Value.Width + overlap.Value.Height * overlap.Value.Height);
-        const float positionalCorrectionFactor = 0.1f; // Adjust this factor as needed
-        
-        // Calculate inverse mass (0 for static objects)
-        var inverseMassThis = IsStatic ? 0f : 1f / Mass;
-        var inverseMassOther = collidable.IsStatic ? 0f : 1f / collidable.Mass;
-        var totalInverseMass = inverseMassThis + inverseMassOther;
-        var correction = correctionDirection * penetrationDepth * positionalCorrectionFactor / totalInverseMass * inverseMassThis;
-        var otherCorrection = otherCorrectionDirection * penetrationDepth * positionalCorrectionFactor / totalInverseMass * inverseMassOther;
-        
-        if (!IsStatic)
-        {
-            Position += correction;
-        }
-    
-        if (!collidable.IsStatic)
-        {
-            collidable.Position += otherCorrection;
         }
 
         Velocity = velocity;

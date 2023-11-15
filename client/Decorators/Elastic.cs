@@ -30,23 +30,6 @@ public class Elastic : EntityDecorator
                    newOverlap.Value,
                    out _);
     }
-    
-    private void Rewind(ICollidable collidable, GameTime gameTime)
-    { 
-        // Position -= Velocity * gameTime.DeltaTime();
-        // collidable.Position -= collidable.Velocity * gameTime.DeltaTime();
-        
-        var direction = CalculateDirection(Position, collidable.Position);
-        direction.Normalize();
-        
-        do
-        {
-            if (!IsStatic)
-                Position += direction * Velocity.Length() * gameTime.DeltaTime();
-            if (!collidable.IsStatic)
-                collidable.Position -= direction * collidable.Velocity.Length() * gameTime.DeltaTime();
-        } while (CollidesWith(collidable));
-    }
 
     protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
     {
@@ -80,8 +63,6 @@ public class Elastic : EntityDecorator
         collidable.Velocity = new Vector2(newV2n * nx - v2t * ny, newV2n * ny + v2t * nx);
 
         Velocity = velocity;
-
-        Rewind(collidable, gameTime);
     }
 
 

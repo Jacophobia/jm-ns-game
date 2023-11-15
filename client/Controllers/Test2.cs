@@ -104,6 +104,7 @@ public class Test2 : Game
                 .SetRestitutionCoefficient(0.8f)
                 // .AddDecorator<Drag>(0.01f)
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
+                .AddDecorator<Elastic>()
                 .AddDecorator<PreventOverlap>()
                 .AddDecorator<Inertia>()
                 .Build();
