@@ -24,7 +24,7 @@ public class Gravity : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnDraw(Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera camera)
     {
         // no new behavior to add
     }

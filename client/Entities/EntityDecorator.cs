@@ -117,11 +117,11 @@ public abstract class EntityDecorator : Entity
 
     protected abstract void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
 
-    public sealed override void Draw(Camera camera)
+    public sealed override void Draw(Renderer renderer, Camera camera)
     {
-        OnDraw(camera);
-        _base.Draw(camera);
+        OnDraw(renderer, camera);
+        _base.Draw(renderer, camera);
     }
 
-    protected abstract void OnDraw(Camera camera);
+    protected abstract void OnDraw(Renderer renderer, Camera camera);
 }

@@ -55,9 +55,8 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void Draw(Camera camera)
+    public override void Draw(Renderer renderer, Camera camera)
     {
-        // We don't do anything. Entity behavior will be handled by the 
-        //  decorators.
+        renderer.Render(this, camera);
     }
 }

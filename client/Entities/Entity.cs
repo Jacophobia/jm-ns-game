@@ -28,7 +28,7 @@ public abstract class Entity : ICollidable
     public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
     public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
     public abstract void Update(GameTime gameTime, Controls controls);
-    public abstract void Draw(Camera camera);
+    public abstract void Draw(Renderer renderer, Camera camera);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {
