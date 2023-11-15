@@ -25,8 +25,11 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private int _partitionSizeX;
     private int _partitionSizeY;
 
-    public SpatialGrid()
+    private float _deltatime; // TODO: Find a way to not store this
+
+    public SpatialGrid(GameTime gameTime)
     {
+        _deltatime = gameTime.DeltaTime();
         _elements = new List<T>();
         _hashSetPool = new ObjectPool<HashSet<Vector2>>();
         _partitionSizeX = 0;
@@ -37,7 +40,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 #endif
     }
 
-    public SpatialGrid(IEnumerable<T> elements) : this()
+    public SpatialGrid(GameTime gameTime, IEnumerable<T> elements) : this(gameTime)
     {
         Add(elements);
     }
@@ -147,6 +150,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     public void Update(GameTime gameTime, Controls controls)
     {
+        _deltatime = gameTime.DeltaTime();
+        
         foreach (var element in _elements)
         {
             var previousIndices = _hashSetPool.Get();
@@ -273,10 +278,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private void AddIndices(Rectangle rectangle, ISet<Vector2> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2) / (_partitionSizeY * 1f));
-        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2) / (_partitionSizeY * 1f));
+        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2f) / (_partitionSizeX * 1f));
+        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2f) / (_partitionSizeX * 1f));
+        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2f) / (_partitionSizeY * 1f));
+        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2f) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
@@ -285,7 +290,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     private void GetPartitionIndices(T item, ISet<Vector2> indices)
     {
-        AddIndices(item.Destination, indices);
+        AddIndices(item.GetPath(_deltatime), indices);
     }
 
     private void UpdateAverages(T item)

@@ -16,10 +16,10 @@ public class Sprite
         _collisionData = new CollisionData(texture);
     }
 
-    public static bool Overlaps(Rectangle lhsDestination, Rectangle rhsDestination, out Rectangle? overlap)
+    public static bool Overlaps(Rectangle lhs, Rectangle rhs, out Rectangle? overlap)
     {
         // Find the intersection rectangle
-        overlap = Rectangle.Intersect(lhsDestination, rhsDestination);
+        overlap = Rectangle.Intersect(lhs, rhs);
 
         // Check if there is an intersection
         if (overlap is not { IsEmpty: true })

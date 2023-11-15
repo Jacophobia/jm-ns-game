@@ -30,7 +30,7 @@ public class Test2 : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        _spatialGrid = new SpatialGrid<Entity>();
+        _spatialGrid = new SpatialGrid<Entity>(new GameTime());
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
         
@@ -102,10 +102,10 @@ public class Test2 : Game
                 .SetRotation(0f)
                 .SetVelocity(new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * (1f / 0.016f))
                 .SetRestitutionCoefficient(0.8f)
+                // .AddDecorator<Drag>(0.01f)
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
-                .AddDecorator<Elastic>()
+                .AddDecorator<PreventOverlap>()
                 .AddDecorator<Inertia>()
-                .AddDecorator<Drag>(0.001f)
                 .Build();
 
             if (i == 0)

@@ -1,4 +1,6 @@
-﻿using IO.Input;
+﻿using System;
+using IO.Extensions;
+using IO.Input;
 using IO.Interfaces;
 using IO.Sprites;
 using Microsoft.Xna.Framework;
@@ -10,6 +12,24 @@ public interface ICollidable : IRenderable
     public Sprite Sprite { get; }
     public Vector2 Position { get; set; }
     public Vector2 Velocity { get; set; }
+    public Rectangle GetPath(float deltaTime)
+    {
+        var endPosition = Position + Velocity * deltaTime;
+        // Calculate the min and max points
+        var minX = Math.Min(Position.X, endPosition.X);
+        var minY = Math.Min(Position.Y, endPosition.Y);
+        var maxX = Math.Max(Position.X, endPosition.X);
+        var maxY = Math.Max(Position.Y, endPosition.Y);
+
+        // Adjust the points to account for the dimensions of the entity
+        minX -= Destination.Width / 2f;
+        minY -= Destination.Height / 2f;
+        maxX += Destination.Width / 2f;
+        maxY += Destination.Height / 2f;
+
+        // Create and return the path rectangle
+        return new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
+    }
     public float RestitutionCoefficient { get; set; }
     public bool IsStatic { get; set; }
     public int Mass { get; }
