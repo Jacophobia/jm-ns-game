@@ -28,7 +28,8 @@ public static class SpriteBatchExtensions
         );
     }
 
-    public static void Draw(this SpriteBatch spriteBatch, Texture2D texture, Rectangle destination, Color color, Camera camera)
+    public static void Draw(this SpriteBatch spriteBatch, Texture2D texture, Rectangle destination, Color color,
+        Camera camera)
     {
         var relativeDestination = new Rectangle(
             destination.X - camera.View.X,
@@ -36,7 +37,7 @@ public static class SpriteBatchExtensions
             destination.Width,
             destination.Height
         );
-        
+
         spriteBatch.Draw(texture, relativeDestination, color);
     }
 }

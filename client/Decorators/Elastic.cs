@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Diagnostics;
 using client.Entities;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
-using IO.Sprites;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
@@ -16,22 +14,9 @@ public class Elastic : EntityDecorator
     {
         // no new behavior to add
     }
-    
-    private static Vector2 CalculateDirection(Vector2 to, Vector2 from)
-    {
-        return Vector2.Normalize(to - from); // Normalizing to get a unit vector
-    }
 
-    private bool CollidesWith(ICollidable collidable)
-    {
-        return Sprite.Overlaps(Destination, collidable.Destination, out var newOverlap)
-               && newOverlap.HasValue
-               && Sprite.Collides(Sprite, Destination, collidable.Sprite, collidable.Destination,
-                   newOverlap.Value,
-                   out _);
-    }
-
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
         Debug.Assert(overlap != null, "This method should not be called if overlap is null");
@@ -66,7 +51,8 @@ public class Elastic : EntityDecorator
     }
 
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }

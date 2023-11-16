@@ -9,7 +9,6 @@ using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
 namespace SpatialPartition;
@@ -20,11 +19,11 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private readonly ObjectPool<HashSet<Vector2>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
+
+    private float _deltatime; // TODO: Find a way to not store this
     private Dictionary<Vector2, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
-
-    private float _deltatime; // TODO: Find a way to not store this
 
     public SpatialGrid(GameTime gameTime)
     {
@@ -34,9 +33,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _partitionSizeX = 0;
         _partitionSizeY = 0;
 
-#if DEBUG
+        #if DEBUG
         _totalRuntimeStopwatch.Start();
-#endif
+        #endif
     }
 
     public SpatialGrid(GameTime gameTime, IEnumerable<T> elements) : this(gameTime)
@@ -48,14 +47,14 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     public void Dispose()
     {
-#if DEBUG
+        #if DEBUG
         _totalRuntimeStopwatch.Stop();
         var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
         if (!(totalSeconds > 0)) return;
         var updatesPerSecond = _updateCallCount / totalSeconds;
         Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
         Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-#endif
+        #endif
     }
 
     public int Count => Partitions.Values.Sum(partition => partition.Count);
@@ -150,7 +149,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     public void Update(GameTime gameTime, Controls controls)
     {
         _deltatime = gameTime.DeltaTime();
-        
+
         foreach (var element in _elements)
         {
             var previousIndices = _hashSetPool.Get();
@@ -168,10 +167,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             _hashSetPool.Return(previousIndices, currentIndices);
         }
-        
-#if DEBUG
+
+        #if DEBUG
         _updateCallCount++;
-#endif
+        #endif
     }
 
     public void Draw(Renderer renderer, Camera camera, GameTime gameTime)
@@ -179,13 +178,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         var indices = _hashSetPool.Get();
 
         foreach (var element in _elements)
-        {
             if (element.Destination.Intersects(camera.View))
-            {
                 renderer.Render(element, camera);
-            }
-        }
-        
+
         _hashSetPool.Return(indices);
     }
 
@@ -233,15 +228,15 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
-                        
+
                         GetPartitionIndices(other, beforeIndices);
-                        
+
                         element.HandleCollisionWith(other, gameTime, location, overlap);
-                        
+
                         GetPartitionIndices(other, afterIndices);
-                        
+
                         HandlePartitionTransitions(other, beforeIndices, afterIndices);
-                        
+
                         _hashSetPool.Return(beforeIndices, afterIndices);
                     }
             }
@@ -261,7 +256,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             if (!currentIndices.Contains(index))
                 if (Partitions.TryGetValue(index, out var partition))
                     partition.Remove(item);
-        
+
         foreach (var index in currentIndices)
             if (!previousIndices.Contains(index))
             {
@@ -270,6 +265,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                     partition = new HashSet<T>();
                     Partitions[index] = partition;
                 }
+
                 partition.Add(item);
             }
     }
@@ -345,15 +341,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         public void Return(params TPooled[] items)
         {
-            foreach (var item in items)
-            {
-                _items.Push(item);
-            }
+            foreach (var item in items) _items.Push(item);
         }
     }
 
-#if DEBUG
+    #if DEBUG
     private readonly Stopwatch _totalRuntimeStopwatch = new();
     private int _updateCallCount;
-#endif
+    #endif
 }

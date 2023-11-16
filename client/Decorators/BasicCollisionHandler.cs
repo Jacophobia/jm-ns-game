@@ -2,7 +2,7 @@
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
@@ -18,12 +18,33 @@ public class BasicCollisionHandler : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    private static Vector2 CalculateDirection(Vector2 to, Vector2 from)
     {
-        // no new behavior to add
+        return Vector2.Normalize(to - from); // Normalizing to get a unit vector
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
+    {
+        var lhs = this;
+
+        var checks = 0;
+
+        if (lhs.Destination.Left < rhs.Destination.Left) checks++;
+
+        if (lhs.Destination.Right > rhs.Destination.Right) checks++;
+
+        if (lhs.Destination.Top < rhs.Destination.Top) checks++;
+
+        if (lhs.Destination.Bottom > rhs.Destination.Bottom) checks++;
+
+        if (checks >= 4)
+        {
+        }
+    }
+
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }

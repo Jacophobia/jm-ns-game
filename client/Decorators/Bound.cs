@@ -3,25 +3,27 @@ using client.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
 public class Bound : EntityDecorator
 {
     private Rectangle _bounds;
-    
+
     public Bound(Entity @base, Rectangle bounds) : base(@base)
     {
         _bounds = bounds;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }
@@ -34,7 +36,7 @@ public class Bound : EntityDecorator
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
         var velocity = Velocity;
-        
+
         if (Destination.X < _bounds.Left)
             velocity.X = MathF.Abs(velocity.X);
         if (Destination.X > _bounds.Right - Destination.Width)

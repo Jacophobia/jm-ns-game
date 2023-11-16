@@ -1,39 +1,38 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using client.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
 public class Rigid : EntityDecorator
 {
-    public Rigid(Entity @base) : base(@base)
+    private float _restitutionCoefficient;
+
+    public Rigid(Entity @base, float restitutionCoefficient) : base(@base)
     {
-        // no new behavior to add
+        _restitutionCoefficient = restitutionCoefficient;
     }
-    
+
     private static Vector2 CalculateDirection(Vector2 to, Vector2 from)
     {
         return Vector2.Normalize(to - from); // Normalizing to get a unit vector
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
         Debug.Assert(overlap != null, "This method should not be called if overlap is null");
 
         // Rewind(collidable);
 
-        
+
         // Skip processing if both objects are static
-        if (IsStatic && collidable.IsStatic)
-        {
-            return;
-        }
-        
+        if (IsStatic && collidable.IsStatic) return;
+
         var velocity = Velocity;
         var otherVelocity = collidable.Velocity;
 
@@ -48,7 +47,8 @@ public class Rigid : EntityDecorator
         if (IsStatic)
         {
             // If this object is static, only adjust the other object's velocity
-            var newV2N = -collidable.RestitutionCoefficient * (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
+            var newV2N = -collidable.RestitutionCoefficient *
+                         (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
             otherVelocity.X = newV2N * n.X - (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.Y;
             otherVelocity.Y = newV2N * n.Y + (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.X;
         }
@@ -68,12 +68,12 @@ public class Rigid : EntityDecorator
             var v2T = -collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X;
 
             // Apply the restitution coefficient
-            var combinedRestitution = (RestitutionCoefficient + collidable.RestitutionCoefficient) / 2;
+            var combinedRestitution = (RestitutionCoefficient + collidable.RestitutionCoefficient) / 2f;
 
             // Exchange normal components in an inelastic collision
-            var newV1N = combinedRestitution * (v1N * (Mass - collidable.Mass) + 2 * collidable.Mass * v2N) /
+            var newV1N = combinedRestitution * (v1N * (Mass - collidable.Mass) + 2f * collidable.Mass * v2N) /
                          (Mass + collidable.Mass);
-            var newV2N = combinedRestitution * (v2N * (collidable.Mass - Mass) + 2 * Mass * v1N) /
+            var newV2N = combinedRestitution * (v2N * (collidable.Mass - Mass) + 2f * Mass * v1N) /
                          (Mass + collidable.Mass);
 
             // Recompose velocities for both objects
@@ -87,7 +87,8 @@ public class Rigid : EntityDecorator
         collidable.Velocity = otherVelocity;
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }

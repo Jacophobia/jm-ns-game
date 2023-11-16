@@ -6,7 +6,7 @@ using IO.Input;
 using IO.Output;
 using IO.Sprites;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
@@ -21,26 +21,23 @@ public class TestCollision : EntityDecorator
     {
         // no new behavior to add
     }
-    
+
     private void Rewind(ICollidable collidable, GameTime gameTime)
-    { 
+    {
         Position -= Velocity * gameTime.DeltaTime();
         collidable.Position -= collidable.Velocity * gameTime.DeltaTime();
     }
-    
+
     private static Vector2 CalculateDirection(Vector2 to, Vector2 from)
     {
         return Vector2.Normalize(to - from); // Normalizing to get a unit vector
     }
-    
+
     private void AdjustVelocity(ICollidable collidable)
     {
         var velocity = Velocity;
-        
-        if (IsStatic)
-        {
-            return;
-        }
+
+        if (IsStatic) return;
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var nx = collidable.Position.X - Position.X;
@@ -52,7 +49,7 @@ public class TestCollision : EntityDecorator
         // Decompose velocities into normal and tangential components
         var v1N = Velocity.X * nx + Velocity.Y * ny; // Dot product
         var v1T = -Velocity.X * ny + Velocity.Y * nx; // Perpendicular dot product
-        
+
         // Collision with another dynamic object
         var v2N = collidable.Velocity.X * nx + collidable.Velocity.Y * ny;
 
@@ -70,24 +67,25 @@ public class TestCollision : EntityDecorator
         Velocity = velocity;
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         AdjustVelocity(collidable);
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
         Debug.Assert(overlap != null, "This method should not be called if overlap is null");
 
         var tries = 0;
-        
+
         var direction = CalculateDirection(Position, collidable.Position);
         direction.Normalize();
-        
+
         do
         {
-
             if (!IsStatic)
                 Position += direction;
             if (!collidable.IsStatic)
@@ -96,10 +94,10 @@ public class TestCollision : EntityDecorator
             tries++;
         } while (Sprite.Overlaps(Destination, collidable.Destination, out var newOverlap)
                  && newOverlap.HasValue
-                 && Sprite.Collides(Sprite, Destination, collidable.Sprite, collidable.Destination, 
+                 && Sprite.Collides(Sprite, Destination, collidable.Sprite, collidable.Destination,
                      newOverlap.Value,
                      out _));
-        
+
         AdjustVelocity(collidable);
         collidable.HandleCollisionFrom(this, gameTime, collisionLocation, overlap);
     }

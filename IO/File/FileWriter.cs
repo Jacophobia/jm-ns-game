@@ -17,14 +17,11 @@ public static class FileWriter
     {
         Save(filepath, csv.Select(row => string.Join(",", row.Select(cell => cell.ToString()))));
     }
-    
+
     public static void Save(string filepath, IEnumerable<string> csv)
     {
         using var writer = new StreamWriter(filepath);
-        
-        foreach (var row in csv)
-        {
-            writer.WriteLine(row);
-        }
+
+        foreach (var row in csv) writer.WriteLine(row);
     }
 }

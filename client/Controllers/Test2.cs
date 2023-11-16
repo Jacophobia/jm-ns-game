@@ -17,13 +17,13 @@ namespace client.Controllers;
 public class Test2 : Game
 {
     private readonly ISpatialPartition<Entity> _spatialGrid;
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch _spriteBatch;
-    private Renderer _renderer;
-    private Listener _listener;
-    private Camera _camera;
     private Texture2D _background;
-    private Rectangle _backgroundSize;
+    private readonly Rectangle _backgroundSize;
+    private Camera _camera;
+    private readonly GraphicsDeviceManager _graphics;
+    private Listener _listener;
+    private Renderer _renderer;
+    private SpriteBatch _spriteBatch;
 
     public Test2()
     {
@@ -32,7 +32,7 @@ public class Test2 : Game
         _spatialGrid = new SpatialGrid<Entity>(new GameTime());
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
-        
+
         using var adapter = GraphicsAdapter.DefaultAdapter;
 
         // Get the current display mode of the primary monitor
@@ -60,15 +60,6 @@ public class Test2 : Game
         return randomNum;
     }
 
-    private static int GetOddRandom(int min, int max)
-    {
-        Debug.Assert(min != max || min % 2 == 1);
-        var random = new Random();
-        var randomNum = 0;
-        while (randomNum % 2 != 1) randomNum = random.Next(min, max);
-        return randomNum;
-    }
-
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -89,24 +80,16 @@ public class Test2 : Game
                 new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
             var size = random.Next(minBallSize, maxBallSize);
 
-            var entity = new EntityBuilder()
-                .SetColor(Color.White)
-                .SetDepth(0f)
-                .SetEffect(SpriteEffects.None)
-                .SetTexture(ballTexture)
-                .SetSource(ballTexture.Bounds)
-                .SetWidth(size * (numBalls - i))
-                .SetHeight(size * (numBalls - i))
-                .SetPosition(ballPosition)
-                .SetOrigin(new Point(size / 2, size / 2))
-                .SetRotation(0f)
-                .SetVelocity(new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * (1f / 0.016f))
-                .SetRestitutionCoefficient(0.8f)
-                // .AddDecorator<Drag>(0.01f)
-                .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
-                .AddDecorator<Elastic>()
-                .AddDecorator<PreventOverlap>()
+            var entity = new EntityBuilder(
+                    ballTexture,
+                    ballPosition,
+                    new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * (1f / 0.016f),
+                    size * (numBalls - i),
+                    size * (numBalls - i))
                 .AddDecorator<Inertia>()
+                .AddDecorator<PreventOverlap>()
+                .AddDecorator<Elastic>()
+                .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .Build();
 
             if (i == 0)
@@ -115,7 +98,7 @@ public class Test2 : Game
                 newDestination.Size = new Point(maxBallSize * 2, maxBallSize * 2);
                 _camera = new Camera(entity, 1, Vector3.Up * 100);
             }
-            
+
             _spatialGrid.Add(entity);
         }
     }
@@ -143,4 +126,3 @@ public class Test2 : Game
         base.Draw(gameTime);
     }
 }
-

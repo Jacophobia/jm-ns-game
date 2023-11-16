@@ -9,11 +9,8 @@ public static class FileReader
     public static IEnumerable<string> GetImages(string subfolder = "")
     {
         const string contentRoot = "Content/";
-        
-        if (!Directory.Exists(contentRoot + subfolder))
-        {
-            return new List<string>();
-        }
+
+        if (!Directory.Exists(contentRoot + subfolder)) return new List<string>();
 
         return Directory
             .GetFiles(contentRoot + subfolder)
@@ -25,10 +22,7 @@ public static class FileReader
     {
         using var reader = new StreamReader(filepath);
 
-        while (!reader.EndOfStream)
-        {
-            yield return reader.ReadLine();
-        }
+        while (!reader.EndOfStream) yield return reader.ReadLine();
     }
 
     public static IEnumerable<int[]> ReadCsv(string filepath)
