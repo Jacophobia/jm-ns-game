@@ -61,14 +61,7 @@ public class PreventOverlap : EntityDecorator
 
             tries++;
         }
-        // if they are separating then don't stop them
-
-
-        // calculate the previous position of each ICollidable
-        // see if their paths intersected. Width & height need to be 
-        // into account
-        // if they did, change their position so that they are right
-        // where they were before they collided.
+        
     }
 
 

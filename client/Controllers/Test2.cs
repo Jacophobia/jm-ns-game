@@ -72,7 +72,7 @@ public class Test2 : Game
         var random = new Random();
         const int minBallSize = 1;
         const int maxBallSize = 5;
-        const int numBalls = 26;
+        const int numBalls = 20;
 
         for (var i = 0; i < numBalls; i++)
         {
@@ -84,16 +84,17 @@ public class Test2 : Game
                     ballTexture,
                     ballPosition,
                     new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * (1f / 0.016f),
-                    size * (numBalls - i),
-                    size * (numBalls - i))
+                    50,//size * (numBalls - i),
+                    50)//size * (numBalls - i))
                 .AddDecorator<Inertia>()
-                .AddDecorator<PreventOverlap>()
+                // .AddDecorator<PreventOverlap>()
                 .AddDecorator<Rigid>()
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .Build();
 
             if (i == 0)
             {
+                entity.Color = Color.Red;
                 var newDestination = entity.Destination;
                 newDestination.Size = new Point(maxBallSize * 2, maxBallSize * 2);
                 _camera = new Camera(entity, 1, Vector3.Up * 100);

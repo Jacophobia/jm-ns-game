@@ -37,13 +37,13 @@ public class Bound : EntityDecorator
     {
         var velocity = Velocity;
 
-        if (Destination.X < _bounds.Left)
+        if (Destination.X < _bounds.Left + Destination.Width / 2)
             velocity.X = MathF.Abs(velocity.X);
-        if (Destination.X > _bounds.Right - Destination.Width)
+        if (Destination.X > _bounds.Right - Destination.Width / 2)
             velocity.X = MathF.Abs(velocity.X) * -1;
-        if (Destination.Y < _bounds.Top)
+        if (Destination.Y < _bounds.Top + Destination.Height / 2)
             velocity.Y = MathF.Abs(velocity.Y);
-        if (Destination.Y > _bounds.Bottom - Destination.Height)
+        if (Destination.Y > _bounds.Bottom - Destination.Height / 2)
             velocity.Y = MathF.Abs(velocity.Y) * -1;
 
         Velocity = velocity;
