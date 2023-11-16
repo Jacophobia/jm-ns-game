@@ -6,9 +6,9 @@ using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
-public class BasicCollisionHandler : EntityDecorator
+public class RectangularCollision : EntityDecorator
 {
-    public BasicCollisionHandler(Entity @base) : base(@base)
+    public RectangularCollision(Entity @base) : base(@base)
     {
         // no new behavior to add
     }

@@ -9,9 +9,9 @@ using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
-public class Rigid : EntityDecorator
+public class CircularCollision : EntityDecorator
 {
-    public Rigid(Entity @base) : base(@base)
+    public CircularCollision(Entity @base) : base(@base)
     {
         // no new behavior to add
     }
@@ -102,6 +102,8 @@ public class Rigid : EntityDecorator
 
         Velocity = velocity;
         collidable.Velocity = otherVelocity;
+        // TODO: To make it so that two types of collision can interact, the OnHandleCollisionFrom method should be called on the other object and it should be up to that object whether or not it moves.
+        // TODO: We may also need to recalculate so that this method uses the RHS center coordinate which is closest to LHS 
     }
 
 

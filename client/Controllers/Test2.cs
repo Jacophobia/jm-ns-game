@@ -29,7 +29,7 @@ public class Test2 : Game
     {
         _graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
-        _spatialGrid = new SpatialGrid<Entity>(new GameTime());
+        _spatialGrid = new SpatialGrid<Entity>();
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
 
@@ -63,7 +63,11 @@ public class Test2 : Game
     protected override void LoadContent()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _listener = new Listener(new Dictionary<Buttons, Controls>()); // TODO: Put in the actual control mappings
+        _listener = new Listener(new Dictionary<Keys, Controls>
+        {
+            { Keys.A, Controls.Left },
+            { Keys.E, Controls.Right }
+        }); // TODO: Put in the actual control mappings
         _renderer = new Renderer(GraphicsDevice, _spriteBatch);
         _background = new Texture2D(GraphicsDevice, 1, 1);
         _background.SetData(new[] { Color.Black }); // Set the pixel to black
@@ -84,12 +88,12 @@ public class Test2 : Game
                     ballTexture,
                     ballPosition,
                     new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * (1f / 0.016f),
-                    50,//size * (numBalls - i),
-                    50)//size * (numBalls - i))
-                .AddDecorator<Inertia>()
+                    size * (numBalls - i),
+                    size * (numBalls - i))
                 // .AddDecorator<PreventOverlap>()
-                .AddDecorator<Rigid>()
+                .AddDecorator<CircularCollision>()
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
+                .AddDecorator<Inertia>()
                 .Build();
 
             if (i == 0)
@@ -98,6 +102,10 @@ public class Test2 : Game
                 var newDestination = entity.Destination;
                 newDestination.Size = new Point(maxBallSize * 2, maxBallSize * 2);
                 _camera = new Camera(entity, 1, Vector3.Up * 100);
+            }
+            else
+            {
+                _camera.Add(entity);
             }
 
             _spatialGrid.Add(entity);

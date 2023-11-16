@@ -47,6 +47,11 @@ public class Camera
         }
     }
 
+    public void Add(IRenderable renderable)
+    {
+        _objectsToFollow.Add(renderable);
+    }
+
     public void Update(GameTime gameTime, Controls controls)
     {
         _position.X += (_objectsToFollow[_currentObject].Destination.Center.X - _offset.X - _view.Center.X)

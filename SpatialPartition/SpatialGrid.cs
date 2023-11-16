@@ -19,15 +19,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private readonly ObjectPool<HashSet<Vector2>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
-
-    private float _deltatime; // TODO: Find a way to not store this
     private Dictionary<Vector2, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
 
-    public SpatialGrid(GameTime gameTime)
+    public SpatialGrid()
     {
-        _deltatime = gameTime.DeltaTime();
         _elements = new List<T>();
         _hashSetPool = new ObjectPool<HashSet<Vector2>>();
         _partitionSizeX = 0;
@@ -38,7 +35,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         #endif
     }
 
-    public SpatialGrid(GameTime gameTime, IEnumerable<T> elements) : this(gameTime)
+    public SpatialGrid(IEnumerable<T> elements) : this()
     {
         Add(elements);
     }
@@ -148,8 +145,6 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     public void Update(GameTime gameTime, Controls controls)
     {
-        _deltatime = gameTime.DeltaTime();
-
         foreach (var element in _elements)
         {
             var previousIndices = _hashSetPool.Get();
@@ -285,7 +280,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     private void GetPartitionIndices(T item, ISet<Vector2> indices)
     {
-        AddIndices(item.GetPath(_deltatime), indices);
+        AddIndices(item.Destination, indices);
     }
 
     private void UpdateAverages(T item)
