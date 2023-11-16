@@ -88,7 +88,7 @@ public class Test2 : Game
                     size * (numBalls - i))
                 .AddDecorator<Inertia>()
                 .AddDecorator<PreventOverlap>()
-                .AddDecorator<Elastic>()
+                .AddDecorator<Rigid>()
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .Build();
 

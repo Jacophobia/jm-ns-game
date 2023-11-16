@@ -9,11 +9,9 @@ namespace client.Decorators;
 
 public class Rigid : EntityDecorator
 {
-    private float _restitutionCoefficient;
-
-    public Rigid(Entity @base, float restitutionCoefficient) : base(@base)
+    public Rigid(Entity @base) : base(@base)
     {
-        _restitutionCoefficient = restitutionCoefficient;
+        // no new behavior to add
     }
 
     private static Vector2 CalculateDirection(Vector2 to, Vector2 from)
@@ -26,10 +24,7 @@ public class Rigid : EntityDecorator
     {
         Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
         Debug.Assert(overlap != null, "This method should not be called if overlap is null");
-
-        // Rewind(collidable);
-
-
+        
         // Skip processing if both objects are static
         if (IsStatic && collidable.IsStatic) return;
 
@@ -48,7 +43,7 @@ public class Rigid : EntityDecorator
         {
             // If this object is static, only adjust the other object's velocity
             var newV2N = -collidable.RestitutionCoefficient *
-                         (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
+                (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
             otherVelocity.X = newV2N * n.X - (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.Y;
             otherVelocity.Y = newV2N * n.Y + (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.X;
         }
@@ -82,6 +77,11 @@ public class Rigid : EntityDecorator
             otherVelocity.X = newV2N * n.X - v2T * n.Y;
             otherVelocity.Y = newV2N * n.Y + v2T * n.X;
         }
+        
+        // right now if they are both coming at each other head-on, they will become stuck since they will be re-winded to before they hit and then this will be called.
+        // if they would hit each other on the next frame, we need to adjust their velocities to stop it from happening, but we need it to look and feel like a natural collision.
+        
+        /* code to check the next position and, if they would still collide, adjust their positions */
 
         Velocity = velocity;
         collidable.Velocity = otherVelocity;
