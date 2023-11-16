@@ -15,109 +15,9 @@ public class Rigid : EntityDecorator
     {
         // no new behavior to add
     }
-
-    public void AttemptOne(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
-    {
-        Debug.Assert(collisionLocation != null, "This method should not be called if collisionLocation is null");
-        Debug.Assert(overlap != null, "This method should not be called if overlap is null");
-        // Calculate collision normal
-        var collisionNormal = Vector2.Normalize(collidable.Position - Position);
-        
-        // Calculate relative velocity
-        var relativeVelocity = collidable.Velocity - Velocity;
-        var velocityAlongNormal = Vector2.Dot(relativeVelocity, collisionNormal);
-        
-        // Early exit if velocities are separating
-        if (velocityAlongNormal > 0)
-            return;
-        
-        // Use the minimum restitution coefficient
-        var restitution = Math.Min(RestitutionCoefficient, collidable.RestitutionCoefficient);
-        
-        // Calculate impulse scalar
-        var impulseScalar = -(1f + restitution) * velocityAlongNormal;
-        
-        // Adjust calculations if one of the objects is static
-        if (IsStatic)
-        {
-            impulseScalar /= (1f / collidable.Mass);
-        }
-        else if (collidable.IsStatic)
-        {
-            impulseScalar /= (1f / Mass);
-        }
-        else
-        {
-            impulseScalar /= (1f / Mass) + (1f / collidable.Mass);
-        }
-        
-        // Calculate and apply impulse
-        var impulse = impulseScalar * collisionNormal;
-        if (!IsStatic)
-        {
-            Velocity += (impulse / Mass);
-        }
-        if (!collidable.IsStatic)
-        {
-            collidable.Velocity -= (impulse / collidable.Mass);
-        }
-    }
-    
-    protected void AttemptTwo(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
-    {
-        Debug.Assert(collidable != null);
-        Debug.Assert(collisionLocation != null);
-        Debug.Assert(overlap != null);
-        
-        var totalVelocity = Velocity + collidable.Velocity;
-        
-        var collisionNormal = Vector2.Normalize(collidable.Position - Position);
-        
-        // Calculate relative velocity
-        var relativeVelocity = collidable.Velocity - Velocity;
-        var velocityAlongNormal = Vector2.Dot(relativeVelocity, collisionNormal);
-        
-        // Early exit if velocities are separating
-        if (velocityAlongNormal > 0)
-            return;
-
-        // Calculate the restitution coefficient
-        var restitution = Math.Min(RestitutionCoefficient, collidable.RestitutionCoefficient);
-
-        // Calculate new velocities
-        var newVelocityThisLength = CalculateNewVelocity(Velocity, Mass, collidable.Velocity, collidable.Mass, restitution);
-        var newVelocityOtherLength = CalculateNewVelocity(collidable.Velocity, collidable.Mass, Velocity, Mass, restitution);
-
-        // Update velocities
-        Velocity += collisionNormal * newVelocityThisLength;
-        collidable.Velocity -= collisionNormal * newVelocityOtherLength;
-
-        var newTotalVelocity = Velocity + collidable.Velocity;
-
-        var totalMagnitude = totalVelocity.Length();
-        var newTotalMagnitude = newTotalVelocity.Length();
-        
-        Debug.Assert(Math.Abs(newTotalVelocity.Length()) <= Math.Abs(totalVelocity.Length()));
-    }
-    
-    private static float CalculateNewVelocity(Vector2 velocity1, float mass1, Vector2 velocity2, float mass2, float restitution)
-    {
-        return (mass1 * velocity1.Length() + mass2 * velocity2.Length() + mass2 * restitution * (velocity2.Length() - velocity1.Length())) / (mass1 + mass2);
-    }
     
     public static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2, Vector2 velocity2)
     {
-
-        // var distance = Math.Abs((collidable.Position - Position).Length());
-        //
-        // var lhsNextPosition = Position + Velocity;
-        // var rhsNextPosition = collidable.Position + collidable.Velocity;
-        //
-        // var futureDistance = Math.Abs((rhsNextPosition - lhsNextPosition).Length());
-        //
-        // // Early exit if velocities are separating
-        // if (futureDistance > distance)
-        //     return;
         // Calculate position differences
         var deltaPosition = position2 - position1;
 
@@ -129,43 +29,6 @@ public class Rigid : EntityDecorator
 
         // If the dot product is negative, objects are moving towards each other
         return dotProduct < 0;
-    }
-
-    protected void AttemptThree(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
-    {
-        // AttemptOne(collidable, gameTime, collisionLocation, overlap);
-        // return;
-        Debug.Assert(collidable != null);
-        Debug.Assert(collisionLocation != null);
-        Debug.Assert(overlap != null);
-
-        if (!AreMovingTowardsEachOther(Position, Velocity, collidable.Position, collidable.Velocity))
-            return;
-        
-        var collisionNormal = Vector2.Normalize(collidable.Position - Position);
-
-        var initialMagnitude = Velocity.Length();
-
-        // Calculate the restitution coefficient
-        var restitution = Math.Min(RestitutionCoefficient, collidable.RestitutionCoefficient);
-
-        // Calculate new velocities
-        var newVelocityThisLength = CalculateNewVelocity(Velocity, Mass, collidable.Velocity, collidable.Mass, restitution);
-        var newVelocityOtherLength = CalculateNewVelocity(collidable.Velocity, collidable.Mass, Velocity, Mass, restitution);
-
-        if (!IsStatic)
-        {
-            Velocity += collisionNormal * (newVelocityThisLength - Velocity.Length());
-        }
-        if (!collidable.IsStatic)
-        {
-            collidable.Velocity += collisionNormal * (newVelocityOtherLength - collidable.Velocity.Length());
-        }
-
-        const float nearlyOne = 0.999999f;
-
-        while (Velocity.Length() >= initialMagnitude)
-            Velocity *= nearlyOne;
     }
 
     protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
