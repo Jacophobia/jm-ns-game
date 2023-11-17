@@ -11,9 +11,15 @@ namespace client.Decorators;
 
 public class CircularCollision : EntityDecorator
 {
+    private int _frameCounter;
+    private int _collisionFrame;
+    private ICollidable _previousCollision;
+    
     public CircularCollision(Entity @base) : base(@base)
     {
-        // no new behavior to add
+        _frameCounter = 0;
+        _collisionFrame = 0;
+        _previousCollision = null;
     }
     
     public static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2, Vector2 velocity2)
@@ -31,77 +37,87 @@ public class CircularCollision : EntityDecorator
         return dotProduct < 0;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap)
     {
-        Debug.Assert(collidable != null);
+        Debug.Assert(rhs != null);
         Debug.Assert(collisionLocation != null);
         Debug.Assert(overlap != null);
 
-        if (!AreMovingTowardsEachOther(Position, Velocity, collidable.Position, collidable.Velocity))
+        // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one
+        if (!AreMovingTowardsEachOther(Position, Velocity, rhs.Position, rhs.Velocity))
+        {
             return;
-        
-        var initialMagnitude = Velocity.Length();
-        
-        if (IsStatic && collidable.IsStatic) return;
+        }
 
-        var velocity = Velocity;
-        var otherVelocity = collidable.Velocity;
+        var initialMagnitude = (Velocity + rhs.Velocity).Length();
+        
+        if (IsStatic && rhs.IsStatic) return;
+        
+        _previousCollision = rhs;
+        _collisionFrame = _frameCounter;
+
+        var lhsVelocity = Velocity;
+        var rhsVelocity = rhs.Velocity;
 
         // Calculate the normal (n) and tangential (t) direction vectors
-        var n = collidable.Position - Position;
+        var n = rhs.Position - Position;
         n.Normalize();
 
         // Decompose velocities into normal and tangential components
-        var v1N = Velocity.X * n.X + Velocity.Y * n.Y; // Dot product
-        var v1T = -Velocity.X * n.Y + Velocity.Y * n.X; // Perpendicular dot product
+        var v1N = lhsVelocity.X * n.X + lhsVelocity.Y * n.Y; // Dot product
+        var v1T = -lhsVelocity.X * n.Y + lhsVelocity.Y * n.X; // Perpendicular dot product
 
         if (IsStatic)
         {
             // If this object is static, only adjust the other object's velocity
-            var newV2N = -collidable.RestitutionCoefficient *
-                         (collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y);
-            otherVelocity.X = newV2N * n.X - (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.Y;
-            otherVelocity.Y = newV2N * n.Y + (-collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X) * n.X;
+            var newV2N = -rhs.RestitutionCoefficient *
+                         (rhsVelocity.X * n.X + rhsVelocity.Y * n.Y);
+            rhsVelocity.X = newV2N * n.X - (-rhsVelocity.X * n.Y + rhsVelocity.Y * n.X) * n.Y;
+            rhsVelocity.Y = newV2N * n.Y + (-rhsVelocity.X * n.Y + rhsVelocity.Y * n.X) * n.X;
         }
-        else if (collidable.IsStatic)
+        else if (rhs.IsStatic)
         {
             // Collision with a static object
             var newV1N = -RestitutionCoefficient * v1N;
 
             // Recompose velocity for the dynamic object
-            velocity.X = newV1N * n.X - v1T * n.Y;
-            velocity.Y = newV1N * n.Y + v1T * n.X;
+            lhsVelocity.X = newV1N * n.X - v1T * n.Y;
+            lhsVelocity.Y = newV1N * n.Y + v1T * n.X;
         }
         else
         {
             // Collision with another dynamic object
-            var v2N = collidable.Velocity.X * n.X + collidable.Velocity.Y * n.Y;
-            var v2T = -collidable.Velocity.X * n.Y + collidable.Velocity.Y * n.X;
+            var v2N = rhsVelocity.X * n.X + rhsVelocity.Y * n.Y;
+            var v2T = -rhsVelocity.X * n.Y + rhsVelocity.Y * n.X;
 
             // Apply the restitution coefficient
-            var combinedRestitution = (RestitutionCoefficient + collidable.RestitutionCoefficient) / 2f;
+            var combinedRestitution = (RestitutionCoefficient + rhs.RestitutionCoefficient) / 2f;
 
             // Exchange normal components in an inelastic collision
-            var newV1N = combinedRestitution * (v1N * (Mass - collidable.Mass) + 2f * collidable.Mass * v2N) /
-                         (Mass + collidable.Mass);
-            var newV2N = combinedRestitution * (v2N * (collidable.Mass - Mass) + 2f * Mass * v1N) /
-                         (Mass + collidable.Mass);
+            var newV1N = combinedRestitution * (v1N * (Mass - rhs.Mass) + 2f * rhs.Mass * v2N) /
+                         (Mass + rhs.Mass);
+            var newV2N = combinedRestitution * (v2N * (rhs.Mass - Mass) + 2f * Mass * v1N) /
+                         (Mass + rhs.Mass);
 
             // Recompose velocities for both objects
-            velocity.X = newV1N * n.X - v1T * n.Y;
-            velocity.Y = newV1N * n.Y + v1T * n.X;
-            otherVelocity.X = newV2N * n.X - v2T * n.Y;
-            otherVelocity.Y = newV2N * n.Y + v2T * n.X;
+            lhsVelocity.X = newV1N * n.X - v1T * n.Y;
+            lhsVelocity.Y = newV1N * n.Y + v1T * n.X;
+            rhsVelocity.X = newV2N * n.X - v2T * n.Y;
+            rhsVelocity.Y = newV2N * n.Y + v2T * n.X;
         }
 
         const float nearlyOne = 0.999999f;
 
-        while (velocity.Length() >= initialMagnitude)
-            velocity *= nearlyOne;
+        // TODO: update this so that it is adjusted in a less band-aid way. Basically right now there is a floating point error where the velocity increases slightly each hit, making things accelerate
+        while ((lhsVelocity + rhsVelocity).Length() >= initialMagnitude)
+        {
+            lhsVelocity *= nearlyOne;
+            rhsVelocity *= nearlyOne;
+        }
 
-        Velocity = velocity;
-        collidable.Velocity = otherVelocity;
+        Velocity = lhsVelocity;
+        rhs.Velocity = rhsVelocity;
         // TODO: To make it so that two types of collision can interact, the OnHandleCollisionFrom method should be called on the other object and it should be up to that object whether or not it moves.
         // TODO: We may also need to recalculate so that this method uses the RHS center coordinate which is closest to LHS 
     }
@@ -121,6 +137,6 @@ public class CircularCollision : EntityDecorator
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        // no new behavior to add
+        _frameCounter++;
     }
 }

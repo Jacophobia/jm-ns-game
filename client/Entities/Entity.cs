@@ -23,7 +23,7 @@ public abstract class Entity : ICollidable
     public abstract Vector2 Velocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
-    public int Mass => Destination.Width * Destination.Height;
+    public float Mass => Destination.Width * Destination.Height;
 
     public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap);

@@ -13,7 +13,7 @@ public interface ICollidable : IRenderable
     public Vector2 Velocity { get; set; }
     public float RestitutionCoefficient { get; set; }
     public bool IsStatic { get; set; }
-    public int Mass { get; }
+    public float Mass { get; }
 
     public Rectangle GetPath(float deltaTime)
     {

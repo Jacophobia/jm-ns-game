@@ -105,7 +105,7 @@ public abstract class EntityDecorator : Entity
         _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
     }
 
-    protected abstract void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    protected abstract void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap);
 
     public sealed override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime,

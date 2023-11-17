@@ -14,7 +14,7 @@ public class Static : EntityDecorator
         Velocity = Vector2.Zero;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap)
     {
         // no new behavior to add

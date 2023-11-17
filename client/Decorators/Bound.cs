@@ -16,7 +16,7 @@ public class Bound : EntityDecorator
         _bounds = bounds;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap)
     {
         // no new behavior to add

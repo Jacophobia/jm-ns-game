@@ -66,8 +66,10 @@ public class Test2 : Game
         _listener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
-            { Keys.E, Controls.Right }
-        }); // TODO: Put in the actual control mappings
+            { Keys.E, Controls.Right },
+            { Keys.OemComma, Controls.Up },
+            { Keys.O, Controls.Down }
+        });
         _renderer = new Renderer(GraphicsDevice, _spriteBatch);
         _background = new Texture2D(GraphicsDevice, 1, 1);
         _background.SetData(new[] { Color.Black }); // Set the pixel to black
@@ -91,9 +93,9 @@ public class Test2 : Game
                     size * (numBalls - i),
                     size * (numBalls - i))
                 // .AddDecorator<PreventOverlap>()
-                .AddDecorator<CircularCollision>()
-                .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .AddDecorator<Inertia>()
+                .AddDecorator<RectangularCollision>()
+                .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .Build();
 
             if (i == 0)
