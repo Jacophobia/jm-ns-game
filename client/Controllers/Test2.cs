@@ -94,7 +94,7 @@ public class Test2 : Game
                     size * (numBalls - i))
                 // .AddDecorator<PreventOverlap>()
                 .AddDecorator<Inertia>()
-                .AddDecorator<RectangularCollision>()
+                .AddDecorator<CircularCollision>()
                 .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                 .Build();
 
