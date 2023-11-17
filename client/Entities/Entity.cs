@@ -4,7 +4,7 @@ using IO.Output;
 using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Entities;
 
@@ -18,15 +18,19 @@ public abstract class Entity : ICollidable
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
     public abstract float Depth { get; set; }
-    public abstract Sprite Sprite { get; set; }
+    public abstract Sprite Sprite { get; }
     public abstract Vector2 Position { get; set; }
     public abstract Vector2 Velocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
-    public int Mass => Destination.Width * Destination.Height;
-    
-    public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
-    public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap);
+    public float Mass => Destination.Width * Destination.Height;
+
+    public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap);
+
+    public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap);
+
     public abstract void Update(GameTime gameTime, Controls controls);
     public abstract void Draw(Renderer renderer, Camera camera);
 
@@ -35,7 +39,7 @@ public abstract class Entity : ICollidable
         var @params = new object[parameters.Length + 1];
         @params[0] = this;
         parameters.CopyTo(@params, 1);
-        
+
         return (T)Activator.CreateInstance(typeof(T), @params);
     }
 

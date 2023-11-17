@@ -11,7 +11,7 @@ public static class ArrayExtensions
         // Get the pixel indices
         return array[x + y * width];
     }
-    
+
     public static bool TryGet<T>(this T[] array, int x, int y, int width, int height, out T element)
     {
         if (x > width - 1 || x < 0 || y > height - 1 || y < 0)
@@ -19,7 +19,7 @@ public static class ArrayExtensions
             element = default;
             return false;
         }
-        
+
         try
         {
             element = array.Get(x, y, width);

@@ -12,13 +12,13 @@ public static class ColorExtensions
         color.A = byte.MaxValue;
         return color;
     }
-    
+
     public static void Next(this Color color)
     {
         color.R++;
         color.G++;
         color.B++;
-        
+
         (color.R, color.G, color.B) = (color.G, color.B, color.R);
     }
 }

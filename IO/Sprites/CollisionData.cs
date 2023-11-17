@@ -14,24 +14,16 @@ public class CollisionData
     // which could order points so that you can perform a more specific
     // search.
     private static IDictionary<string, ISet<Vector2>> _collisionData;
-    private ISet<Vector2> Data
-    {
-        get => _collisionData[_name];
-        set => _collisionData[_name] = value;
-    }
 
     private readonly string _name;
 
     public CollisionData(Texture2D texture)
     {
         _name = texture.Name;
-        
+
         _collisionData ??= new Dictionary<string, ISet<Vector2>>();
-        
-        if (_collisionData.ContainsKey(_name))
-        {
-            return;
-        }
+
+        if (_collisionData.ContainsKey(_name)) return;
 
         _collisionData.TryAdd(_name, new HashSet<Vector2>());
 
@@ -43,8 +35,8 @@ public class CollisionData
             Load(fullPath);
             return;
         }
-        
-        
+
+
         // Get the pixel data from the textures
         var data1 = new Color[texture.Width * texture.Height];
         texture.GetData(data1);
@@ -55,28 +47,30 @@ public class CollisionData
             var color = data1.Get(x, y, texture.Width);
             var range = (texture.Width + texture.Height) / 2;
             if (color.A == byte.MaxValue && HasTransparentNeighbor(data1, x, y, texture.Width, texture.Height, range))
-            {
                 Data.Add(new Vector2(x, y));
-            }
         }
 
         Save(texture.GetCollisionDataFilepath());
     }
-    
+
+    private ISet<Vector2> Data
+    {
+        get => _collisionData[_name];
+        set => _collisionData[_name] = value;
+    }
+
     private static bool HasTransparentNeighbor(Color[] image, int x, int y, int width, int height, int range)
     {
-        for (var dx = x - range; dx < x + range; dx++) // TODO: See if you can just check the furthest possible distance in a box around the pixel
+        for (var dx = x - range;
+             dx < x + range;
+             dx++) // TODO: See if you can just check the furthest possible distance in a box around the pixel
         for (var dy = y - range; dy < y + range; dy++)
-        {
             if (image.TryGet(dx, dy, width, height, out var color) && color.A != byte.MaxValue)
-            {
                 return true;
-            }
-        }
 
         return false;
     }
-    
+
     public bool IsCollidableCoord(Vector2 coordinate)
     {
         return Data.Contains(coordinate);

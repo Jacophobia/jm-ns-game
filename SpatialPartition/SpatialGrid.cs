@@ -5,10 +5,10 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
 using SpatialPartition.Interfaces;
 
 namespace SpatialPartition;
@@ -30,9 +30,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _partitionSizeX = 0;
         _partitionSizeY = 0;
 
-#if DEBUG
+        #if DEBUG
         _totalRuntimeStopwatch.Start();
-#endif
+        #endif
     }
 
     public SpatialGrid(IEnumerable<T> elements) : this()
@@ -44,14 +44,14 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     public void Dispose()
     {
-#if DEBUG
+        #if DEBUG
         _totalRuntimeStopwatch.Stop();
         var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
         if (!(totalSeconds > 0)) return;
         var updatesPerSecond = _updateCallCount / totalSeconds;
         Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
         Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-#endif
+        #endif
     }
 
     public int Count => Partitions.Values.Sum(partition => partition.Count);
@@ -162,10 +162,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             _hashSetPool.Return(previousIndices, currentIndices);
         }
-        
-#if DEBUG
+
+        #if DEBUG
         _updateCallCount++;
-#endif
+        #endif
     }
 
     public void Draw(Renderer renderer, Camera camera, GameTime gameTime)
@@ -173,13 +173,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         var indices = _hashSetPool.Get();
 
         foreach (var element in _elements)
-        {
             if (element.Destination.Intersects(camera.View))
-            {
                 renderer.Render(element, camera);
-            }
-        }
-        
+
         _hashSetPool.Return(indices);
     }
 
@@ -227,15 +223,15 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
-                        
+
                         GetPartitionIndices(other, beforeIndices);
-                        
+
                         element.HandleCollisionWith(other, gameTime, location, overlap);
-                        
+
                         GetPartitionIndices(other, afterIndices);
-                        
+
                         HandlePartitionTransitions(other, beforeIndices, afterIndices);
-                        
+
                         _hashSetPool.Return(beforeIndices, afterIndices);
                     }
             }
@@ -255,7 +251,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             if (!currentIndices.Contains(index))
                 if (Partitions.TryGetValue(index, out var partition))
                     partition.Remove(item);
-        
+
         foreach (var index in currentIndices)
             if (!previousIndices.Contains(index))
             {
@@ -264,6 +260,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                     partition = new HashSet<T>();
                     Partitions[index] = partition;
                 }
+
                 partition.Add(item);
             }
     }
@@ -271,10 +268,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private void AddIndices(Rectangle rectangle, ISet<Vector2> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2) / (_partitionSizeX * 1f));
-        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2) / (_partitionSizeY * 1f));
-        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2) / (_partitionSizeY * 1f));
+        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2f) / (_partitionSizeX * 1f));
+        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2f) / (_partitionSizeX * 1f));
+        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2f) / (_partitionSizeY * 1f));
+        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2f) / (_partitionSizeY * 1f));
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
@@ -339,15 +336,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         public void Return(params TPooled[] items)
         {
-            foreach (var item in items)
-            {
-                _items.Push(item);
-            }
+            foreach (var item in items) _items.Push(item);
         }
     }
 
-#if DEBUG
+    #if DEBUG
     private readonly Stopwatch _totalRuntimeStopwatch = new();
     private int _updateCallCount;
-#endif
+    #endif
 }

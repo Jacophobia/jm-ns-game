@@ -3,30 +3,30 @@ using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
+using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
 public class Drag : EntityDecorator
 {
-    private readonly float _rate;
-    
-    public Drag(Entity @base, float rate) : base(@base)
+    public Drag(Entity @base, float restitutionCoefficient) : base(@base)
     {
-        _rate = rate;
+        RestitutionCoefficient = restitutionCoefficient;
     }
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        Velocity -= Velocity * _rate * gameTime.DeltaTime();
+        // no new behavior to add
     }
 
-    protected override void OnHandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
-        Velocity -= Velocity * _rate * 2 * gameTime.DeltaTime();
+        // no new behavior to add
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }

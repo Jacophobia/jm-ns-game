@@ -1,11 +1,13 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using SpatialPartition.Interfaces;
 
 namespace SpatialPartition.Collision;
 
 internal static class CollisionDetector
 {
-    internal static bool TryRadialCollision(ICollidable collidable1, ICollidable collidable2, out Vector2? collisionLocation)
+    internal static bool TryRadialCollision(ICollidable collidable1, ICollidable collidable2,
+        out Vector2? collisionLocation)
     {
         // Calculate the center of the bounding circles for both entities
         var center1 = new Vector2(collidable1.Destination.X + collidable1.Destination.Width / 2,

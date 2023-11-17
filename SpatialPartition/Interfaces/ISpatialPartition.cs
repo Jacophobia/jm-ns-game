@@ -2,7 +2,6 @@
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Collision;
 
 namespace SpatialPartition.Interfaces;
 

@@ -26,17 +26,14 @@ public class Renderer
 
     public void Render(IEnumerable<IRenderable> renderables, Camera camera)
     {
-        foreach (var renderable in renderables)
-        {
-            _spriteBatch.Draw(renderable, camera);
-        }
+        foreach (var renderable in renderables) _spriteBatch.Draw(renderable, camera);
     }
 
     public void Render(IRenderable renderable, Camera camera)
     {
         _spriteBatch.Draw(renderable, camera);
     }
-    
+
     public void FullRender(IRenderable renderable, Camera camera)
     {
         Begin();
@@ -47,10 +44,7 @@ public class Renderer
     public void FullRender(IEnumerable<IRenderable> renderables, Camera camera)
     {
         Begin();
-        foreach (var renderable in renderables)
-        {
-            _spriteBatch.Draw(renderable, camera);
-        }
+        foreach (var renderable in renderables) _spriteBatch.Draw(renderable, camera);
         End();
     }
 

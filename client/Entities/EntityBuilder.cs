@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using IO.Sprites;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
@@ -9,246 +8,84 @@ namespace client.Entities;
 
 public class EntityBuilder
 {
-    private bool TextureSet
-    {
-        set => _requiredFields[0] = value;
-    }
-
-    private bool DestinationSet
-    {
-        set => _requiredFields[1] = value;
-    }
-    private bool SourceSet
-    {
-        set => _requiredFields[2] = value;
-    }
-    private bool ColorSet
-    {
-        set => _requiredFields[3] = value;
-    }
-    private bool RotationSet
-    {
-        set => _requiredFields[4] = value;
-    }
-    private bool OriginSet
-    {
-        set => _requiredFields[5] = value;
-    }
-    private bool EffectSet
-    {
-        set => _requiredFields[6] = value;
-    }
-    private bool DepthSet
-    {
-        set => _requiredFields[7] = value;
-    }
-    private bool VelocitySet
-    {
-        set => _requiredFields[8] = value;
-    }
-    private bool PositionSet
-    {
-        get => _requiredFields[9];
-        set => _requiredFields[9] = value;
-    }
-
-    private bool WidthSet
-    {
-        get => _requiredFields[10];
-        set => _requiredFields[10] = value;
-    }
-
-    private bool HeightSet
-    {
-        get => _requiredFields[11];
-        set => _requiredFields[11] = value;
-    }
-
-    private bool RestitutionCoefficientSet
-    {
-        get => _requiredFields[12];
-        set => _requiredFields[12] = value;
-    }
-
-    private readonly bool[] _requiredFields = new bool[13];
-    private readonly ICollection<Action> _addDecorators;
+    private readonly Stack<Action> _addDecorators;
     private Entity _entity;
 
-    private int _width;
-    private int _height;
-
-    public EntityBuilder(Texture2D texture = null, Vector2? position = null, int? width = null, int? height = null,
-        Rectangle? source = null,
-        Color? color = null, float? rotation = null, Point? origin = null, SpriteEffects? effect = null,
-        float? depth = null, Vector2? velocity = null, float? restitutionCoefficient = null)
+    public EntityBuilder(Texture2D texture, Vector2 position, Vector2 velocity, int? width = null, int? height = null,
+        float? scale = null, Rectangle? source = null, Color? color = null, float? rotation = null,
+        Vector2? origin = null, SpriteEffects? effect = null, float? depth = null)
     {
-        _entity = new BaseEntity();
-        _addDecorators = new List<Action>();
-
-        if (texture != null)
+        if (width.HasValue && height.HasValue && !scale.HasValue)
         {
-            _entity.Texture = texture;
-            _entity.Sprite = new Sprite(texture);
-            TextureSet = true;
+            _entity = new BaseEntity(texture, position, velocity, width.Value, height.Value, source, color, rotation,
+                origin, effect, depth);
+        }
+        else if (!width.HasValue && !height.HasValue && scale.HasValue)
+        {
+            _entity = new BaseEntity(texture, position, velocity, scale.Value, source, color, rotation, origin, effect,
+                depth);
+        }
+        else
+        {
+            Debug.Assert(false,
+                "There should either be a single scale with no width and height or a width and height with no scale");
+            throw new Exception("An EntityBuilder instance was created without valid parameters");
         }
 
-        if (position.HasValue)
-        {
-            _entity.Position = position.Value;
-            PositionSet = true;
-
-            if (width.HasValue && height.HasValue)
-            {
-                _entity.Destination = new Rectangle((int)position.Value.X, (int)position.Value.Y, width.Value, height.Value);
-                DestinationSet = true;
-            }
-        }
-
-        if (source.HasValue)
-        {
-            _entity.Source = source.Value;
-            SourceSet = true;
-        }
-
-        if (color.HasValue)
-        {
-            _entity.Color = color.Value;
-            ColorSet = true;
-        }
-
-        if (rotation.HasValue)
-        {
-            _entity.Rotation = rotation.Value;
-            RotationSet = true;
-        }
-
-        if (origin.HasValue)
-        {
-            _entity.Origin = new Vector2(origin.Value.X, origin.Value.Y);
-            OriginSet = true;
-        }
-
-        if (effect.HasValue)
-        {
-            _entity.Effect = effect.Value;
-            EffectSet = true;
-        }
-
-        if (depth.HasValue)
-        {
-            _entity.Depth = depth.Value;
-            DepthSet = true;
-        }
-
-        if (velocity.HasValue)
-        {
-            _entity.Velocity = velocity.Value;
-            VelocitySet = true;
-        }
-
-        if (restitutionCoefficient.HasValue)
-        {
-            _entity.RestitutionCoefficient = restitutionCoefficient.Value;
-            RestitutionCoefficientSet = true;
-        }
+        _addDecorators = new Stack<Action>();
     }
-    
+
     public EntityBuilder SetTexture(Texture2D texture)
     {
         _entity.Texture = texture;
-        _entity.Sprite = new Sprite(texture);
-        TextureSet = true;
         return this;
-    }
-
-    private void TrySetDestination()
-    {
-        if (!PositionSet || !WidthSet || !HeightSet)
-        {
-            return;
-        }
-        
-        _entity.Destination = new Rectangle((int)_entity.Position.X, (int)_entity.Position.Y, _width, _height);
-        DestinationSet = true;
     }
 
     public EntityBuilder SetPosition(Vector2 position)
     {
         _entity.Position = position;
-        PositionSet = true;
-        TrySetDestination();
-        return this;
-    }
-
-    public EntityBuilder SetWidth(int width)
-    {
-        _width = width;
-        WidthSet = true;
-        TrySetDestination();
-        return this;
-    }
-
-    public EntityBuilder SetHeight(int height)
-    {
-        _height = height;
-        HeightSet = true;
-        TrySetDestination();
         return this;
     }
 
     public EntityBuilder SetSource(Rectangle source)
     {
         _entity.Source = source;
-        SourceSet = true;
         return this;
     }
 
     public EntityBuilder SetColor(Color color)
     {
         _entity.Color = color;
-        ColorSet = true;
         return this;
     }
 
     public EntityBuilder SetRotation(float rotation)
     {
         _entity.Rotation = rotation;
-        RotationSet = true;
         return this;
     }
 
-    public EntityBuilder SetOrigin(Point origin)
+    public EntityBuilder SetOrigin(Vector2 origin)
     {
-        _entity.Origin = new Vector2(origin.X, origin.Y);
-        OriginSet = true;
+        _entity.Origin = origin;
         return this;
     }
 
     public EntityBuilder SetEffect(SpriteEffects effect)
     {
         _entity.Effect = effect;
-        EffectSet = true;
         return this;
     }
 
     public EntityBuilder SetDepth(float depth)
     {
         _entity.Depth = depth;
-        DepthSet = true;
         return this;
     }
 
     public EntityBuilder SetVelocity(Vector2 velocity)
     {
         _entity.Velocity = velocity;
-        VelocitySet = true;
-        return this;
-    }
-
-    public EntityBuilder SetRestitutionCoefficient(float restitutionCoefficient)
-    {
-        _entity.RestitutionCoefficient = restitutionCoefficient;
-        RestitutionCoefficientSet = true;
         return this;
     }
 
@@ -257,21 +94,17 @@ public class EntityBuilder
         // because the constructor may need info from one of the 
         //  entities fields, we need to add them after all fields have 
         //  been set
-        _addDecorators.Add(() => Entity.AddDecorator<T>(ref _entity, parameters));
+        _addDecorators.Push(() => Entity.AddDecorator<T>(ref _entity, parameters));
         return this;
     }
 
     // Build method
     public Entity Build()
     {
-        if (!_requiredFields.All(set => set))
-            throw new InvalidOperationException("Cannot build BaseEntity: Not all fields have been set.");
-        
-        foreach (var addDecorator in _addDecorators)
+        while (_addDecorators.TryPop(out var decorate))
         {
-            addDecorator();
+            decorate();
         }
         return _entity;
-
     }
 }
