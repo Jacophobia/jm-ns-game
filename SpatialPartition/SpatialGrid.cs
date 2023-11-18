@@ -5,7 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
@@ -173,8 +172,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         var indices = _hashSetPool.Get();
 
         foreach (var element in _elements)
-            if (element.Destination.Intersects(camera.View))
-                renderer.Render(element, camera);
+            element.Draw(renderer, camera);
 
         _hashSetPool.Return(indices);
     }
@@ -219,7 +217,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.CollidesWith(other, out var location, out var overlap))
+                    if (!element.Equals(other) && element.Depth == other.Depth && element.CollidesWith(other, out var location, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();

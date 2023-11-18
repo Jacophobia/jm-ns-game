@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using client.Entities;
 using IO.Extensions;
 using IO.Input;

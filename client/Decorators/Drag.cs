@@ -1,5 +1,4 @@
 ﻿using client.Entities;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;

@@ -17,7 +17,7 @@ public abstract class Entity : ICollidable
     public abstract float Rotation { get; set; }
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
-    public abstract float Depth { get; set; }
+    public abstract int Depth { get; set; }
     public abstract Sprite Sprite { get; }
     public abstract Vector2 Position { get; set; }
     public abstract Vector2 Velocity { get; set; }

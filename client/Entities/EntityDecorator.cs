@@ -60,7 +60,7 @@ public abstract class EntityDecorator : Entity
         set => _base.Effect = value;
     }
 
-    public sealed override float Depth
+    public sealed override int Depth
     {
         get => _base.Depth;
         set => _base.Depth = value;

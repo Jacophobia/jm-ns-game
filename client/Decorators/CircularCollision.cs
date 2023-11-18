@@ -1,7 +1,5 @@
-﻿using System;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using client.Entities;
-using IO.Extensions;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
@@ -51,7 +49,7 @@ public class CircularCollision : EntityDecorator
         }
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
-        
+
         if (IsStatic && rhs.IsStatic) return;
         
         _previousCollision = rhs;
@@ -107,10 +105,10 @@ public class CircularCollision : EntityDecorator
             rhsVelocity.Y = newV2N * n.Y + v2T * n.X;
         }
 
-        const float nearlyOne = 0.999999f;
+        const float nearlyOne = 0.99f;
 
         // TODO: update this so that it is adjusted in a less band-aid way. Basically right now there is a floating point error where the velocity increases slightly each hit, making things accelerate
-        while ((lhsVelocity + rhsVelocity).Length() >= initialMagnitude)
+        while (initialMagnitude != 0 && (lhsVelocity + rhsVelocity).Length() >= initialMagnitude)
         {
             lhsVelocity *= nearlyOne;
             rhsVelocity *= nearlyOne;
