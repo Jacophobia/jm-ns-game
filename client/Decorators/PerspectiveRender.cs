@@ -12,18 +12,17 @@ public sealed class PerspectiveRender : EntityDecorator
     private readonly float _scale;
 
     // ReSharper disable once IntroduceOptionalParameters.Global
-    public PerspectiveRender(Entity @base) : this(@base, false, -10f) {}
+    public PerspectiveRender(Entity @base) : this(@base, false, -10f)
+    {
+    }
 
     // ReSharper disable once MemberCanBePrivate.Global
     public PerspectiveRender(Entity @base, bool adjustScale, float perspectiveDepth) : base(@base)
     {
         var cameraDistance = Depth - perspectiveDepth;
 
-        if (cameraDistance == 0)
-        {
-            cameraDistance = 0.001f;
-        }
-    
+        if (cameraDistance == 0) cameraDistance = 0.001f;
+
         _scale = MathF.Abs(perspectiveDepth / cameraDistance);
 
         // scale is focalLength divided by distance
@@ -34,9 +33,9 @@ public sealed class PerspectiveRender : EntityDecorator
             destination.Height = (int)Math.Round(destination.Height * Math.Abs(_scale));
             Destination = destination;
         }
-        
+
         _scale = 1 - _scale;
-        
+
         // Debug.Assert(_scale is >= 0 and <= 1, "Scale should not be less than zero. I don't think negative scale would be good.");
     }
 
@@ -45,12 +44,14 @@ public sealed class PerspectiveRender : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         // no new behavior to add
     }

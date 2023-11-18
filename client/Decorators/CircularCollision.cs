@@ -9,18 +9,19 @@ namespace client.Decorators;
 
 public class CircularCollision : EntityDecorator
 {
-    private int _frameCounter;
     private int _collisionFrame;
+    private int _frameCounter;
     private ICollidable _previousCollision;
-    
+
     public CircularCollision(Entity @base) : base(@base)
     {
         _frameCounter = 0;
         _collisionFrame = 0;
         _previousCollision = null;
     }
-    
-    public static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2, Vector2 velocity2)
+
+    public static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
+        Vector2 velocity2)
     {
         // Calculate position differences
         var deltaPosition = position2 - position1;
@@ -43,15 +44,12 @@ public class CircularCollision : EntityDecorator
         Debug.Assert(overlap != null);
 
         // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one
-        if (!AreMovingTowardsEachOther(Position, Velocity, rhs.Position, rhs.Velocity))
-        {
-            return;
-        }
+        if (!AreMovingTowardsEachOther(Position, Velocity, rhs.Position, rhs.Velocity)) return;
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         if (IsStatic && rhs.IsStatic) return;
-        
+
         _previousCollision = rhs;
         _collisionFrame = _frameCounter;
 
@@ -119,7 +117,6 @@ public class CircularCollision : EntityDecorator
         // TODO: To make it so that two types of collision can interact, the OnHandleCollisionFrom method should be called on the other object and it should be up to that object whether or not it moves.
         // TODO: We may also need to recalculate so that this method uses the RHS center coordinate which is closest to LHS 
     }
-
 
 
     protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,

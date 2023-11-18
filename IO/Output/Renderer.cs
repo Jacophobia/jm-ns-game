@@ -7,6 +7,9 @@ namespace IO.Output;
 
 public class Renderer
 {
+    public const int MaxDepth = 992;
+    public const int MinDepth = -8;
+    
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SpriteBatch _spriteBatch;
 
@@ -18,10 +21,9 @@ public class Renderer
 
     private void Draw(IRenderable renderable, Camera camera)
     {
-        
         if (!renderable.Destination.Intersects(camera.View))
             return;
-            
+
         var relativeDestination = new Rectangle(
             renderable.Destination.X - camera.View.X,
             renderable.Destination.Y - camera.View.Y,
@@ -37,7 +39,7 @@ public class Renderer
             renderable.Rotation,
             renderable.Origin,
             renderable.Effect,
-            (renderable.Depth + 500) / 1000f
+            (MaxDepth - renderable.Depth) / 1000f
         );
     }
 
@@ -45,7 +47,7 @@ public class Renderer
     {
         _graphicsDevice.Clear(Color.Black);
 
-        _spriteBatch.Begin(SpriteSortMode.BackToFront);
+        _spriteBatch.Begin(SpriteSortMode.FrontToBack);
     }
 
     public void Render(IEnumerable<IRenderable> renderables, Camera camera)

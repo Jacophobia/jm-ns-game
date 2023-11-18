@@ -64,15 +64,9 @@ public class Camera
         if (controls.HasFlag(Controls.Left))
         {
             _currentObject--;
-            if (_currentObject < 0)
-            {
-                _currentObject = _objectsToFollow.Count - 1;
-            }
+            if (_currentObject < 0) _currentObject = _objectsToFollow.Count - 1;
         }
 
-        if (controls.HasFlag(Controls.Right))
-        {
-            _currentObject = (_currentObject + 1) % _objectsToFollow.Count;
-        }
+        if (controls.HasFlag(Controls.Right)) _currentObject = (_currentObject + 1) % _objectsToFollow.Count;
     }
 }

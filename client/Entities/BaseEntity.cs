@@ -10,9 +10,9 @@ namespace client.Entities;
 
 public sealed class BaseEntity : Entity
 {
+    private int _depth;
     private Rectangle _destination;
     private Sprite _sprite;
-    private int _depth = 0;
 
     public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
@@ -22,7 +22,8 @@ public sealed class BaseEntity : Entity
         Destination = new Rectangle((int)MathF.Round(position.X), (int)MathF.Round(position.Y), width, height);
     }
 
-    public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale) : this(texture, position, velocity, (int)MathF.Round(texture.Width * scale), (int)MathF.Round(texture.Height * scale))
+    public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale) : this(texture, position,
+        velocity, (int)MathF.Round(texture.Width * scale), (int)MathF.Round(texture.Height * scale))
     {
     }
 
@@ -77,10 +78,8 @@ public sealed class BaseEntity : Entity
         get => _depth;
         set
         {
-            if (value is > 500 or < -8)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), value, "Depth must be between -8 and 500");
-            }
+            if (value is > Renderer.MaxDepth or < Renderer.MinDepth)
+                throw new ArgumentOutOfRangeException(nameof(value), value, $"Depth must be between {Renderer.MinDepth} and {Renderer.MinDepth}");
             _depth = value;
         }
     }

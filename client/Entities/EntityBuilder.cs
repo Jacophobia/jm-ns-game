@@ -109,10 +109,7 @@ public class EntityBuilder
     // Build method
     public Entity Build()
     {
-        while (_addDecorators.TryPop(out var decorate))
-        {
-            decorate();
-        }
+        while (_addDecorators.TryPop(out var decorate)) decorate();
         return _entity;
     }
 }

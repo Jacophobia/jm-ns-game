@@ -15,11 +15,11 @@ namespace client.Controllers;
 
 public class Test2 : Game
 {
-    private readonly ISpatialPartition<Entity> _spatialGrid;
     private readonly Rectangle _backgroundSize;
+    private readonly GraphicsDeviceManager _graphics;
+    private readonly ISpatialPartition<Entity> _spatialGrid;
     private List<Entity> _background;
     private Camera _camera;
-    private readonly GraphicsDeviceManager _graphics;
     private Listener _listener;
     private Renderer _renderer;
     private SpriteBatch _spriteBatch;
@@ -80,6 +80,7 @@ public class Test2 : Game
 
         for (var i = -1; i < numBalls; i++)
         {
+            var color = new Color(random.Next(200), random.Next(255), random.Next(255));
             for (var j = 0; j < 10; j++)
             {
                 var ballPosition =
@@ -94,7 +95,7 @@ public class Test2 : Game
                         50,
                         50)
                     .SetDepth(i * 5)
-                    .SetColor(new Color(50, random.Next(255), random.Next(255)))
+                    .SetColor(color)
                     .AddDecorator<Inertia>()
                     .AddDecorator<CircularCollision>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
@@ -122,22 +123,18 @@ public class Test2 : Game
         backgroundTexture.Name = "Background";
         _background = new List<Entity>();
         foreach (var side in _backgroundSize.GetOutline(50).GetSides())
-        {
             for (var i = -1; i < 50; i++)
-            {
                 _background.Add(new EntityBuilder(
-                    backgroundTexture, 
-                    new Vector2(side.X, side.Y), 
-                    Vector2.Zero, 
-                    width: side.Width, 
-                    height: side.Height)
-                .SetDepth(5 * i)
-                .SetStatic(true)
-                .SetColor(Color.White)
-                .AddDecorator<PerspectiveRender>(true, -10)
-                .Build());
-            }
-        }
+                        backgroundTexture,
+                        new Vector2(side.X, side.Y),
+                        Vector2.Zero,
+                        side.Width,
+                        side.Height)
+                    .SetDepth(5 * i)
+                    .SetStatic(true)
+                    .SetColor(Color.White)
+                    .AddDecorator<PerspectiveRender>(true, -10)
+                    .Build());
     }
 
     protected override void Update(GameTime gameTime)
@@ -156,10 +153,7 @@ public class Test2 : Game
     protected override void Draw(GameTime gameTime)
     {
         _renderer.Begin();
-        foreach (var side in _background)
-        {
-            side.Draw(_renderer, _camera);
-        }
+        foreach (var side in _background) side.Draw(_renderer, _camera);
         _spatialGrid.Draw(_renderer, _camera, gameTime);
         _renderer.End();
 

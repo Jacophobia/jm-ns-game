@@ -159,7 +159,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             CheckForCollisions(element, gameTime, currentIndices);
 
-            _hashSetPool.Return(previousIndices, currentIndices);
+            _hashSetPool.Return(previousIndices);
+            _hashSetPool.Return(currentIndices);
         }
 
         #if DEBUG
@@ -217,7 +218,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.Depth == other.Depth && element.CollidesWith(other, out var location, out var overlap))
+                    if (!element.Equals(other) && element.Depth == other.Depth &&
+                        element.CollidesWith(other, out var location, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
@@ -230,7 +232,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
                         HandlePartitionTransitions(other, beforeIndices, afterIndices);
 
-                        _hashSetPool.Return(beforeIndices, afterIndices);
+                        _hashSetPool.Return(beforeIndices);
+                        _hashSetPool.Return(afterIndices);
                     }
             }
             else
@@ -332,9 +335,9 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             return _items.Count > 0 ? _items.Pop() : new TPooled();
         }
 
-        public void Return(params TPooled[] items)
+        public void Return(TPooled item)
         {
-            foreach (var item in items) _items.Push(item);
+            _items.Push(item);
         }
     }
 
