@@ -10,6 +10,7 @@ namespace client.Entities;
 
 public sealed class BaseEntity : Entity
 {
+    private int _depth;
     private Rectangle _destination;
     private Sprite _sprite;
 
@@ -21,18 +22,14 @@ public sealed class BaseEntity : Entity
         Destination = new Rectangle((int)MathF.Round(position.X), (int)MathF.Round(position.Y), width, height);
     }
 
-    public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale)
+    public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale) : this(texture, position,
+        velocity, (int)MathF.Round(texture.Width * scale), (int)MathF.Round(texture.Height * scale))
     {
-        Texture = texture;
-        Position = position;
-        Velocity = velocity;
-        Destination = new Rectangle((int)MathF.Round(position.X), (int)MathF.Round(position.Y),
-            (int)MathF.Round(texture.Width * scale), (int)MathF.Round(texture.Height * scale));
     }
 
     public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects? effect = null, float? depth = null)
+        SpriteEffects? effect = null, int? depth = null)
         : this(texture, position, velocity, width, height)
     {
         SetOptionalValues(source, color, rotation, origin, effect, depth);
@@ -40,7 +37,7 @@ public sealed class BaseEntity : Entity
 
     public BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects? effect = null, float? depth = null)
+        SpriteEffects? effect = null, int? depth = null)
         : this(texture, position, velocity, scale)
     {
         SetOptionalValues(source, color, rotation, origin, effect, depth);
@@ -53,7 +50,7 @@ public sealed class BaseEntity : Entity
         {
             _sprite = new Sprite(value);
             Source = Sprite.Texture.Bounds;
-            Origin = new Vector2(Sprite.Texture.Width / 2f, Sprite.Texture.Height / 2f);
+            Origin = Sprite.Texture.Bounds.Center.ToVector2();
         }
     }
 
@@ -68,20 +65,32 @@ public sealed class BaseEntity : Entity
         set => _destination = value;
     }
 
+    // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
     public override Sprite Sprite => _sprite;
     public override Rectangle Source { get; set; }
     public override Color Color { get; set; } = Color.White;
     public override float Rotation { get; set; }
     public override Vector2 Origin { get; set; }
     public override SpriteEffects Effect { get; set; } = SpriteEffects.None;
-    public override float Depth { get; set; }
+
+    public override int Depth
+    {
+        get => _depth;
+        set
+        {
+            if (value is > Renderer.MaxDepth or < Renderer.MinDepth)
+                throw new ArgumentOutOfRangeException(nameof(value), value, $"Depth must be between {Renderer.MinDepth} and {Renderer.MinDepth}");
+            _depth = value;
+        }
+    }
+
     public override Vector2 Position { get; set; }
     public override Vector2 Velocity { get; set; }
-    public override float RestitutionCoefficient { get; set; } = 1f;
+    public override float RestitutionCoefficient { get; set; } = 1;
     public override bool IsStatic { get; set; } = false;
 
     private void SetOptionalValues(Rectangle? source = null, Color? color = null, float? rotation = null,
-        Vector2? origin = null, SpriteEffects? effect = null, float? depth = null)
+        Vector2? origin = null, SpriteEffects? effect = null, int? depth = null)
     {
         if (source.HasValue) Source = source.Value;
 
@@ -118,6 +127,7 @@ public sealed class BaseEntity : Entity
 
     public override void Draw(Renderer renderer, Camera camera)
     {
-        renderer.Render(this, camera);
+        // We don't do anything. Entity behavior will be handled by the 
+        //  decorators.
     }
 }

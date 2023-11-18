@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using IO.Output;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 namespace IO.Interfaces;
@@ -12,5 +13,6 @@ public interface IRenderable
     public float Rotation { get; }
     public Vector2 Origin { get; }
     public SpriteEffects Effect { get; }
-    public float Depth { get; }
+    public int Depth { get; }
+    public void Draw(Renderer renderer, Camera camera);
 }

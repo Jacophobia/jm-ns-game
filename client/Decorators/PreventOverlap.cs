@@ -61,7 +61,6 @@ public class PreventOverlap : EntityDecorator
 
             tries++;
         }
-        
     }
 
 

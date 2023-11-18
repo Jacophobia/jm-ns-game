@@ -16,7 +16,7 @@ public class Camera
     private readonly IList<IRenderable> _objectsToFollow;
     private readonly Vector3 _offset;
     private int _currentObject;
-    private Vector2 _position;
+    private Vector3 _position;
     private Rectangle _view;
 
     public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset)
@@ -31,18 +31,20 @@ public class Camera
         var position = offset + objectsToFollow.First().Destination.Center.ToVector3();
 
         _view = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
-        _position = new Vector2(position.X + displayMode.Width / 2f, position.Y + displayMode.Height / 2f);
+        _position = new Vector3(position.X + displayMode.Width / 2f, position.Y + displayMode.Height / 2f, -10f);
         _objectsToFollow = objectsToFollow;
         _followSpeed = followSpeed;
         _offset = offset;
     }
 
+    public Vector3 Position => _position;
+
     public Rectangle View
     {
         get
         {
-            _view.X = (int)MathF.Round(_position.X);
-            _view.Y = (int)MathF.Round(_position.Y);
+            _view.X = (int)MathF.Round(_position.X + _offset.X);
+            _view.Y = (int)MathF.Round(_position.Y + _offset.Y);
             return _view;
         }
     }
@@ -62,15 +64,9 @@ public class Camera
         if (controls.HasFlag(Controls.Left))
         {
             _currentObject--;
-            if (_currentObject < 0)
-            {
-                _currentObject = _objectsToFollow.Count - 1;
-            }
+            if (_currentObject < 0) _currentObject = _objectsToFollow.Count - 1;
         }
 
-        if (controls.HasFlag(Controls.Right))
-        {
-            _currentObject = (_currentObject + 1) % _objectsToFollow.Count;
-        }
+        if (controls.HasFlag(Controls.Right)) _currentObject = (_currentObject + 1) % _objectsToFollow.Count;
     }
 }

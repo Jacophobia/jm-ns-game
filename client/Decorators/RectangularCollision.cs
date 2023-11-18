@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using client.Entities;
 using IO.Extensions;
 using IO.Input;
@@ -11,6 +10,15 @@ namespace client.Decorators;
 
 public class RectangularCollision : EntityDecorator
 {
+    public enum IntersectionSide
+    {
+        Top,
+        Bottom,
+        Left,
+        Right,
+        None
+    }
+
     public RectangularCollision(Entity @base) : base(@base)
     {
         // no new behavior to add
@@ -19,15 +27,6 @@ public class RectangularCollision : EntityDecorator
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
         // no new behavior to add
-    }
-    
-    public enum IntersectionSide
-    {
-        Top,
-        Bottom,
-        Left,
-        Right,
-        None
     }
 
     private static Tuple<float?, float?> GetTimeToCollision(ICollidable lhs, ICollidable rhs)
@@ -60,18 +59,19 @@ public class RectangularCollision : EntityDecorator
         if (relativeVelocity.Y != 0)
         {
             if (relativeVelocity.Y > 0)
-                timeToCollisionY = (prevCenter2.Y + halfHeight2 - (prevCenter1.Y - halfHeight1)) / relativeVelocity.Y; // Inverted Y-axis
+                timeToCollisionY
+                    = (prevCenter2.Y + halfHeight2 - (prevCenter1.Y - halfHeight1)) /
+                      relativeVelocity.Y; // Inverted Y-axis
             else
-                timeToCollisionY = (prevCenter2.Y - halfHeight2 - (prevCenter1.Y + halfHeight1)) / relativeVelocity.Y; // Inverted Y-axis
+                timeToCollisionY
+                    = (prevCenter2.Y - halfHeight2 - (prevCenter1.Y + halfHeight1)) /
+                      relativeVelocity.Y; // Inverted Y-axis
         }
 
         return new Tuple<float?, float?>(timeToCollisionX, timeToCollisionY);
-    }
-
-    // ReSharper disable twice PossibleInvalidOperationException
+    } // ReSharper disable twice PossibleInvalidOperationException
     private static float? GetMinimumPositiveTime(float? timeX, float? timeY)
     {
-            
         return timeY switch
         {
             > 0 when timeX is null or < 0 => timeY,
@@ -87,7 +87,7 @@ public class RectangularCollision : EntityDecorator
 
         var timeX = timeToCollisionX ?? float.MaxValue;
         var timeY = timeToCollisionY ?? float.MaxValue;
-        
+
 
         // Calculate relative velocity
         var relativeVelocity = lhs.Velocity - rhs.Velocity;
@@ -102,7 +102,8 @@ public class RectangularCollision : EntityDecorator
     }
 
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap)
     {
         var (timeX, timeY) = GetTimeToCollision(this, rhs);
 
@@ -116,7 +117,7 @@ public class RectangularCollision : EntityDecorator
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
-        
+
         switch (GetCollisionDirection(this, rhs))
         {
             case IntersectionSide.Top:
@@ -140,7 +141,6 @@ public class RectangularCollision : EntityDecorator
         Velocity = lhsVelocity;
         rhs.Velocity = rhsVelocity;
     }
-
 
 
     protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,

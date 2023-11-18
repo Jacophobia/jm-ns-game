@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using IO.Extensions;
 using IO.Interfaces;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -8,6 +7,9 @@ namespace IO.Output;
 
 public class Renderer
 {
+    public const int MaxDepth = 992;
+    public const int MinDepth = -8;
+    
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SpriteBatch _spriteBatch;
 
@@ -17,34 +19,58 @@ public class Renderer
         _spriteBatch = spriteBatch;
     }
 
+    private void Draw(IRenderable renderable, Camera camera)
+    {
+        if (!renderable.Destination.Intersects(camera.View))
+            return;
+
+        var relativeDestination = new Rectangle(
+            renderable.Destination.X - camera.View.X,
+            renderable.Destination.Y - camera.View.Y,
+            renderable.Destination.Width,
+            renderable.Destination.Height
+        );
+
+        _spriteBatch.Draw(
+            renderable.Texture,
+            relativeDestination,
+            renderable.Source,
+            renderable.Color,
+            renderable.Rotation,
+            renderable.Origin,
+            renderable.Effect,
+            (MaxDepth - renderable.Depth) / 1000f
+        );
+    }
+
     public void Begin()
     {
-        _graphicsDevice.Clear(Color.White);
+        _graphicsDevice.Clear(Color.Black);
 
-        _spriteBatch.Begin();
+        _spriteBatch.Begin(SpriteSortMode.FrontToBack);
     }
 
     public void Render(IEnumerable<IRenderable> renderables, Camera camera)
     {
-        foreach (var renderable in renderables) _spriteBatch.Draw(renderable, camera);
+        foreach (var renderable in renderables) Draw(renderable, camera);
     }
 
     public void Render(IRenderable renderable, Camera camera)
     {
-        _spriteBatch.Draw(renderable, camera);
+        Draw(renderable, camera);
     }
 
     public void FullRender(IRenderable renderable, Camera camera)
     {
         Begin();
-        _spriteBatch.Draw(renderable, camera);
+        Draw(renderable, camera);
         End();
     }
 
     public void FullRender(IEnumerable<IRenderable> renderables, Camera camera)
     {
         Begin();
-        foreach (var renderable in renderables) _spriteBatch.Draw(renderable, camera);
+        foreach (var renderable in renderables) Draw(renderable, camera);
         End();
     }
 

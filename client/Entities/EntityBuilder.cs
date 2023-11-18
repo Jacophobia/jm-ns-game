@@ -13,7 +13,7 @@ public class EntityBuilder
 
     public EntityBuilder(Texture2D texture, Vector2 position, Vector2 velocity, int? width = null, int? height = null,
         float? scale = null, Rectangle? source = null, Color? color = null, float? rotation = null,
-        Vector2? origin = null, SpriteEffects? effect = null, float? depth = null)
+        Vector2? origin = null, SpriteEffects? effect = null, int? depth = null, bool isStatic = false)
     {
         if (width.HasValue && height.HasValue && !scale.HasValue)
         {
@@ -31,6 +31,8 @@ public class EntityBuilder
                 "There should either be a single scale with no width and height or a width and height with no scale");
             throw new Exception("An EntityBuilder instance was created without valid parameters");
         }
+
+        _entity.IsStatic = isStatic;
 
         _addDecorators = new Stack<Action>();
     }
@@ -77,7 +79,7 @@ public class EntityBuilder
         return this;
     }
 
-    public EntityBuilder SetDepth(float depth)
+    public EntityBuilder SetDepth(int depth)
     {
         _entity.Depth = depth;
         return this;
@@ -86,6 +88,12 @@ public class EntityBuilder
     public EntityBuilder SetVelocity(Vector2 velocity)
     {
         _entity.Velocity = velocity;
+        return this;
+    }
+
+    public EntityBuilder SetStatic(bool isStatic)
+    {
+        _entity.IsStatic = isStatic;
         return this;
     }
 
@@ -101,10 +109,7 @@ public class EntityBuilder
     // Build method
     public Entity Build()
     {
-        while (_addDecorators.TryPop(out var decorate))
-        {
-            decorate();
-        }
+        while (_addDecorators.TryPop(out var decorate)) decorate();
         return _entity;
     }
 }
