@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -12,24 +13,24 @@ using MonoGame.Output;
 
 namespace MonoGame.Networking;
 
-internal class NetworkClient
+public class NetworkClient : IDisposable
 {
     private readonly UdpClient _udpClient;
     private readonly IPEndPoint _remoteEndPoint;
     private readonly Stopwatch _stopwatch;
-    private readonly SortedDictionary<long, Controls> _controlQueue;
-    private readonly SortedDictionary<long, IRenderable> _renderableQueue;
+    private readonly TimePriorityQueue<Controls> _controlQueue;
+    private readonly TimePriorityQueue<IRenderable> _renderableQueue;
 
-    internal NetworkClient(string ipAddress, int port)
+    public NetworkClient(string ipAddress, int port)
     {
         _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
         _udpClient = new UdpClient();
         _stopwatch = Stopwatch.StartNew();
-        _controlQueue = new SortedDictionary<long, Controls>();
-        _renderableQueue = new SortedDictionary<long, IRenderable>();
+        _controlQueue = new TimePriorityQueue<Controls>();
+        _renderableQueue = new TimePriorityQueue<IRenderable>();
     }
 
-    internal void Connect()
+    public void Connect()
     {
         SendInitialPacket();
     }
@@ -41,7 +42,7 @@ internal class NetworkClient
         StartListening();
     }
 
-    internal void StartListening()
+    public void StartListening()
     {
         _udpClient.BeginReceive(ReceiveCallback, null);
     }
@@ -56,16 +57,30 @@ internal class NetworkClient
         _udpClient.BeginReceive(ReceiveCallback, null);
     }
 
-    internal void SendControlData(Controls controlData)
+    public void SendControlData(Controls controlData)
     {
         var data = new[] { (byte)controlData };
         SendData(data, 0); // Assuming '0' is the data type for Controls
     }
 
-    internal void SendRenderableData(IRenderable renderableData)
+    // ReSharper disable once LoopCanBeConvertedToQuery
+    public IEnumerable<Controls> GetControlData(long currentTime)
+    {
+        foreach (var control in _controlQueue.Get(currentTime))
+            yield return control;
+    }
+
+    public void SendRenderableData(IRenderable renderableData)
     {
         var data = SerializeRenderableData(renderableData);
         SendData(data, 1); // Assuming '1' is the data type for Renderables
+    }
+
+    // ReSharper disable once LoopCanBeConvertedToQuery
+    public IEnumerable<IRenderable> GetRenderableData(long currentTime)
+    {
+        foreach (var renderable in _renderableQueue.Get(currentTime))
+            yield return renderable;
     }
 
 
@@ -107,18 +122,16 @@ internal class NetworkClient
     private void ProcessControlData(IReadOnlyList<byte> payload, long timestamp)
     {
         var controlData = (Controls)payload[0];
-        lock (_controlQueue)
         {
-            _controlQueue.Add(timestamp, controlData);
+            _controlQueue.Put(controlData, timestamp);
         }
     }
 
     private void ProcessRenderableData(byte[] payload, long timestamp)
     {
         var renderableData = DeserializeRenderableData(payload);
-        lock (_renderableQueue)
         {
-            _renderableQueue.Add(timestamp, renderableData);
+            _renderableQueue.Put(renderableData, timestamp);
         }
     }
 
@@ -180,9 +193,9 @@ internal class NetworkClient
         return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
     }
 
-
-    internal void Disconnect()
+    public void Dispose()
     {
         _udpClient.Close();
+        _udpClient?.Dispose();
     }
 }

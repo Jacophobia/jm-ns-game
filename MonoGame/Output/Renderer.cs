@@ -47,12 +47,12 @@ public class Renderer
         );
     }
 
-    internal void Render(IEnumerable<IRenderable> renderables, Camera camera)
+    public void Render(IEnumerable<IRenderable> renderables, Camera camera)
     {
         foreach (var renderable in renderables) Draw(renderable, camera);
     }
 
-    internal void Render(IRenderable renderable, Camera camera, Texture2D texture = null,
+    public void Render(IRenderable renderable, Camera camera, Texture2D texture = null,
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         int? depth = null)

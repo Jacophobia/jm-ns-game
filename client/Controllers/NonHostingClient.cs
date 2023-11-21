@@ -1,72 +1,94 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using MonoGame;
+using MonoGame.Input;
+using MonoGame.Networking;
+using MonoGame.Output;
 
 namespace client.Controllers;
-
-public class NonHostingClient : Game
+public class NonHostingClient : GameController
 {
-    protected override void OnActivated(object sender, EventArgs args)
+    private NetworkClient _networkClient;
+    private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
+    private const int ServerPort = 12345; // Replace with the server's port
+    private Camera _camera;
+
+    protected override void OnInitialize()
     {
-        base.OnActivated(sender, args);
+        // Initialize NetworkClient
+        _networkClient = new NetworkClient(ServerIpAddress, ServerPort);
     }
 
-    protected override void OnDeactivated(object sender, EventArgs args)
+    protected override void OnLoadContent()
     {
-        base.OnDeactivated(sender, args);
+        // Load any necessary content
     }
 
-    protected override void Initialize()
+    protected override void OnBeginRun()
     {
-        base.Initialize();
+        // Start the network client and its listening process
+        _networkClient.Connect();
+        _networkClient.StartListening();
     }
 
-    protected override void LoadContent()
+    protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        base.LoadContent();
+        // Send control data
+        _networkClient.SendControlData(controls);
+
+        // Additional update logic
     }
 
-    protected override void BeginRun()
+    protected override void OnBeginDraw()
     {
-        base.BeginRun();
+        // Before drawing
     }
 
-    protected override void EndRun()
+    protected override void OnDraw(GameTime gameTime)
     {
-        base.EndRun();
+        // Retrieve renderable data from the network and render it
+        foreach (var renderable in _networkClient.GetRenderableData(gameTime.TotalGameTime.Milliseconds))
+        {
+            Renderer.Render(renderable, _camera);
+        }
     }
 
-    protected override void Update(GameTime gameTime)
+    protected override void OnEndDraw()
     {
-        base.Update(gameTime);
+        // After drawing
     }
 
-    protected override bool BeginDraw()
+    protected override void OnEndRun()
     {
-        return base.BeginDraw();
+        // Clean up on game end
     }
 
-    protected override void Draw(GameTime gameTime)
+    protected override void OnUnloadContent()
     {
-        base.Draw(gameTime);
+        // Unload any game content
     }
 
-    protected override void EndDraw()
+    protected override void OnExit(object sender, EventArgs args)
     {
-        base.EndDraw();
+        // Handle game exit events
     }
 
-    protected override void OnExiting(object sender, EventArgs args)
+    protected override void OnDispose(bool disposing)
     {
-        base.OnExiting(sender, args);
+        // Dispose resources
+        if (disposing)
+        {
+            _networkClient?.Dispose();
+        }
     }
 
-    protected override void UnloadContent()
+    protected override void OnWindowFocused(object sender, EventArgs args)
     {
-        base.UnloadContent();
+        // Handle window focus events
     }
 
-    protected override void Dispose(bool disposing)
+    protected override void OnWindowClosed(object sender, EventArgs args)
     {
-        base.Dispose(disposing);
+        // Handle window close events
     }
 }

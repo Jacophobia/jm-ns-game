@@ -13,7 +13,7 @@ public abstract class GameController : Game
 {
     protected Renderer Renderer;
 
-    protected Rectangle WindowSize
+    protected static Rectangle WindowSize
     {
         get
         {
