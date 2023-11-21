@@ -1,7 +1,7 @@
 ﻿using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace IO.Sprites;
+namespace Collision.Sprites;
 
 public class SpriteFactory
 {

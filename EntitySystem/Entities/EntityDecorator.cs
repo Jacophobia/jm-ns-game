@@ -1,11 +1,11 @@
-﻿using IO.Input;
+﻿using Collision.Interfaces;
+using Collision.Sprites;
+using IO.Input;
 using IO.Output;
-using IO.Sprites;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using SpatialPartition.Interfaces;
 
-namespace client.Entities;
+namespace EntitySystem.Entities;
 
 public abstract class EntityDecorator : Entity
 {

@@ -6,7 +6,7 @@ using IO.File;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace IO.Sprites;
+namespace Collision.Sprites;
 
 public class CollisionData
 {

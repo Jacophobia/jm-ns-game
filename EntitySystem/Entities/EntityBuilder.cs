@@ -4,7 +4,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
-namespace client.Entities;
+namespace EntitySystem.Entities;
 
 public class EntityBuilder
 {

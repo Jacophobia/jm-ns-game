@@ -1,10 +1,10 @@
-﻿using client.Entities;
+﻿using Collision.Interfaces;
+using EntitySystem.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Interfaces;
 
-namespace client.Decorators;
+namespace EntitySystem.Decorators;
 
 public class Static : EntityDecorator
 {

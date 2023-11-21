@@ -5,6 +5,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Collision.Interfaces;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;

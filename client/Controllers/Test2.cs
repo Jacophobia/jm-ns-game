@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using client.Decorators;
-using client.Entities;
 using client.Extensions;
+using EntitySystem.Decorators;
+using EntitySystem.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;

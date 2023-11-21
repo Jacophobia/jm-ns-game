@@ -8,6 +8,7 @@
         </PackageReference>
     </ItemGroup>
     <ItemGroup>
-        <ProjectReference Include="..\IO\IO.csproj"/>
+        <ProjectReference Include="..\Collision\Collision.csproj" />
+        <ProjectReference Include="..\IO\IO.csproj" />
     </ItemGroup>
 </Project>

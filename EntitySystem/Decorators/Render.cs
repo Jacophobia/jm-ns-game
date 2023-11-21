@@ -1,16 +1,16 @@
-﻿using client.Entities;
+﻿using Collision.Interfaces;
+using EntitySystem.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Interfaces;
 
-namespace client.Decorators;
+namespace EntitySystem.Decorators;
 
-public class Drag : EntityDecorator
+public class Render : EntityDecorator
 {
-    public Drag(Entity @base, float restitutionCoefficient) : base(@base)
+    public Render(Entity @base) : base(@base)
     {
-        RestitutionCoefficient = restitutionCoefficient;
+        // no new behavior to add
     }
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
@@ -32,6 +32,6 @@ public class Drag : EntityDecorator
 
     protected override void OnDraw(Renderer renderer, Camera camera)
     {
-        // no new behavior to add
+        renderer.Render(this, camera);
     }
 }

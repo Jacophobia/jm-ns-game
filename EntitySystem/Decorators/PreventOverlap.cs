@@ -1,13 +1,13 @@
 ﻿using System.Diagnostics;
-using client.Entities;
+using Collision.Interfaces;
+using Collision.Sprites;
+using EntitySystem.Entities;
 using IO.Extensions;
 using IO.Input;
 using IO.Output;
-using IO.Sprites;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Interfaces;
 
-namespace client.Decorators;
+namespace EntitySystem.Decorators;
 
 public class PreventOverlap : EntityDecorator
 {

@@ -1,26 +1,20 @@
 ﻿using System.Diagnostics;
-using client.Entities;
+using Collision.Interfaces;
+using EntitySystem.Entities;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
-using SpatialPartition.Interfaces;
 
-namespace client.Decorators;
+namespace EntitySystem.Decorators;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class CircularCollision : EntityDecorator
 {
-    private int _collisionFrame;
-    private int _frameCounter;
-    private ICollidable _previousCollision;
-
     public CircularCollision(Entity @base) : base(@base)
     {
-        _frameCounter = 0;
-        _collisionFrame = 0;
-        _previousCollision = null;
     }
 
-    public static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
+    private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
         Vector2 velocity2)
     {
         // Calculate position differences
@@ -49,9 +43,6 @@ public class CircularCollision : EntityDecorator
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         if (IsStatic && rhs.IsStatic) return;
-
-        _previousCollision = rhs;
-        _collisionFrame = _frameCounter;
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
@@ -132,6 +123,5 @@ public class CircularCollision : EntityDecorator
 
     protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
-        _frameCounter++;
     }
 }

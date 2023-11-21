@@ -1,10 +1,10 @@
 ﻿using System;
+using Collision.Sprites;
 using IO.Input;
 using IO.Interfaces;
-using IO.Sprites;
 using Microsoft.Xna.Framework;
 
-namespace SpatialPartition.Interfaces;
+namespace Collision.Interfaces;
 
 public interface ICollidable : IRenderable
 {

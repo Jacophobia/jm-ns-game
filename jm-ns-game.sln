@@ -9,6 +9,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO", "IO\IO.csproj", "{86FB
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpatialPartition", "SpatialPartition\SpatialPartition.csproj", "{53B407B9-FA96-42F0-B09F-AFDED8359DAA}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EntitySystem", "EntitySystem\EntitySystem.csproj", "{8CBEA30F-09C9-49B8-BC19-790CC6731316}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Collision", "Collision\Collision.csproj", "{8E48E99F-F42B-416E-ACB5-CA7F73F74F04}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +34,13 @@ Global
 		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CBEA30F-09C9-49B8-BC19-790CC6731316}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CBEA30F-09C9-49B8-BC19-790CC6731316}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CBEA30F-09C9-49B8-BC19-790CC6731316}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CBEA30F-09C9-49B8-BC19-790CC6731316}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E48E99F-F42B-416E-ACB5-CA7F73F74F04}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E48E99F-F42B-416E-ACB5-CA7F73F74F04}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E48E99F-F42B-416E-ACB5-CA7F73F74F04}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E48E99F-F42B-416E-ACB5-CA7F73F74F04}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

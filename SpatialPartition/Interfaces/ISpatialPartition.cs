@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Collision.Interfaces;
 using IO.Input;
 using IO.Output;
 using Microsoft.Xna.Framework;
