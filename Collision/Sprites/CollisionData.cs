@@ -30,7 +30,7 @@ public class CollisionData
         var relativePath = texture.GetCollisionDataFilepath();
         var fullPath = Path.Combine(Directory.GetCurrentDirectory(), relativePath);
 
-        if (System.IO.File.Exists(fullPath))
+        if (File.Exists(fullPath))
         {
             Load(fullPath);
             return;
