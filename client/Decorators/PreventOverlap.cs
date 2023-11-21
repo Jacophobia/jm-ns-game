@@ -24,6 +24,7 @@ public class PreventOverlap : EntityDecorator
     protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap)
     {
+        // no new behavior to add
     }
 
     protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,

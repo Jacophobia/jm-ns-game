@@ -11,6 +11,14 @@ public static class ArrayExtensions
         // Get the pixel indices
         return array[x + y * width];
     }
+    
+    
+    public static void Set<T>(this T[] array, int x, int y, int width, T value)
+    {
+        Debug.Assert(array.Length % width == 0, "The array is missing elements or the width is incorrect");
+        // Get the pixel indices
+        array[x + y * width] = value;
+    }
 
     public static bool TryGet<T>(this T[] array, int x, int y, int width, int height, out T element)
     {

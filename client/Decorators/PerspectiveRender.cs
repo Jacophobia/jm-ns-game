@@ -7,7 +7,7 @@ using SpatialPartition.Interfaces;
 
 namespace client.Decorators;
 
-public sealed class PerspectiveRender : EntityDecorator
+public class PerspectiveRender : EntityDecorator
 {
     private readonly float _scale;
 

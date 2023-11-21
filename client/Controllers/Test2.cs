@@ -16,6 +16,7 @@ namespace client.Controllers;
 public class Test2 : Game
 {
     private readonly Rectangle _backgroundSize;
+    // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
     private readonly GraphicsDeviceManager _graphics;
     private readonly ISpatialPartition<Entity> _spatialGrid;
     private List<Entity> _background;

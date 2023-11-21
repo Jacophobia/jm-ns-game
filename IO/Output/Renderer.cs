@@ -19,27 +19,28 @@ public class Renderer
         _spriteBatch = spriteBatch;
     }
 
-    private void Draw(IRenderable renderable, Camera camera)
+    private void Draw(IRenderable renderable, Camera camera, Texture2D texture = null, 
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
     {
         if (!renderable.Destination.Intersects(camera.View))
             return;
 
-        var relativeDestination = new Rectangle(
-            renderable.Destination.X - camera.View.X,
-            renderable.Destination.Y - camera.View.Y,
-            renderable.Destination.Width,
-            renderable.Destination.Height
-        );
+        var relativeDestination = destination ?? renderable.Destination;
+
+        relativeDestination.X -= camera.View.X;
+        relativeDestination.Y -= camera.View.Y;
 
         _spriteBatch.Draw(
-            renderable.Texture,
+            texture ?? renderable.Texture,
             relativeDestination,
-            renderable.Source,
-            renderable.Color,
-            renderable.Rotation,
-            renderable.Origin,
-            renderable.Effect,
-            (MaxDepth - renderable.Depth) / 1000f
+            source ?? renderable.Source,
+            color ?? renderable.Color,
+            rotation ?? renderable.Rotation,
+            origin ?? renderable.Origin,
+            effect == SpriteEffects.None ? renderable.Effect : effect,
+            (MaxDepth - (depth ?? renderable.Depth)) / 1000f
         );
     }
 
@@ -55,15 +56,21 @@ public class Renderer
         foreach (var renderable in renderables) Draw(renderable, camera);
     }
 
-    public void Render(IRenderable renderable, Camera camera)
+    public void Render(IRenderable renderable, Camera camera, Texture2D texture = null,
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
     {
-        Draw(renderable, camera);
+        Draw(renderable, camera, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
-    public void FullRender(IRenderable renderable, Camera camera)
+    public void FullRender(IRenderable renderable, Camera camera, Texture2D texture = null,
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
     {
         Begin();
-        Draw(renderable, camera);
+        Draw(renderable, camera, texture, destination, source, color, rotation, origin, effect, depth);
         End();
     }
 
