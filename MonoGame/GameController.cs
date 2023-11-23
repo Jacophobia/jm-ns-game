@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Input;
+using MonoGame.Networking;
 using MonoGame.Output;
 
 namespace MonoGame;
@@ -11,6 +12,9 @@ namespace MonoGame;
 // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 public abstract class GameController : Game
 {
+    private const string ServerIpAddress = "127.0.0.1"; // Replace with actual server IP
+    private const int ServerPort = 12345; // Replace with the actual port
+    
     protected Renderer Renderer;
 
     protected static Rectangle WindowSize
@@ -27,6 +31,7 @@ public abstract class GameController : Game
     }
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
+    private readonly NetworkClient _networkClient;
     private Listener _inputListener;
     private SpriteBatch _spriteBatch;
 
@@ -43,8 +48,15 @@ public abstract class GameController : Game
         _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
+
+        _networkClient = new NetworkClient(ServerIpAddress, ServerPort);
     }
     
+    /// <summary>
+    /// Initializes game component. Called once before the game loop
+    /// starts and after the graphics device is initialized.
+    /// </summary>
+    protected abstract void OnInitialize();
     protected sealed override void Initialize()
     {
         _spriteBatch = new SpriteBatch(GraphicsDevice);
@@ -55,7 +67,7 @@ public abstract class GameController : Game
             { Keys.OemComma, Controls.Up },
             { Keys.O, Controls.Down }
         });
-        Renderer = new Renderer(GraphicsDevice, _spriteBatch, Content);
+        Renderer = new Renderer(GraphicsDevice, _spriteBatch, Content, _networkClient);
         
         OnInitialize();
         
@@ -63,39 +75,28 @@ public abstract class GameController : Game
     }
 
     /// <summary>
-    /// Initializes game component. Called once before the game loop
-    /// starts and after the graphics device is initialized.
+    /// Called when the game should load its content.
     /// </summary>
-    protected abstract void OnInitialize();
-
+    protected abstract void OnLoadContent();
     protected sealed override void LoadContent()
     {
         OnLoadContent();
         
         base.LoadContent();
     }
-
-    /// <summary>
-    /// Called when the game should load its content.
-    /// </summary>
-    protected abstract void OnLoadContent();
-
-    protected sealed override void BeginRun()
-    {
-        OnBeginRun();
-        base.BeginRun();
-    }
-
+    
     /// <summary>
     /// Called once before the game loop begins. Useful for any one-time
     /// setup.
     /// </summary>
     protected abstract void OnBeginRun();
-
-    protected sealed override void Update(GameTime gameTime)
+    protected sealed override void BeginRun()
     {
-        OnUpdate(gameTime, _inputListener.GetInputState());
-        base.Update(gameTime);
+        OnBeginRun();
+        // Start the network client and its listening process
+        _networkClient.Connect();
+        _networkClient.StartListening();
+        base.BeginRun();
     }
 
     /// <summary>
@@ -105,8 +106,20 @@ public abstract class GameController : Game
     ///     Snapshot of the game's timing state.
     /// </param>
     /// <param name="controls"></param>
-    protected abstract void OnUpdate(GameTime gameTime, Controls controls);
+    protected abstract void OnUpdate(GameTime gameTime, Controls[] controls);
+    protected sealed override void Update(GameTime gameTime)
+    {
+        // Receive control data from the network
+        var controls = _networkClient.GetControlData(gameTime.TotalGameTime.Milliseconds);
+        OnUpdate(gameTime, new []{_inputListener.GetInputState(), controls});
+        base.Update(gameTime);
+    }
 
+    /// <summary>
+    /// Called before drawing the frame. Allows any necessary pre-draw
+    /// operations.
+    /// </summary>
+    protected abstract void OnBeginDraw();
     protected sealed override bool BeginDraw()
     {
         GraphicsDevice.Clear(Color.Black);
@@ -116,11 +129,12 @@ public abstract class GameController : Game
     }
 
     /// <summary>
-    /// Called before drawing the frame. Allows any necessary pre-draw
-    /// operations.
+    /// Called when the game should draw itself.
     /// </summary>
-    protected abstract void OnBeginDraw();
-
+    /// <param name="gameTime">
+    /// Snapshot of the game's timing state.
+    /// </param>
+    protected abstract void OnDraw(GameTime gameTime);
     protected sealed override void Draw(GameTime gameTime)
     {
         OnDraw(gameTime);
@@ -128,13 +142,10 @@ public abstract class GameController : Game
     }
 
     /// <summary>
-    /// Called when the game should draw itself.
+    /// Called after drawing the frame. Allows any necessary post-draw
+    /// operations.
     /// </summary>
-    /// <param name="gameTime">
-    /// Snapshot of the game's timing state.
-    /// </param>
-    protected abstract void OnDraw(GameTime gameTime);
-
+    protected abstract void OnEndDraw();
     protected sealed override void EndDraw()
     {
         OnEndDraw();
@@ -143,11 +154,9 @@ public abstract class GameController : Game
     }
 
     /// <summary>
-    /// Called after drawing the frame. Allows any necessary post-draw
-    /// operations.
+    /// Called once after the game loop ends. Useful for any cleanup.
     /// </summary>
-    protected abstract void OnEndDraw();
-
+    protected abstract void OnEndRun();
     protected sealed override void EndRun()
     {
         OnEndRun();
@@ -155,25 +164,13 @@ public abstract class GameController : Game
     }
 
     /// <summary>
-    /// Called once after the game loop ends. Useful for any cleanup.
+    /// Called when the game should unload its content.
     /// </summary>
-    protected abstract void OnEndRun();
-
+    protected abstract void OnUnloadContent();
     protected sealed override void UnloadContent()
     {
         OnUnloadContent();
         base.UnloadContent();
-    }
-
-    /// <summary>
-    /// Called when the game should unload its content.
-    /// </summary>
-    protected abstract void OnUnloadContent();
-
-    protected sealed override void OnExiting(object sender, EventArgs args)
-    {
-        OnExit(sender, args);
-        base.OnExiting(sender, args);
     }
 
     /// <summary>
@@ -183,12 +180,12 @@ public abstract class GameController : Game
     /// <param name="sender">The source of the event.</param>
     /// <param name="args">Arguments for the event.</param>
     protected abstract void OnExit(object sender, EventArgs args);
-
-    protected sealed override void Dispose(bool disposing)
+    protected sealed override void OnExiting(object sender, EventArgs args)
     {
-        OnDispose(disposing);
-        base.Dispose(disposing);
+        OnExit(sender, args);
+        base.OnExiting(sender, args);
     }
+    
 
     /// <summary>
     /// Disposes of the game's resources. Called when the game is being
@@ -199,13 +196,16 @@ public abstract class GameController : Game
     /// (its value is true) or from a finalizer (its value is false).
     /// </param>
     protected abstract void OnDispose(bool disposing);
-
-    protected sealed override void OnActivated(object sender, EventArgs args)
+    protected sealed override void Dispose(bool disposing)
     {
-        OnWindowFocused(sender, args);
-        base.OnActivated(sender, args);
+        OnDispose(disposing);
+        if (disposing)
+        {
+            _networkClient?.Dispose();
+        }
+        base.Dispose(disposing);
     }
-
+    
     /// <summary>
     /// Called when the game window gains focus. This method is used to
     /// trigger any actions that should occur when the game becomes the
@@ -219,13 +219,12 @@ public abstract class GameController : Game
     /// the activation.
     /// </param>
     protected abstract void OnWindowFocused(object sender, EventArgs args);
-
-    protected sealed override void OnDeactivated(object sender, EventArgs args)
+    protected sealed override void OnActivated(object sender, EventArgs args)
     {
-        OnWindowClosed(sender, args);
-        base.OnDeactivated(sender, args);
+        OnWindowFocused(sender, args);
+        base.OnActivated(sender, args);
     }
-
+    
     /// <summary>
     /// Called when the game window loses focus. This method is useful
     /// for pausing the game, stopping animations, or other actions when
@@ -238,4 +237,9 @@ public abstract class GameController : Game
     /// Arguments for the event, containing any additional info about the deactivation.
     /// </param>
     protected abstract void OnWindowClosed(object sender, EventArgs args);
+    protected sealed override void OnDeactivated(object sender, EventArgs args)
+    {
+        OnWindowClosed(sender, args);
+        base.OnDeactivated(sender, args);
+    }
 }

@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.DataStructures;
 using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
@@ -64,10 +65,12 @@ public class NetworkClient : IDisposable
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
-    public IEnumerable<Controls> GetControlData(long currentTime)
+    public Controls GetControlData(long currentTime)
     {
+        var controls = Controls.None;
         foreach (var control in _controlQueue.Get(currentTime))
-            yield return control;
+            controls |= control;
+        return controls;
     }
 
     public void SendRenderableData(IRenderable renderableData)

@@ -10,7 +10,7 @@ using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
-namespace MonoGame.SpatialPartitions;
+namespace MonoGame.DataStructures;
 
 public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
 {
@@ -319,21 +319,6 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
 
             _hashSetPool.Return(indices);
-        }
-    }
-
-    private class ObjectPool<TPooled> where TPooled : new()
-    {
-        private readonly Stack<TPooled> _items = new();
-
-        internal TPooled Get()
-        {
-            return _items.Count > 0 ? _items.Pop() : new TPooled();
-        }
-
-        internal void Return(TPooled item)
-        {
-            _items.Push(item);
         }
     }
 

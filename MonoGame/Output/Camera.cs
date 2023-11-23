@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extensions;
@@ -18,7 +17,7 @@ public class Camera
     private Vector3 _position;
     private Rectangle _view;
 
-    public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset)
+    public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset, int clientIndex = 0)
     {
         using var adapter = GraphicsAdapter.DefaultAdapter;
         var displayMode = adapter.CurrentDisplayMode;
@@ -30,9 +29,11 @@ public class Camera
         _objectsToFollow.Push(objectToFollow);
         _followSpeed = followSpeed;
         _offset = offset;
+        ClientIndex = clientIndex;
     }
 
     internal Vector3 Position => _position;
+    internal int ClientIndex { get; }
 
     internal Rectangle View
     {

@@ -3,28 +3,27 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoGame;
+using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
 using MonoGame.Input;
 using MonoGame.Networking;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-using MonoGame.SpatialPartitions; // Assuming this is where IRenderable is located
+
+// Assuming this is where IRenderable is located
 
 namespace client.Controllers;
 
 public class HostingClient : GameController
 {
-    private NetworkClient _networkClient;
-    private const string ServerIpAddress = "127.0.0.1"; // Replace with actual server IP
-    private const int ServerPort = 12345; // Replace with the actual port
     private ISpatialPartition<Entity> _spatialPartition;
-    private Camera _camera;
+    private Camera _camera1;
+    private Camera _camera2;
 
     protected override void OnInitialize()
     {
         // Initialize NetworkClient
-        _networkClient = new NetworkClient(ServerIpAddress, ServerPort);
         _spatialPartition = new SpatialGrid<Entity>();
     }
 
@@ -66,36 +65,41 @@ public class HostingClient : GameController
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                     .AddDecorator<PerspectiveRender>(true, -10);
 
-                if (i == 0)
+                switch (i)
                 {
-                    entityBuilder.SetColor(Color.Red);
-                    entityBuilder.SetDepth(0);
-                    var entity = entityBuilder.Build();
-                    _camera = new Camera(entity, 1, Vector3.Up * 100);
-                    _spatialPartition.Add(entity);
-                    continue;
+                    case 0:
+                    {
+                        entityBuilder.SetColor(Color.Red);
+                        entityBuilder.SetDepth(0);
+                        var entity = entityBuilder.Build();
+                        _camera1 = new Camera(entity, 1, Vector3.Up * 100, i);
+                        _spatialPartition.Add(entity);
+                        continue;
+                    }
+                    case 1:
+                    {
+                        entityBuilder.SetColor(Color.Red);
+                        entityBuilder.SetDepth(0);
+                        var entity = entityBuilder.Build();
+                        _camera2 = new Camera(entity, 1, Vector3.Up * 100, i);
+                        _spatialPartition.Add(entity);
+                        continue;
+                    }
+                    default:
+                        _spatialPartition.Add(entityBuilder.Build());
+                        break;
                 }
-
-                _spatialPartition.Add(entityBuilder.Build());
             }
         }
     }
 
     protected override void OnBeginRun()
     {
-        // Start the network client and its listening process
-        _networkClient.Connect();
-        _networkClient.StartListening();
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
-        // Receive control data from the network
-        foreach (var control in _networkClient.GetControlData(gameTime.TotalGameTime.Milliseconds))
-        {
-            // Process received control data
-            ProcessControlData(control);
-        }
+        
     }
 
     protected override void OnBeginDraw()
@@ -110,7 +114,7 @@ public class HostingClient : GameController
         // Send renderable data
         foreach (var renderable in GetRenderables())
         {
-            _networkClient.SendRenderableData(renderable);
+            Renderer.Render(renderable);
         }
     }
 
@@ -137,10 +141,6 @@ public class HostingClient : GameController
     protected override void OnDispose(bool disposing)
     {
         // Dispose resources
-        if (disposing)
-        {
-            _networkClient?.Dispose();
-        }
     }
 
     protected override void OnWindowFocused(object sender, EventArgs args)

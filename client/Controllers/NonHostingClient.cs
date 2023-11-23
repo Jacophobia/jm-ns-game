@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework;
 using MonoGame;
 using MonoGame.Input;
 using MonoGame.Networking;
-using MonoGame.Output;
 
 namespace client.Controllers;
 public class NonHostingClient : GameController
@@ -11,7 +10,6 @@ public class NonHostingClient : GameController
     private NetworkClient _networkClient;
     private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
     private const int ServerPort = 12345; // Replace with the server's port
-    private Camera _camera;
 
     protected override void OnInitialize()
     {
@@ -31,10 +29,10 @@ public class NonHostingClient : GameController
         _networkClient.StartListening();
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // Send control data
-        _networkClient.SendControlData(controls);
+        _networkClient.SendControlData(controls[1]);
 
         // Additional update logic
     }
@@ -49,7 +47,7 @@ public class NonHostingClient : GameController
         // Retrieve renderable data from the network and render it
         foreach (var renderable in _networkClient.GetRenderableData(gameTime.TotalGameTime.Milliseconds))
         {
-            Renderer.Render(renderable, _camera);
+            Renderer.Render(renderable);
         }
     }
 

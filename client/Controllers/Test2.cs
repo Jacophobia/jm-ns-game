@@ -5,12 +5,12 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame;
+using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-using MonoGame.SpatialPartitions;
 
 namespace client.Controllers;
 
@@ -111,14 +111,14 @@ public class Test2 : GameController
         // nothing to implement
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         // This will call Update on each Ball
-        _spatialGrid.Update(gameTime, controls); 
-        _camera.Update(gameTime, controls);
+        _spatialGrid.Update(gameTime, controls[0]); 
+        _camera.Update(gameTime, controls[0]);
     }
 
     protected override void OnBeginDraw()
