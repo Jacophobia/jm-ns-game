@@ -15,9 +15,10 @@ internal class TimePriorityQueue<T>
     internal IEnumerable<T> Get(long currentTime)
     {
         bool done;
+        
         lock (_queue)
         {
-            done = _queue.Count > 0 && _queue.Peek().Time <= currentTime;
+            done = _queue.IsEmpty || _queue.Peek().Time > currentTime;
         }
         
         while (!done)
@@ -25,7 +26,7 @@ internal class TimePriorityQueue<T>
             lock (_queue)
             {
                 yield return _queue.Get().Item;
-                done = _queue.Count > 0 && _queue.Peek().Time <= currentTime;
+                done = _queue.IsEmpty || _queue.Peek().Time > currentTime;
             }
         }
     }

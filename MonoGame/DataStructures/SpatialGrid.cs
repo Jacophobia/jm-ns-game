@@ -142,7 +142,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(GameTime gameTime, Controls controls)
+    void ISpatialPartition<T>.Update(GameTime gameTime, Controls[] controls)
     {
         foreach (var element in _elements)
         {

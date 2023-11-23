@@ -33,7 +33,7 @@ public interface ICollidable : IRenderable
         return new Rectangle((int)minX, (int)minY, (int)(maxX - minX), (int)(maxY - minY));
     }
 
-    public void Update(GameTime gameTime, Controls controls);
+    public void Update(GameTime gameTime, Controls[] controls);
 
     public void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap);

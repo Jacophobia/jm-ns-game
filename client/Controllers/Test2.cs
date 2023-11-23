@@ -117,8 +117,8 @@ public class Test2 : GameController
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         // This will call Update on each Ball
-        _spatialGrid.Update(gameTime, controls[0]); 
-        _camera.Update(gameTime, controls[0]);
+        _spatialGrid.Update(gameTime, controls); 
+        _camera.Update(gameTime, controls);
     }
 
     protected override void OnBeginDraw()

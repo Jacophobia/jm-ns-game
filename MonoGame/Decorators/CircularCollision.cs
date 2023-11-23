@@ -121,7 +121,7 @@ public class CircularCollision : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // no new behavior to add
     }

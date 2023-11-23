@@ -31,7 +31,7 @@ public class Gravity : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         Velocity = new Vector2(Velocity.X, Velocity.Y - 9.8f * gameTime.DeltaTime());
     }

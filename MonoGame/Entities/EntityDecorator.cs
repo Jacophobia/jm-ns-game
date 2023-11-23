@@ -90,13 +90,13 @@ public abstract class EntityDecorator : Entity
         set => _base.IsStatic = value;
     }
 
-    public sealed override void Update(GameTime gameTime, Controls controls)
+    public sealed override void Update(GameTime gameTime, Controls[] controls)
     {
         OnUpdate(gameTime, controls);
         _base.Update(gameTime, controls);
     }
 
-    protected abstract void OnUpdate(GameTime gameTime, Controls controls);
+    protected abstract void OnUpdate(GameTime gameTime, Controls[] controls);
 
     public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
         Vector2? collisionLocation, Rectangle? overlap)

@@ -31,7 +31,7 @@ public class Inertia : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         Position += Velocity * gameTime.DeltaTime();
     }

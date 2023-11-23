@@ -37,7 +37,7 @@ public class PerspectiveRender : EntityDecorator
         _scale = 1 - _scale;
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // no new behavior to add
     }

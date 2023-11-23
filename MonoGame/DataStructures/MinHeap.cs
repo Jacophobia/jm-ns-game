@@ -13,6 +13,7 @@ internal class MinHeap<T> where T : IComparable<T>
     }
 
     public int Count => _elements.Count;
+    public bool IsEmpty => Count <= 0;
 
     public void Put(T item)
     {
@@ -31,6 +32,18 @@ internal class MinHeap<T> where T : IComparable<T>
         HeapifyDown(0);
 
         return result;
+    }
+
+    public bool TryGet(out T value)
+    {
+        if (_elements.Count == 0)
+        {
+            value = default;
+            return false;
+        }
+
+        value = Get();
+        return true;
     }
     
     public T Peek()

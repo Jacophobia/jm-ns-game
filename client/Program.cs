@@ -1,16 +1,35 @@
-﻿using System.Threading;
+﻿using System;
 using client.Controllers;
 
-// using var game = new Test2();
-using var game1 = new HostingClient();
-using var game2 = new NonHostingClient();
-game1.Run();
+namespace client;
 
-var gameRunner1 = new Thread(game1.Run);
-var gameRunner2 = new Thread(game2.Run);
+public static class Program
+{
+    [STAThread]
+    private static void Main(string[] args)
+    {
+        if (args.Length > 1 && args[0] == "--client")
+        {
+            switch (args[1].ToLower())
+            {
+                case "host":
+                    using (var game = new HostingClient())
+                        game.Run();
+                    break;
 
-gameRunner1.Start();
-gameRunner2.Start();
+                case "thin":
+                    using (var game = new NonHostingClient())
+                        game.Run();
+                    break;
 
-gameRunner1.Join();
-gameRunner2.Join();
+                default:
+                    Console.WriteLine("Invalid client type specified.");
+                    break;
+            }
+        }
+        else
+        {
+            Console.WriteLine("No valid arguments provided. Exiting...");
+        }
+    }
+}

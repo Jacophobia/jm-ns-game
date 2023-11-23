@@ -105,7 +105,7 @@ public sealed class BaseEntity : Entity
         if (depth.HasValue) Depth = depth.Value;
     }
 
-    public override void Update(GameTime gameTime, Controls controls)
+    public override void Update(GameTime gameTime, Controls[] controls)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

@@ -13,7 +13,7 @@ public class Drag : EntityDecorator
         RestitutionCoefficient = restitutionCoefficient;
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls controls)
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // no new behavior to add
     }

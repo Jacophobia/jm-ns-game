@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
@@ -21,18 +22,38 @@ public class NetworkClient : IDisposable
     private readonly Stopwatch _stopwatch;
     private readonly TimePriorityQueue<Controls> _controlQueue;
     private readonly TimePriorityQueue<IRenderable> _renderableQueue;
+    private Thread _listeningThread;
+    private bool _listening;
+    private readonly int _port;
+    private readonly bool _isHosting;
 
-    public NetworkClient(string ipAddress, int port)
+    private NetworkClient()
     {
-        _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-        _udpClient = new UdpClient();
         _stopwatch = Stopwatch.StartNew();
-        _controlQueue = new TimePriorityQueue<Controls>();
         _renderableQueue = new TimePriorityQueue<IRenderable>();
+        _controlQueue = new TimePriorityQueue<Controls>();
+    }
+
+    public NetworkClient(int port, string ipAddress) : this()
+    {
+        _udpClient = new UdpClient();
+        _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
+        _port = port;
+        _isHosting = false;
+    }
+
+    public NetworkClient(int port) : this()
+    {
+        _udpClient = new UdpClient(port);
+        _port = port;
+        _isHosting = true;
     }
 
     public void Connect()
     {
+        if (_isHosting)
+            return;
+        
         SendInitialPacket();
     }
 
@@ -45,17 +66,27 @@ public class NetworkClient : IDisposable
 
     public void StartListening()
     {
-        _udpClient.BeginReceive(ReceiveCallback, null);
+        _listening = true;
+        _listeningThread = new Thread(ListenLoop);
+        _listeningThread.Start();
     }
-
-    private void ReceiveCallback(IAsyncResult ar)
+    
+    private void ListenLoop()
     {
-        IPEndPoint remoteEp = null;
-        var receivedData = _udpClient.EndReceive(ar, ref remoteEp);
-
-        ProcessReceivedData(receivedData);
-
-        _udpClient.BeginReceive(ReceiveCallback, null);
+        while (_listening)
+        {
+            if (true)
+            {
+                var remoteEp = new IPEndPoint(IPAddress.Any, _port);
+                var receivedData = _udpClient.Receive(ref remoteEp);
+                ProcessReceivedData(receivedData);
+            }
+            else
+            {
+                // Sleep for a short period to avoid spinning.
+                Thread.Sleep(10);
+            }
+        }
     }
 
     public void SendControlData(Controls controlData)
@@ -106,6 +137,9 @@ public class NetworkClient : IDisposable
 
     private void ProcessReceivedData(byte[] data)
     {
+        if (data.Length <= 8)
+            return;
+        
         var timestamp = BitConverter.ToInt64(data, 0);
         var dataType = data[8];
         var payload = new byte[data.Length - 9];
@@ -125,17 +159,13 @@ public class NetworkClient : IDisposable
     private void ProcessControlData(IReadOnlyList<byte> payload, long timestamp)
     {
         var controlData = (Controls)payload[0];
-        {
-            _controlQueue.Put(controlData, timestamp);
-        }
+        _controlQueue.Put(controlData, timestamp);
     }
 
     private void ProcessRenderableData(byte[] payload, long timestamp)
     {
         var renderableData = DeserializeRenderableData(payload);
-        {
-            _renderableQueue.Put(renderableData, timestamp);
-        }
+        _renderableQueue.Put(renderableData, timestamp);
     }
 
     private static byte[] SerializeRenderableData(IRenderable data)
@@ -198,6 +228,8 @@ public class NetworkClient : IDisposable
 
     public void Dispose()
     {
+        _listening = false;
+        _listeningThread?.Join();
         _udpClient.Close();
         _udpClient?.Dispose();
     }

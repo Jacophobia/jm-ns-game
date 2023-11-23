@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoGame;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
 using MonoGame.Input;
-using MonoGame.Networking;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
@@ -17,9 +15,15 @@ namespace client.Controllers;
 
 public class HostingClient : GameController
 {
+    private const int ServerPort = 12345;
     private ISpatialPartition<Entity> _spatialPartition;
     private Camera _camera1;
     private Camera _camera2;
+
+    public HostingClient() : base(ServerPort, fullscreen: false)
+    {
+        
+    }
 
     protected override void OnInitialize()
     {
@@ -99,7 +103,7 @@ public class HostingClient : GameController
 
     protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
-        
+        _spatialPartition.Update(gameTime, controls);
     }
 
     protected override void OnBeginDraw()
@@ -114,7 +118,8 @@ public class HostingClient : GameController
         // Send renderable data
         foreach (var renderable in GetRenderables())
         {
-            Renderer.Render(renderable);
+            Renderer.Render(renderable, _camera1);
+            Renderer.Render(renderable, _camera2);
         }
     }
 

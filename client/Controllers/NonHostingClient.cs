@@ -2,19 +2,21 @@
 using Microsoft.Xna.Framework;
 using MonoGame;
 using MonoGame.Input;
-using MonoGame.Networking;
 
 namespace client.Controllers;
 public class NonHostingClient : GameController
 {
-    private NetworkClient _networkClient;
     private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
     private const int ServerPort = 12345; // Replace with the server's port
+
+    public NonHostingClient() : base(ServerIpAddress, ServerPort)
+    {
+        
+    }
 
     protected override void OnInitialize()
     {
         // Initialize NetworkClient
-        _networkClient = new NetworkClient(ServerIpAddress, ServerPort);
     }
 
     protected override void OnLoadContent()
@@ -25,14 +27,14 @@ public class NonHostingClient : GameController
     protected override void OnBeginRun()
     {
         // Start the network client and its listening process
-        _networkClient.Connect();
-        _networkClient.StartListening();
+        NetworkClient.Connect();
+        NetworkClient.StartListening();
     }
 
     protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // Send control data
-        _networkClient.SendControlData(controls[1]);
+        NetworkClient.SendControlData(controls[1]);
 
         // Additional update logic
     }
@@ -45,7 +47,7 @@ public class NonHostingClient : GameController
     protected override void OnDraw(GameTime gameTime)
     {
         // Retrieve renderable data from the network and render it
-        foreach (var renderable in _networkClient.GetRenderableData(gameTime.TotalGameTime.Milliseconds))
+        foreach (var renderable in NetworkClient.GetRenderableData(gameTime.TotalGameTime.Milliseconds))
         {
             Renderer.Render(renderable);
         }
@@ -76,7 +78,7 @@ public class NonHostingClient : GameController
         // Dispose resources
         if (disposing)
         {
-            _networkClient?.Dispose();
+            NetworkClient?.Dispose();
         }
     }
 

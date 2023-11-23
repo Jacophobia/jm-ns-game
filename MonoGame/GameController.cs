@@ -12,10 +12,8 @@ namespace MonoGame;
 // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 public abstract class GameController : Game
 {
-    private const string ServerIpAddress = "127.0.0.1"; // Replace with actual server IP
-    private const int ServerPort = 12345; // Replace with the actual port
-    
     protected Renderer Renderer;
+    protected readonly NetworkClient NetworkClient;
 
     protected static Rectangle WindowSize
     {
@@ -31,11 +29,10 @@ public abstract class GameController : Game
     }
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
-    private readonly NetworkClient _networkClient;
     private Listener _inputListener;
     private SpriteBatch _spriteBatch;
-
-    protected GameController(bool fullscreen = true)
+    
+    protected GameController(string serverIpAddress, int serverPort, bool fullscreen = true)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
@@ -49,9 +46,26 @@ public abstract class GameController : Game
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
 
-        _networkClient = new NetworkClient(ServerIpAddress, ServerPort);
+        NetworkClient = new NetworkClient(serverPort, serverIpAddress);
     }
-    
+
+    protected GameController(int serverPort = 12345, bool fullscreen = true)
+    {
+        _graphicsDeviceManager = new GraphicsDeviceManager(this);
+        Content.RootDirectory = "Content";
+        Window.AllowUserResizing = true;
+        IsMouseVisible = true;
+
+        var windowSize = WindowSize;
+        
+        _graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
+        _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
+        // Set fullscreen mode
+        _graphicsDeviceManager.IsFullScreen = fullscreen;
+
+        NetworkClient = new NetworkClient(serverPort);
+    }
+
     /// <summary>
     /// Initializes game component. Called once before the game loop
     /// starts and after the graphics device is initialized.
@@ -67,7 +81,7 @@ public abstract class GameController : Game
             { Keys.OemComma, Controls.Up },
             { Keys.O, Controls.Down }
         });
-        Renderer = new Renderer(GraphicsDevice, _spriteBatch, Content, _networkClient);
+        Renderer = new Renderer(GraphicsDevice, _spriteBatch, Content, NetworkClient);
         
         OnInitialize();
         
@@ -94,8 +108,8 @@ public abstract class GameController : Game
     {
         OnBeginRun();
         // Start the network client and its listening process
-        _networkClient.Connect();
-        _networkClient.StartListening();
+        NetworkClient.Connect();
+        NetworkClient.StartListening();
         base.BeginRun();
     }
 
@@ -110,7 +124,7 @@ public abstract class GameController : Game
     protected sealed override void Update(GameTime gameTime)
     {
         // Receive control data from the network
-        var controls = _networkClient.GetControlData(gameTime.TotalGameTime.Milliseconds);
+        var controls = NetworkClient.GetControlData(gameTime.TotalGameTime.Milliseconds);
         OnUpdate(gameTime, new []{_inputListener.GetInputState(), controls});
         base.Update(gameTime);
     }
@@ -201,7 +215,7 @@ public abstract class GameController : Game
         OnDispose(disposing);
         if (disposing)
         {
-            _networkClient?.Dispose();
+            NetworkClient?.Dispose();
         }
         base.Dispose(disposing);
     }
