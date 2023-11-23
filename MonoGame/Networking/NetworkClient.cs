@@ -19,9 +19,9 @@ public class NetworkClient : IDisposable
 {
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint;
-    private readonly Stopwatch _stopwatch;
-    private readonly TimePriorityQueue<Controls> _controlQueue;
-    private readonly TimePriorityQueue<IRenderable> _renderableQueue;
+    private Stopwatch _stopwatch;
+    private readonly PriorityQueue<Controls> _controlQueue;
+    private readonly PriorityQueue<IRenderable> _renderableQueue;
     private Thread _listeningThread;
     private bool _listening;
     private readonly int _port;
@@ -30,8 +30,8 @@ public class NetworkClient : IDisposable
     private NetworkClient()
     {
         _stopwatch = Stopwatch.StartNew();
-        _renderableQueue = new TimePriorityQueue<IRenderable>();
-        _controlQueue = new TimePriorityQueue<Controls>();
+        _renderableQueue = new PriorityQueue<IRenderable>();
+        _controlQueue = new PriorityQueue<Controls>();
     }
 
     public NetworkClient(int port, string ipAddress) : this()
@@ -100,7 +100,7 @@ public class NetworkClient : IDisposable
     public Controls GetControlData(long currentTime)
     {
         var controls = Controls.None;
-        foreach (var control in _controlQueue.Get(currentTime))
+        foreach (var control in _controlQueue.GetAll())
             controls |= control;
         return controls;
     }
@@ -116,7 +116,7 @@ public class NetworkClient : IDisposable
     // ReSharper disable once LoopCanBeConvertedToQuery
     public IEnumerable<IRenderable> GetRenderableData(long currentTime)
     {
-        foreach (var renderable in _renderableQueue.Get(currentTime))
+        foreach (var renderable in _renderableQueue.GetAll())
             yield return renderable;
     }
 
@@ -133,10 +133,13 @@ public class NetworkClient : IDisposable
 
     private void ProcessReceivedData(byte[] data)
     {
-        if (data.Length <= 8)
-            return;
-        
         var timestamp = BitConverter.ToInt64(data, 0);
+        if (data.Length <= 8)
+        {
+            // TODO: Sync up stopwatches
+            return;
+        }
+        
         var dataType = data[8];
         var payload = new byte[data.Length - 9];
         Buffer.BlockCopy(data, 9, payload, 0, data.Length - 9);
@@ -222,11 +225,16 @@ public class NetworkClient : IDisposable
         return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
     }
 
-    public void Dispose()
+    public void Disconnect()
     {
         _listening = false;
         _listeningThread?.Join();
         _udpClient.Close();
+    }
+
+    public void Dispose()
+    {
+        Disconnect();
         _udpClient?.Dispose();
     }
 }

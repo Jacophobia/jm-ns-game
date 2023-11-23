@@ -197,6 +197,7 @@ public abstract class GameController : Game
     protected sealed override void OnExiting(object sender, EventArgs args)
     {
         OnExit(sender, args);
+        NetworkClient.Disconnect();
         base.OnExiting(sender, args);
     }
     

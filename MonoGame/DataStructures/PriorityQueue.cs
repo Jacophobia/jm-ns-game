@@ -3,40 +3,26 @@ using System.Collections.Generic;
 
 namespace MonoGame.DataStructures;
 
-internal class TimePriorityQueue<T>
+internal class PriorityQueue<T>
 {
     private readonly MinHeap<TimestampedItem> _queue;
 
-    internal TimePriorityQueue()
+    internal PriorityQueue()
     {
         _queue = new MinHeap<TimestampedItem>();
     }
 
-    internal IEnumerable<T> Get(long currentTime)
+    internal IEnumerable<T> GetAll()
     {
-        bool done;
-        
-        lock (_queue)
+        while (!_queue.IsEmpty)
         {
-            done = _queue.IsEmpty || _queue.Peek().Time > currentTime;
-        }
-        
-        while (!done)
-        {
-            lock (_queue)
-            {
-                yield return _queue.Get().Item;
-                done = _queue.IsEmpty || _queue.Peek().Time > currentTime;
-            }
+            yield return _queue.Get().Item;
         }
     }
 
     internal void Put(T value, long timeSent)
     {
-        lock (_queue)
-        {
-            _queue.Put(new TimestampedItem(value, timeSent));
-        }
+        _queue.Put(new TimestampedItem(value, timeSent));
     }
 
     private readonly struct TimestampedItem : IComparable<TimestampedItem>

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -101,5 +102,15 @@ public class Renderer
         int? depth = null)
     {
         Draw(renderable, camera, texture, destination, source, color, rotation, origin, effect, depth);
+    }
+
+    internal void Begin()
+    {
+        _spriteBatch.Begin();
+    }
+
+    internal void End()
+    {
+        _spriteBatch.End();
     }
 }

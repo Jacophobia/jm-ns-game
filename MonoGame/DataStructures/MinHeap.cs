@@ -12,31 +12,46 @@ internal class MinHeap<T> where T : IComparable<T>
         _elements = new List<T>();
     }
 
-    public int Count => _elements.Count;
+    public int Count
+    {
+        get
+        {
+            lock (_elements)
+                return _elements.Count;
+        }
+    }
+
     public bool IsEmpty => Count <= 0;
 
     public void Put(T item)
     {
-        _elements.Add(item);
-        HeapifyUp(_elements.Count - 1);
+        lock (_elements)
+        {
+            _elements.Add(item);
+            HeapifyUp(_elements.Count - 1);
+        }
     }
 
     public T Get()
     {
-        if (_elements.Count == 0)
+        if (Count == 0)
             throw new InvalidOperationException("Heap is empty");
 
-        var result = _elements[0];
-        _elements[0] = _elements[^1];
-        _elements.RemoveAt(_elements.Count - 1);
-        HeapifyDown(0);
+        T result;
+        lock (_elements)
+        {
+            result = _elements[0];
+            _elements[0] = _elements[^1];
+            _elements.RemoveAt(Count - 1);
+            HeapifyDown(0);
+        }
 
         return result;
     }
 
     public bool TryGet(out T value)
     {
-        if (_elements.Count == 0)
+        if (Count == 0)
         {
             value = default;
             return false;
@@ -48,10 +63,10 @@ internal class MinHeap<T> where T : IComparable<T>
     
     public T Peek()
     {
-        if (_elements.Count == 0)
+        if (Count == 0)
             throw new InvalidOperationException("Heap is empty");
-
-        return _elements[0];
+        lock (_elements)
+            return _elements[0];
     }
 
     private void HeapifyUp(int index)
@@ -75,10 +90,10 @@ internal class MinHeap<T> where T : IComparable<T>
             var leftChildIndex = 2 * index + 1;
             var rightChildIndex = 2 * index + 2;
 
-            if (leftChildIndex < _elements.Count && _elements[leftChildIndex].CompareTo(_elements[smallest]) < 0)
+            if (leftChildIndex < Count && _elements[leftChildIndex].CompareTo(_elements[smallest]) < 0)
                 smallest = leftChildIndex;
 
-            if (rightChildIndex < _elements.Count && _elements[rightChildIndex].CompareTo(_elements[smallest]) < 0)
+            if (rightChildIndex < Count && _elements[rightChildIndex].CompareTo(_elements[smallest]) < 0)
                 smallest = rightChildIndex;
 
             if (smallest == index)
