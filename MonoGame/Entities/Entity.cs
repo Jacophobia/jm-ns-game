@@ -33,7 +33,7 @@ public abstract class Entity : ICollidable
         Rectangle? overlap);
 
     public abstract void Update(GameTime gameTime, Controls[] controls);
-    public abstract void Draw(Renderer renderer, Camera camera);
+    public abstract void Draw(Renderer renderer, Camera[] cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

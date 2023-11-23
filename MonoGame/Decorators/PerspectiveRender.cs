@@ -54,11 +54,14 @@ public class PerspectiveRender : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnDraw(Renderer renderer, Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera[] cameras)
     {
-        var actualPosition = Position;
-        Position += (camera.View.Center.ToVector2() - Position) * _scale;
-        renderer.Render(this, camera);
-        Position = actualPosition;
+        foreach (var camera in cameras)
+        {
+            var actualPosition = Position;
+            Position += (camera.View.Center.ToVector2() - Position) * _scale;
+            renderer.Render(this, camera);
+            Position = actualPosition;
+        }
     }
 }

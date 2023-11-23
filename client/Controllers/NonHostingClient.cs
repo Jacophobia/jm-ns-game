@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using MonoGame;
 using MonoGame.Input;
 
@@ -9,7 +10,7 @@ public class NonHostingClient : GameController
     private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
     private const int ServerPort = 12345; // Replace with the server's port
 
-    public NonHostingClient() : base(ServerIpAddress, ServerPort)
+    public NonHostingClient() : base(ServerIpAddress, ServerPort, false)
     {
         
     }
@@ -33,6 +34,9 @@ public class NonHostingClient : GameController
 
     protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
+            Exit();
         // Send control data
         NetworkClient.SendControlData(controls[1]);
 
@@ -47,7 +51,7 @@ public class NonHostingClient : GameController
     protected override void OnDraw(GameTime gameTime)
     {
         // Retrieve renderable data from the network and render it
-        foreach (var renderable in NetworkClient.GetRenderableData(gameTime.TotalGameTime.Milliseconds))
+        foreach (var renderable in NetworkClient.GetRenderableData((long)gameTime.TotalGameTime.TotalMilliseconds))
         {
             Renderer.Render(renderable);
         }

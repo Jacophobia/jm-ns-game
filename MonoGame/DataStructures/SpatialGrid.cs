@@ -168,10 +168,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(Renderer renderer, Camera camera, GameTime gameTime)
+    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, GameTime gameTime)
     {
         foreach (var element in _elements)
-            element.Draw(renderer, camera);
+            element.Draw(renderer, cameras);
     }
 
     public void Add(IEnumerable<T> items)

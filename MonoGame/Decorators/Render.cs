@@ -30,8 +30,8 @@ public class Render : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnDraw(Renderer renderer, Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera[] cameras)
     {
-        renderer.Render(this, camera);
+        renderer.Render(this, cameras);
     }
 }

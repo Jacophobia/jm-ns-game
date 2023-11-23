@@ -42,9 +42,9 @@ internal class Renderable : IRenderable
         _depth = depth;
     }
 
-    void IRenderable.Draw(Renderer renderer, Camera camera)
+    void IRenderable.Draw(Renderer renderer, Camera[] cameras)
     {
-        renderer.Render(this, camera);
+        renderer.Render(this, cameras);
     }
 
     // Method to retrieve Texture2D by its name

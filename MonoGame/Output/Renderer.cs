@@ -85,6 +85,15 @@ public class Renderer
     {
         Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
+    
+    public void Render(IRenderable renderable, IEnumerable<Camera> cameras, Texture2D texture = null,
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
+    {
+        foreach (var camera in cameras)
+            Draw(renderable, camera, texture, destination, source, color, rotation, origin, effect, depth);
+    }
 
     public void Render(IRenderable renderable, Camera camera, Texture2D texture = null,
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 

@@ -124,7 +124,7 @@ public abstract class GameController : Game
     protected sealed override void Update(GameTime gameTime)
     {
         // Receive control data from the network
-        var controls = NetworkClient.GetControlData(gameTime.TotalGameTime.Milliseconds);
+        var controls = NetworkClient.GetControlData((long)gameTime.TotalGameTime.TotalMilliseconds);
         OnUpdate(gameTime, new []{_inputListener.GetInputState(), controls});
         base.Update(gameTime);
     }

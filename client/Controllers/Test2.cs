@@ -128,8 +128,8 @@ public class Test2 : GameController
 
     protected override void OnDraw(GameTime gameTime)
     {
-        foreach (var side in _background) side.Draw(Renderer, _camera);
-        _spatialGrid.Draw(Renderer, _camera, gameTime);
+        foreach (var side in _background) side.Draw(Renderer, new []{ _camera });
+        _spatialGrid.Draw(Renderer, new []{ _camera }, gameTime);
     }
 
     protected override void OnEndDraw()

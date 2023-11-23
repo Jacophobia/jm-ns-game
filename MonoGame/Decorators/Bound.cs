@@ -28,7 +28,7 @@ public class Bound : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnDraw(Renderer renderer, Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera[] cameras)
     {
         // no new behavior to add
     }

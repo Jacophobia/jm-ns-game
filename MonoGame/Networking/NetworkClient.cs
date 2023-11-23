@@ -18,7 +18,7 @@ namespace MonoGame.Networking;
 public class NetworkClient : IDisposable
 {
     private readonly UdpClient _udpClient;
-    private readonly IPEndPoint _remoteEndPoint;
+    private IPEndPoint _remoteEndPoint;
     private readonly Stopwatch _stopwatch;
     private readonly TimePriorityQueue<Controls> _controlQueue;
     private readonly TimePriorityQueue<IRenderable> _renderableQueue;
@@ -45,6 +45,7 @@ public class NetworkClient : IDisposable
     public NetworkClient(int port) : this()
     {
         _udpClient = new UdpClient(port);
+        _remoteEndPoint = null; // new IPEndPoint(IPAddress.Any, _port);
         _port = port;
         _isHosting = true;
     }
@@ -77,8 +78,7 @@ public class NetworkClient : IDisposable
         {
             if (true)
             {
-                var remoteEp = new IPEndPoint(IPAddress.Any, _port);
-                var receivedData = _udpClient.Receive(ref remoteEp);
+                var receivedData = _udpClient.Receive(ref _remoteEndPoint);
                 ProcessReceivedData(receivedData);
             }
             else
@@ -92,7 +92,8 @@ public class NetworkClient : IDisposable
     public void SendControlData(Controls controlData)
     {
         var data = new[] { (byte)controlData };
-        SendData(data, 0); // Assuming '0' is the data type for Controls
+        var packet = PrependHeaders(data, 0);
+        _udpClient.Send(packet, packet.Length, _remoteEndPoint);
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
@@ -107,7 +108,9 @@ public class NetworkClient : IDisposable
     public void SendRenderableData(IRenderable renderableData)
     {
         var data = SerializeRenderableData(renderableData);
-        SendData(data, 1); // Assuming '1' is the data type for Renderables
+        var packet = PrependHeaders(data, 1);
+        if (_remoteEndPoint != null)
+            _udpClient.Send(packet, packet.Length, _remoteEndPoint);
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
@@ -115,13 +118,6 @@ public class NetworkClient : IDisposable
     {
         foreach (var renderable in _renderableQueue.Get(currentTime))
             yield return renderable;
-    }
-
-
-    private void SendData(byte[] data, byte dataType)
-    {
-        var packet = PrependHeaders(data, dataType);
-        _udpClient.Send(packet, packet.Length, _remoteEndPoint);
     }
 
     private byte[] PrependHeaders(byte[] data, byte dataType)

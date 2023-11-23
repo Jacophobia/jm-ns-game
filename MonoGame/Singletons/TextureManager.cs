@@ -20,7 +20,7 @@ internal class TextureManager
             if (!_textures.TryGetValue(key, out var texture))
             {
                 texture = _contentManager.Load<Texture2D>(key);
-                _textures.Add(key, texture);
+                _textures.TryAdd(key, texture);
             }
             
             return texture;

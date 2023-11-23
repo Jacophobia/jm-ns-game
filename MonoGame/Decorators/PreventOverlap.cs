@@ -65,7 +65,7 @@ public class PreventOverlap : EntityDecorator
     }
 
 
-    protected override void OnDraw(Renderer renderer, Camera camera)
+    protected override void OnDraw(Renderer renderer, Camera[] cameras)
     {
         // no new behavior to add
     }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Input;
 using MonoGame;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
@@ -104,6 +105,8 @@ public class HostingClient : GameController
     protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         _spatialPartition.Update(gameTime, controls);
+        _camera1.Update(gameTime, controls);
+        _camera2.Update(gameTime, controls);
     }
 
     protected override void OnBeginDraw()
@@ -113,14 +116,11 @@ public class HostingClient : GameController
 
     protected override void OnDraw(GameTime gameTime)
     {
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
+            Exit();
         // Draw game elements
-
-        // Send renderable data
-        foreach (var renderable in GetRenderables())
-        {
-            Renderer.Render(renderable, _camera1);
-            Renderer.Render(renderable, _camera2);
-        }
+        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, gameTime);
     }
 
     protected override void OnEndDraw()

@@ -14,5 +14,5 @@ public interface IRenderable
     public Vector2 Origin { get; }
     public SpriteEffects Effect { get; }
     public int Depth { get; }
-    public void Draw(Renderer renderer, Camera camera);
+    public void Draw(Renderer renderer, Camera[] cameras);
 }
