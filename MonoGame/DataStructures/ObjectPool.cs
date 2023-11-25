@@ -8,7 +8,10 @@ public class ObjectPool<TPooled> where TPooled : new()
 
     internal TPooled Get()
     {
-        return _items.Count > 0 ? _items.Pop() : new TPooled();
+        if (_items.TryPop(out var item) && item != null)
+            return item;
+        
+        return new TPooled();
     }
 
     internal void Return(TPooled item)

@@ -124,7 +124,7 @@ public abstract class GameController : Game
     protected sealed override void Update(GameTime gameTime)
     {
         // Receive control data from the network
-        var controls = NetworkClient.GetControlData((long)gameTime.TotalGameTime.TotalMilliseconds);
+        var controls = NetworkClient.GetControlData();
         OnUpdate(gameTime, new []{_inputListener.GetInputState(), controls});
         base.Update(gameTime);
     }
@@ -136,8 +136,7 @@ public abstract class GameController : Game
     protected abstract void OnBeginDraw();
     protected sealed override bool BeginDraw()
     {
-        GraphicsDevice.Clear(Color.Black);
-        _spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend);
+        Renderer.Begin();
         OnBeginDraw();
         return base.BeginDraw();
     }
@@ -163,7 +162,7 @@ public abstract class GameController : Game
     protected sealed override void EndDraw()
     {
         OnEndDraw();
-        _spriteBatch.End();
+        Renderer.End();
         base.EndDraw();
     }
 

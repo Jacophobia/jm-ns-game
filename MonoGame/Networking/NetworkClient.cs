@@ -21,7 +21,7 @@ public class NetworkClient : IDisposable
     private IPEndPoint _remoteEndPoint;
     private Stopwatch _stopwatch;
     private readonly PriorityQueue<Controls> _controlQueue;
-    private readonly PriorityQueue<IRenderable> _renderableQueue;
+    private readonly PriorityQueue<IEnumerable<IRenderable>> _renderableQueue;
     private Thread _listeningThread;
     private bool _listening;
     private readonly int _port;
@@ -30,7 +30,7 @@ public class NetworkClient : IDisposable
     private NetworkClient()
     {
         _stopwatch = Stopwatch.StartNew();
-        _renderableQueue = new PriorityQueue<IRenderable>();
+        _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>>();
         _controlQueue = new PriorityQueue<Controls>();
     }
 
@@ -49,6 +49,8 @@ public class NetworkClient : IDisposable
         _port = port;
         _isHosting = true;
     }
+
+    public long TotalMilliseconds => _stopwatch.ElapsedMilliseconds;
 
     public void Connect()
     {
@@ -76,16 +78,8 @@ public class NetworkClient : IDisposable
     {
         while (_listening)
         {
-            if (true)
-            {
-                var receivedData = _udpClient.Receive(ref _remoteEndPoint);
-                ProcessReceivedData(receivedData);
-            }
-            else
-            {
-                // Sleep for a short period to avoid spinning.
-                Thread.Sleep(10);
-            }
+            var receivedData = _udpClient.Receive(ref _remoteEndPoint);
+            ProcessReceivedData(receivedData);
         }
     }
 
@@ -97,7 +91,7 @@ public class NetworkClient : IDisposable
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
-    public Controls GetControlData(long currentTime)
+    public Controls GetControlData()
     {
         var controls = Controls.None;
         foreach (var control in _controlQueue.GetAll())
@@ -105,7 +99,7 @@ public class NetworkClient : IDisposable
         return controls;
     }
 
-    public void SendRenderableData(IRenderable renderableData)
+    public void SendRenderableData(IEnumerable<IRenderable> renderableData)
     {
         var data = SerializeRenderableData(renderableData);
         var packet = PrependHeaders(data, 1);
@@ -114,7 +108,7 @@ public class NetworkClient : IDisposable
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
-    public IEnumerable<IRenderable> GetRenderableData(long currentTime)
+    public IEnumerable<IEnumerable<IRenderable>> GetRenderableData()
     {
         foreach (var renderable in _renderableQueue.GetAll())
             yield return renderable;
@@ -136,7 +130,7 @@ public class NetworkClient : IDisposable
         var timestamp = BitConverter.ToInt64(data, 0);
         if (data.Length <= 8)
         {
-            // TODO: Sync up stopwatches
+            _stopwatch.Restart();
             return;
         }
         
@@ -165,6 +159,38 @@ public class NetworkClient : IDisposable
     {
         var renderableData = DeserializeRenderableData(payload);
         _renderableQueue.Put(renderableData, timestamp);
+    }
+    
+    private static byte[] SerializeRenderableData(IEnumerable<IRenderable> renderables)
+    {
+        using var ms = new MemoryStream();
+
+        foreach (var renderable in renderables)
+        {
+            // Serialize Texture.Name (as string)
+            ms.WriteString(renderable.Texture.Name);
+
+            // Serialize Rectangle (as four integers)
+            ms.WriteRectangle(renderable.Destination);
+            ms.WriteRectangle(renderable.Source);
+
+            // Serialize Color (as four bytes)
+            ms.WriteColor(renderable.Color);
+
+            // Serialize Rotation (as float)
+            ms.WriteFloat(renderable.Rotation);
+
+            // Serialize Origin (as two floats)
+            ms.WriteVector2(renderable.Origin);
+
+            // Serialize Effect (as integer)
+            ms.WriteInt((int)renderable.Effect);
+
+            // Serialize Depth (as integer)
+            ms.WriteInt(renderable.Depth);
+        }
+
+        return ms.ToArray();
     }
 
     private static byte[] SerializeRenderableData(IRenderable data)
@@ -196,33 +222,39 @@ public class NetworkClient : IDisposable
         return ms.ToArray();
     }
 
-    private static IRenderable DeserializeRenderableData(byte[] data)
+    private static IEnumerable<IRenderable> DeserializeRenderableData(byte[] data)
     {
         using var ms = new MemoryStream(data);
+        
+        while (ms.Length > 0)
+        {
+            // Deserialize Texture.Name
+            var textureName = ms.ReadString();
+            
+            if (textureName is "")
+                yield break;
 
-        // Deserialize Texture.Name
-        var textureName = ms.ReadString();
+            // Deserialize Rectangle
+            var destination = ms.ReadRectangle();
+            var source = ms.ReadRectangle();
 
-        // Deserialize Rectangle
-        var destination = ms.ReadRectangle();
-        var source = ms.ReadRectangle();
+            // Deserialize Color
+            var color = ms.ReadColor();
 
-        // Deserialize Color
-        var color = ms.ReadColor();
+            // Deserialize Rotation
+            var rotation = ms.ReadFloat();
 
-        // Deserialize Rotation
-        var rotation = ms.ReadFloat();
+            // Deserialize Origin
+            var origin = ms.ReadVector2();
 
-        // Deserialize Origin
-        var origin = ms.ReadVector2();
+            // Deserialize Effect
+            var effect = (SpriteEffects)ms.ReadInt();
 
-        // Deserialize Effect
-        var effect = (SpriteEffects)ms.ReadInt();
+            // Deserialize Depth
+            var depth = ms.ReadInt();
 
-        // Deserialize Depth
-        var depth = ms.ReadInt();
-
-        return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
+            yield return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
+        }
     }
 
     public void Disconnect()

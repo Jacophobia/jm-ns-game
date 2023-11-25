@@ -1,8 +1,10 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.DataStructures;
 using MonoGame.Interfaces;
 using MonoGame.Networking;
 using MonoGame.Singletons;
@@ -17,6 +19,9 @@ public class Renderer
     private readonly GraphicsDevice _graphicsDevice;
     private readonly SpriteBatch _spriteBatch;
     private readonly NetworkClient _networkClient;
+    private readonly PriorityQueue<Renderable> _networkRenderables;
+    private readonly ObjectPool<Renderable> _renderablePool;
+    private Thread _renderableSender;
 
     internal Renderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager contentManager, NetworkClient networkClient)
     {
@@ -24,6 +29,9 @@ public class Renderer
         _spriteBatch = spriteBatch;
         TextureManager.Initialize(contentManager);
         _networkClient = networkClient;
+        _networkRenderables = new PriorityQueue<Renderable>();
+        _renderablePool = new ObjectPool<Renderable>();
+        _renderableSender = null;
     }
     
     private void Draw(IRenderable renderable, Texture2D texture = null, 
@@ -43,21 +51,39 @@ public class Renderer
         );
     }
     
-    private void Send(IRenderable renderable, GraphicsResource texture = null, 
+    private void Send(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         int? depth = null)
     {
-        _networkClient.SendRenderableData(new Renderable(
-            texture?.Name ?? renderable.Texture.Name,
-            destination ?? renderable.Destination,
-            source ?? renderable.Source,
-            color ?? renderable.Color,
-            rotation ?? renderable.Rotation,
-            origin ?? renderable.Origin,
-            effect == SpriteEffects.None ? renderable.Effect : effect,
-            depth ?? renderable.Depth
-        ));
+        var sendableRenderable = _renderablePool.Get();
+        
+        sendableRenderable.Texture = texture ?? renderable.Texture;
+        sendableRenderable.Destination = destination ?? renderable.Destination;
+        sendableRenderable.Source = source ?? renderable.Source;
+        sendableRenderable.Color = color ?? renderable.Color;
+        sendableRenderable.Rotation = rotation ?? renderable.Rotation;
+        sendableRenderable.Origin = origin ?? renderable.Origin;
+        sendableRenderable.Effect = effect == SpriteEffects.None ? renderable.Effect : effect;
+        sendableRenderable.Depth = depth ?? renderable.Depth;
+        
+        _networkRenderables.Put(sendableRenderable, _networkClient.TotalMilliseconds);
+
+        if (_renderableSender != null) 
+            return;
+        
+        _renderableSender = new Thread(SendAllRenderables);
+        _renderableSender.Start();
+    }
+
+    private void SendAllRenderables()
+    {
+        if (_networkRenderables.IsEmpty) return;
+        
+        var renderables = _networkRenderables.GetAll().ToArray();
+        _networkClient.SendRenderableData(renderables);
+        foreach (var renderable in renderables)
+            _renderablePool.Return(renderable);
     }
 
     private void Draw(IRenderable renderable, Camera camera, Texture2D texture = null, 
@@ -106,11 +132,13 @@ public class Renderer
 
     internal void Begin()
     {
-        _spriteBatch.Begin();
+        _graphicsDevice.Clear(Color.Black);
+        _spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend);
     }
 
     internal void End()
     {
+        SendAllRenderables();
         _spriteBatch.End();
     }
 }

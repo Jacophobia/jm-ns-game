@@ -12,6 +12,13 @@ internal class PriorityQueue<T>
         _queue = new MinHeap<TimestampedItem>();
     }
 
+    internal bool IsEmpty => _queue.IsEmpty;
+
+    internal T Get()
+    {
+        return _queue.Get().Item;
+    }
+
     internal IEnumerable<T> GetAll()
     {
         while (!_queue.IsEmpty)

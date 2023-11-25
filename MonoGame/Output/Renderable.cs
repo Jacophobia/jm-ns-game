@@ -7,39 +7,50 @@ namespace MonoGame.Output;
 
 internal class Renderable : IRenderable
 {
-    private readonly Texture2D _texture;
-    private Rectangle _destination;
-    private readonly Rectangle _source;
-    private readonly Color _color;
-    private readonly float _rotation;
-    private readonly Vector2 _origin;
-    private readonly SpriteEffects _effect;
-    private readonly int _depth;
+    Texture2D IRenderable.Texture => Texture;
+    internal Texture2D Texture { get; set; }
 
-    Texture2D IRenderable.Texture => _texture;
     Rectangle IRenderable.Destination
     {
-        get => _destination;
-        set => _destination = value;
+        get => Destination;
+        set => Destination = value;
     }
-    Rectangle IRenderable.Source => _source;
-    Color IRenderable.Color => _color;
-    float IRenderable.Rotation => _rotation;
-    Vector2 IRenderable.Origin => _origin;
-    SpriteEffects IRenderable.Effect => _effect;
-    int IRenderable.Depth => _depth;
+    internal Rectangle Destination { get; set; }
+
+    Rectangle IRenderable.Source => Source;
+    internal Rectangle Source { get; set; }
+
+    Color IRenderable.Color => Color;
+    internal Color Color { get; set; }
+
+    float IRenderable.Rotation => Rotation;
+    internal float Rotation { get; set; }
+
+    Vector2 IRenderable.Origin => Origin;
+    internal Vector2 Origin { get; set; }
+
+    SpriteEffects IRenderable.Effect => Effect;
+    internal SpriteEffects Effect { get; set; }
+
+    int IRenderable.Depth => Depth;
+    internal int Depth { get; set; }
+
+    public Renderable()
+    {
+        
+    }
 
     internal Renderable(string textureName, Rectangle destination, Rectangle source, Color color, float rotation, Vector2 origin, SpriteEffects effect, int depth)
     {
         // Assuming you have a way to get Texture2D from textureName
-        _texture = GetTextureByName(textureName);
-        _destination = destination;
-        _source = source;
-        _color = color;
-        _rotation = rotation;
-        _origin = origin;
-        _effect = effect;
-        _depth = depth;
+        Texture = GetTextureByName(textureName);
+        Destination = destination;
+        Source = source;
+        Color = color;
+        Rotation = rotation;
+        Origin = origin;
+        Effect = effect;
+        Depth = depth;
     }
 
     void IRenderable.Draw(Renderer renderer, Camera[] cameras)
