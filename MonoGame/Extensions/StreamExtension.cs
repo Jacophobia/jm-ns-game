@@ -5,92 +5,79 @@ using Microsoft.Xna.Framework;
 namespace MonoGame.Extensions;
 
 internal static class StreamExtensions
-{
-    internal static void WriteRectangle(this Stream stream, Rectangle value)
     {
-        stream.WriteInt(value.X);
-        stream.WriteInt(value.Y);
-        stream.WriteInt(value.Width);
-        stream.WriteInt(value.Height);
-    }
+        internal static void WriteRectangle(this BinaryWriter writer, Rectangle value)
+        {
+            writer.Write(value.X);
+            writer.Write(value.Y);
+            writer.Write(value.Width);
+            writer.Write(value.Height);
+        }
 
-    internal static Rectangle ReadRectangle(this Stream stream)
-    {
-        var x = stream.ReadInt();
-        var y = stream.ReadInt();
-        var width = stream.ReadInt();
-        var height = stream.ReadInt();
-        return new Rectangle(x, y, width, height);
-    }
+        internal static Rectangle ReadRectangle(this BinaryReader reader)
+        {
+            var x = reader.ReadInt32();
+            var y = reader.ReadInt32();
+            var width = reader.ReadInt32();
+            var height = reader.ReadInt32();
+            return new Rectangle(x, y, width, height);
+        }
 
-    internal static void WriteColor(this Stream stream, Color value)
-    {
-        stream.WriteByte(value.R);
-        stream.WriteByte(value.G);
-        stream.WriteByte(value.B);
-        stream.WriteByte(value.A);
-    }
+        internal static void WriteColor(this BinaryWriter writer, Color value)
+        {
+            writer.Write(value.PackedValue); // Storing color as a single integer
+        }
 
-    internal static Color ReadColor(this Stream stream)
-    {
-        var r = (byte)stream.ReadByte();
-        var g = (byte)stream.ReadByte();
-        var b = (byte)stream.ReadByte();
-        var a = (byte)stream.ReadByte();
-        return new Color(r, g, b, a);
-    }
+        internal static Color ReadColor(this BinaryReader reader)
+        {
+            var packedValue = reader.ReadUInt32();
+            return new Color(packedValue);
+        }
 
-    internal static void WriteFloat(this Stream stream, float value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
+        internal static void WriteFloat(this BinaryWriter writer, float value)
+        {
+            writer.Write(value);
+        }
 
-    internal static float ReadFloat(this Stream stream)
-    {
-        var buffer = new byte[4];
-        stream.Read(buffer, 0, 4);
-        return BitConverter.ToSingle(buffer, 0);
-    }
+        internal static float ReadFloat(this BinaryReader reader)
+        {
+            return reader.ReadSingle();
+        }
 
-    internal static void WriteVector2(this Stream stream, Vector2 value)
-    {
-        stream.WriteFloat(value.X);
-        stream.WriteFloat(value.Y);
-    }
+        internal static void WriteVector2(this BinaryWriter writer, Vector2 value)
+        {
+            writer.Write(value.X);
+            writer.Write(value.Y);
+        }
 
-    internal static Vector2 ReadVector2(this Stream stream)
-    {
-        var x = stream.ReadFloat();
-        var y = stream.ReadFloat();
-        return new Vector2(x, y);
-    }
+        internal static Vector2 ReadVector2(this BinaryReader reader)
+        {
+            var x = reader.ReadSingle();
+            var y = reader.ReadSingle();
+            return new Vector2(x, y);
+        }
 
-    internal static void WriteInt(this Stream stream, int value)
-    {
-        var bytes = BitConverter.GetBytes(value);
-        stream.Write(bytes, 0, bytes.Length);
-    }
+        internal static void WriteInt(this BinaryWriter writer, int value)
+        {
+            writer.Write(value);
+        }
 
-    internal static int ReadInt(this Stream stream)
-    {
-        var buffer = new byte[4];
-        stream.Read(buffer, 0, 4);
-        return BitConverter.ToInt32(buffer, 0);
-    }
+        internal static int ReadInt(this BinaryReader reader)
+        {
+            return reader.ReadInt32();
+        }
 
-    internal static void WriteString(this Stream stream, string value)
-    {
-        var bytes = System.Text.Encoding.UTF8.GetBytes(value);
-        stream.WriteInt(bytes.Length); // Write the length of the string
-        stream.Write(bytes, 0, bytes.Length);
-    }
+        internal static void WriteString(this BinaryWriter writer, string value)
+        {
+            var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+            writer.Write(bytes.Length); // Write the length of the string
+            writer.Write(bytes);
+        }
 
-    internal static string ReadString(this Stream stream)
-    {
-        var length = stream.ReadInt();
-        var bytes = new byte[length];
-        stream.Read(bytes, 0, length);
-        return System.Text.Encoding.UTF8.GetString(bytes);
+        internal static string ReadString(this BinaryReader reader)
+        {
+            var length = reader.ReadInt32();
+            var bytes = reader.ReadBytes(length);
+            return System.Text.Encoding.UTF8.GetString(bytes);
+        }
     }
-}

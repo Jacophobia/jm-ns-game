@@ -69,30 +69,36 @@ public class HostingClient : GameController
                     .AddDecorator<CircularCollision>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                     .AddDecorator<PerspectiveRender>(true, -10);
-
-                switch (i)
+                if (i == 0)
                 {
-                    case 0:
+                    switch (j)
                     {
-                        entityBuilder.SetColor(Color.Red);
-                        entityBuilder.SetDepth(0);
-                        var entity = entityBuilder.Build();
-                        _camera1 = new Camera(entity, 1, Vector3.Up * 100, i);
-                        _spatialPartition.Add(entity);
-                        continue;
+                        case 0:
+                        {
+                            entityBuilder.SetColor(Color.OrangeRed);
+                            entityBuilder.SetDepth(0);
+                            var entity = entityBuilder.Build();
+                            _camera1 = new Camera(entity, 1, Vector3.Up * 100, j);
+                            _camera2 = new Camera(entity, 1, Vector3.Up * 100, j + 1);
+                            _spatialPartition.Add(entity);
+                            continue;
+                        }
+                        case 1:
+                        {
+                            entityBuilder.SetColor(Color.IndianRed);
+                            entityBuilder.SetDepth(0);
+                            var entity = entityBuilder.Build();
+                            _spatialPartition.Add(entity);
+                            continue;
+                        }
+                        default:
+                            _spatialPartition.Add(entityBuilder.Build());
+                            break;
                     }
-                    case 1:
-                    {
-                        entityBuilder.SetColor(Color.Red);
-                        entityBuilder.SetDepth(0);
-                        var entity = entityBuilder.Build();
-                        _camera2 = new Camera(entity, 1, Vector3.Up * 100, i);
-                        _spatialPartition.Add(entity);
-                        continue;
-                    }
-                    default:
-                        _spatialPartition.Add(entityBuilder.Build());
-                        break;
+                }
+                else
+                {
+                    _spatialPartition.Add(entityBuilder.Build());
                 }
             }
         }

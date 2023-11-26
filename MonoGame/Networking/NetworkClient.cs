@@ -6,6 +6,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
@@ -164,60 +165,26 @@ public class NetworkClient : IDisposable
     private static byte[] SerializeRenderableData(IEnumerable<IRenderable> renderables)
     {
         using var ms = new MemoryStream();
+        var writer = new BinaryWriter(ms); // Using BinaryWriter for more efficient writes
 
         foreach (var renderable in renderables)
         {
-            // Serialize Texture.Name (as string)
-            ms.WriteString(renderable.Texture.Name);
-
-            // Serialize Rectangle (as four integers)
-            ms.WriteRectangle(renderable.Destination);
-            ms.WriteRectangle(renderable.Source);
-
-            // Serialize Color (as four bytes)
-            ms.WriteColor(renderable.Color);
-
-            // Serialize Rotation (as float)
-            ms.WriteFloat(renderable.Rotation);
-
-            // Serialize Origin (as two floats)
-            ms.WriteVector2(renderable.Origin);
-
-            // Serialize Effect (as integer)
-            ms.WriteInt((int)renderable.Effect);
-
-            // Serialize Depth (as integer)
-            ms.WriteInt(renderable.Depth);
+            writer.Write(renderable.Texture.Name);
+            writer.Write(renderable.Destination.X);
+            writer.Write(renderable.Destination.Y);
+            writer.Write(renderable.Destination.Width);
+            writer.Write(renderable.Destination.Height);
+            writer.Write(renderable.Source.X);
+            writer.Write(renderable.Source.Y);
+            writer.Write(renderable.Source.Width);
+            writer.Write(renderable.Source.Height);
+            writer.Write(renderable.Color.PackedValue); // Storing color as a single integer
+            writer.Write(renderable.Rotation);
+            writer.Write(renderable.Origin.X);
+            writer.Write(renderable.Origin.Y);
+            writer.Write((int)renderable.Effect);
+            writer.Write(renderable.Depth);
         }
-
-        return ms.ToArray();
-    }
-
-    private static byte[] SerializeRenderableData(IRenderable data)
-    {
-        using var ms = new MemoryStream();
-
-        // Serialize Texture.Name (as string)
-        ms.WriteString(data.Texture.Name);
-
-        // Serialize Rectangle (as four integers)
-        ms.WriteRectangle(data.Destination);
-        ms.WriteRectangle(data.Source);
-
-        // Serialize Color (as four bytes)
-        ms.WriteColor(data.Color);
-
-        // Serialize Rotation (as float)
-        ms.WriteFloat(data.Rotation);
-
-        // Serialize Origin (as two floats)
-        ms.WriteVector2(data.Origin);
-
-        // Serialize Effect (as integer)
-        ms.WriteInt((int)data.Effect);
-
-        // Serialize Depth (as integer)
-        ms.WriteInt(data.Depth);
 
         return ms.ToArray();
     }
@@ -225,33 +192,18 @@ public class NetworkClient : IDisposable
     private static IEnumerable<IRenderable> DeserializeRenderableData(byte[] data)
     {
         using var ms = new MemoryStream(data);
-        
-        while (ms.Length > 0)
+        var reader = new BinaryReader(ms); // Using BinaryReader for more efficient reads
+
+        while (ms.Position < ms.Length)
         {
-            // Deserialize Texture.Name
-            var textureName = ms.ReadString();
-            
-            if (textureName is "")
-                yield break;
-
-            // Deserialize Rectangle
-            var destination = ms.ReadRectangle();
-            var source = ms.ReadRectangle();
-
-            // Deserialize Color
-            var color = ms.ReadColor();
-
-            // Deserialize Rotation
-            var rotation = ms.ReadFloat();
-
-            // Deserialize Origin
-            var origin = ms.ReadVector2();
-
-            // Deserialize Effect
-            var effect = (SpriteEffects)ms.ReadInt();
-
-            // Deserialize Depth
-            var depth = ms.ReadInt();
+            var textureName = reader.ReadString();
+            var destination = new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
+            var source = new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
+            var color = new Color(reader.ReadUInt32()); // Reading color as a single integer
+            var rotation = reader.ReadSingle();
+            var origin = new Vector2(reader.ReadSingle(), reader.ReadSingle());
+            var effect = (SpriteEffects)reader.ReadInt32();
+            var depth = reader.ReadInt32();
 
             yield return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
         }
