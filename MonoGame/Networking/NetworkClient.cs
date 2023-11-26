@@ -17,7 +17,7 @@ namespace MonoGame.Networking;
 public class NetworkClient : IDisposable
 {
     private readonly UdpClient _udpClient;
-    private IPEndPoint _remoteEndPoint;
+    private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
     private readonly Stopwatch _stopwatch;
     private readonly PriorityQueue<Controls> _controlQueue;
     private readonly PriorityQueue<IEnumerable<IRenderable>> _renderableQueue;

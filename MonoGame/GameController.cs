@@ -13,7 +13,7 @@ namespace MonoGame;
 public abstract class GameController : Game
 {
     protected Renderer Renderer;
-    protected readonly NetworkClient NetworkClient;
+    protected readonly NetworkClient NetworkClient; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
 
     protected static Rectangle WindowSize
     {
