@@ -51,12 +51,9 @@ public class NonHostingClient : GameController
     protected override void OnDraw(GameTime gameTime)
     {
         // Retrieve renderable data from the network and render it
-        foreach (var renderables in NetworkClient.GetRenderableData())
+        foreach (var renderable in NetworkClient.GetRenderableData())
         {
-            foreach (var renderable in renderables)
-            {
-                Renderer.Render(renderable);
-            }
+            Renderer.Render(renderable);
         }
     }
 

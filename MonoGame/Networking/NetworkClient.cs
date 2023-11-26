@@ -1,12 +1,10 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
@@ -20,34 +18,35 @@ public class NetworkClient : IDisposable
 {
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint;
-    private Stopwatch _stopwatch;
+    private readonly Stopwatch _stopwatch;
     private readonly PriorityQueue<Controls> _controlQueue;
     private readonly PriorityQueue<IEnumerable<IRenderable>> _renderableQueue;
     private Thread _listeningThread;
     private bool _listening;
-    private readonly int _port;
     private readonly bool _isHosting;
+    private readonly byte[] _receiveBuffer;
+    private readonly ObjectPool<Renderable> _renderablePool;
 
     private NetworkClient()
     {
         _stopwatch = Stopwatch.StartNew();
         _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>>();
         _controlQueue = new PriorityQueue<Controls>();
+        _receiveBuffer = new byte[65536]; // Adjust size as needed
+        _renderablePool = new ObjectPool<Renderable>();
     }
 
     public NetworkClient(int port, string ipAddress) : this()
     {
         _udpClient = new UdpClient();
         _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-        _port = port;
         _isHosting = false;
     }
 
     public NetworkClient(int port) : this()
     {
         _udpClient = new UdpClient(port);
-        _remoteEndPoint = null; // new IPEndPoint(IPAddress.Any, _port);
-        _port = port;
+        _remoteEndPoint = null;
         _isHosting = true;
     }
 
@@ -79,16 +78,33 @@ public class NetworkClient : IDisposable
     {
         while (_listening)
         {
-            var receivedData = _udpClient.Receive(ref _remoteEndPoint);
-            ProcessReceivedData(receivedData);
+            // Create an endpoint for any IP. This will be populated with the sender's info.
+            EndPoint senderEndPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            // Use the same buffer for each receive operation
+            var receivedBytes = _udpClient.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
+
+            // The senderEndPoint is now populated with the sender's address and port
+            if (senderEndPoint is IPEndPoint senderIp)
+            {
+                // You can now use senderIP.Address and senderIP.Port
+                _remoteEndPoint = senderIp;
+            }
+
+            ProcessReceivedData(new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes));
         }
     }
 
     public void SendControlData(Controls controlData)
     {
-        var data = new[] { (byte)controlData };
-        var packet = PrependHeaders(data, 0);
-        _udpClient.Send(packet, packet.Length, _remoteEndPoint);
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+        
+        AddHeaders(0, writer);
+        
+        writer.Write((byte)controlData);
+        
+        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
@@ -102,110 +118,101 @@ public class NetworkClient : IDisposable
 
     public void SendRenderableData(IEnumerable<IRenderable> renderableData)
     {
-        var data = SerializeRenderableData(renderableData);
-        var packet = PrependHeaders(data, 1);
+        using var ms = new MemoryStream();
+        using var writer = new BinaryWriter(ms);
+        
+        AddHeaders(1, writer);
+        
+        SerializeRenderableData(renderableData, writer);
+        
         if (_remoteEndPoint != null)
-            _udpClient.Send(packet, packet.Length, _remoteEndPoint);
+            _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
     }
 
-    // ReSharper disable once LoopCanBeConvertedToQuery
-    public IEnumerable<IEnumerable<IRenderable>> GetRenderableData()
-    {
-        foreach (var renderable in _renderableQueue.GetAll())
-            yield return renderable;
+    public IEnumerable<IRenderable> GetRenderableData()
+    {  
+        return _renderableQueue.Get();
     }
 
-    private byte[] PrependHeaders(byte[] data, byte dataType)
+    private void AddHeaders(byte dataType, BinaryWriter writer)
     {
-        var timestamp = _stopwatch.ElapsedMilliseconds;
-        var timestampBytes = BitConverter.GetBytes(timestamp);
-        var packet = new byte[timestampBytes.Length + 1 + data.Length];
-        Buffer.BlockCopy(timestampBytes, 0, packet, 0, timestampBytes.Length);
-        packet[timestampBytes.Length] = dataType;
-        Buffer.BlockCopy(data, 0, packet, timestampBytes.Length + 1, data.Length);
-        return packet;
+        writer.Write(_stopwatch.ElapsedMilliseconds);
+        writer.Write(dataType);
     }
 
-    private void ProcessReceivedData(byte[] data)
+    private void ProcessReceivedData(ArraySegment<byte> segment)
     {
-        var timestamp = BitConverter.ToInt64(data, 0);
-        if (data.Length <= 8)
+        var timestamp = BitConverter.ToInt64(segment.Array ?? Array.Empty<byte>(), segment.Offset);
+        if (segment.Count <= 8)
         {
             _stopwatch.Restart();
             return;
         }
-        
-        var dataType = data[8];
-        var payload = new byte[data.Length - 9];
-        Buffer.BlockCopy(data, 9, payload, 0, data.Length - 9);
+
+        Debug.Assert(segment.Array != null, "segment.Array != null");
+        var dataType = segment.Array[segment.Offset + 8];
+        var payload = new ArraySegment<byte>(segment.Array, segment.Offset + 9, segment.Count - (segment.Offset + 9));
 
         switch (dataType)
         {
-            case 0: // Control Data
+            case 0:
                 ProcessControlData(payload, timestamp);
                 break;
-            case 1: // Renderable Data
+            case 1:
                 ProcessRenderableData(payload, timestamp);
                 break;
         }
     }
 
-    private void ProcessControlData(IReadOnlyList<byte> payload, long timestamp)
+    private void ProcessControlData(ArraySegment<byte> payload, long timestamp)
     {
-        var controlData = (Controls)payload[0];
+        Debug.Assert(payload.Array != null, "payload.Array != null");
+        var controlData = (Controls)payload.Array[payload.Offset];
         _controlQueue.Put(controlData, timestamp);
     }
 
-    private void ProcessRenderableData(byte[] payload, long timestamp)
+    private void ProcessRenderableData(ArraySegment<byte> payload, long timestamp)
     {
         var renderableData = DeserializeRenderableData(payload);
         _renderableQueue.Put(renderableData, timestamp);
     }
     
-    private static byte[] SerializeRenderableData(IEnumerable<IRenderable> renderables)
+    private static void SerializeRenderableData(IEnumerable<IRenderable> renderables, BinaryWriter writer)
     {
-        using var ms = new MemoryStream();
-        var writer = new BinaryWriter(ms); // Using BinaryWriter for more efficient writes
-
         foreach (var renderable in renderables)
         {
-            writer.Write(renderable.Texture.Name);
-            writer.Write(renderable.Destination.X);
-            writer.Write(renderable.Destination.Y);
-            writer.Write(renderable.Destination.Width);
-            writer.Write(renderable.Destination.Height);
-            writer.Write(renderable.Source.X);
-            writer.Write(renderable.Source.Y);
-            writer.Write(renderable.Source.Width);
-            writer.Write(renderable.Source.Height);
-            writer.Write(renderable.Color.PackedValue); // Storing color as a single integer
+            writer.WriteString(renderable.Texture.Name);
+            writer.WriteRectangle(renderable.Destination);
+            writer.WriteRectangle(renderable.Source);
+            writer.WriteColor(renderable.Color);
             writer.Write(renderable.Rotation);
-            writer.Write(renderable.Origin.X);
-            writer.Write(renderable.Origin.Y);
+            writer.WriteVector2(renderable.Origin);
             writer.Write((int)renderable.Effect);
             writer.Write(renderable.Depth);
         }
-
-        return ms.ToArray();
     }
 
-    private static IEnumerable<IRenderable> DeserializeRenderableData(byte[] data)
+    private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)
     {
-        using var ms = new MemoryStream(data);
+        using var ms = new MemoryStream(data.Array ?? Array.Empty<byte>(), data.Offset, data.Count);
         var reader = new BinaryReader(ms); // Using BinaryReader for more efficient reads
 
         while (ms.Position < ms.Length)
         {
-            var textureName = reader.ReadString();
-            var destination = new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
-            var source = new Rectangle(reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32(), reader.ReadInt32());
-            var color = new Color(reader.ReadUInt32()); // Reading color as a single integer
-            var rotation = reader.ReadSingle();
-            var origin = new Vector2(reader.ReadSingle(), reader.ReadSingle());
-            var effect = (SpriteEffects)reader.ReadInt32();
-            var depth = reader.ReadInt32();
+            var renderable = _renderablePool.Get();
+            
+            renderable.TextureName = reader.ReadUtf8String();
+            renderable.Destination = reader.ReadRectangle();
+            renderable.Source = reader.ReadRectangle();
+            renderable.Color = reader.ReadColor();
+            renderable.Rotation = reader.ReadSingle();
+            renderable.Origin = reader.ReadVector2();
+            renderable.Effect = (SpriteEffects)reader.ReadInt32();
+            renderable.Depth = reader.ReadInt32();
 
-            yield return new Renderable(textureName, destination, source, color, rotation, origin, effect, depth);
+            yield return renderable;
+            
+            _renderablePool.Return(renderable);
         }
     }
 

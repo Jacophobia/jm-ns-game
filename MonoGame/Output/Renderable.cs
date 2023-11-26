@@ -10,6 +10,12 @@ internal class Renderable : IRenderable
     Texture2D IRenderable.Texture => Texture;
     internal Texture2D Texture { get; set; }
 
+    internal string TextureName
+    {
+        get => Texture.Name;
+        set => Texture = GetTextureByName(value);
+    }
+
     Rectangle IRenderable.Destination
     {
         get => Destination;
@@ -43,7 +49,7 @@ internal class Renderable : IRenderable
     internal Renderable(string textureName, Rectangle destination, Rectangle source, Color color, float rotation, Vector2 origin, SpriteEffects effect, int depth)
     {
         // Assuming you have a way to get Texture2D from textureName
-        Texture = GetTextureByName(textureName);
+        TextureName = textureName;
         Destination = destination;
         Source = source;
         Color = color;

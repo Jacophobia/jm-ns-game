@@ -69,15 +69,15 @@ internal static class StreamExtensions
 
         internal static void WriteString(this BinaryWriter writer, string value)
         {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(value);
+            var bytes = System.Text.Encoding.Default.GetBytes(value);
             writer.Write(bytes.Length); // Write the length of the string
             writer.Write(bytes);
         }
 
-        internal static string ReadString(this BinaryReader reader)
+        internal static string ReadUtf8String(this BinaryReader reader)
         {
             var length = reader.ReadInt32();
             var bytes = reader.ReadBytes(length);
-            return System.Text.Encoding.UTF8.GetString(bytes);
+            return System.Text.Encoding.Default.GetString(bytes);
         }
     }

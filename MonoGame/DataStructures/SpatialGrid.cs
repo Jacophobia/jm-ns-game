@@ -21,6 +21,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private Dictionary<Vector2, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
+    private readonly int _partitionSizeZ; // TODO: Add a z index to the partitions since things in separate layers can't hit eachother
 
     public SpatialGrid()
     {
@@ -28,6 +29,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _hashSetPool = new ObjectPool<HashSet<Vector2>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
+        _partitionSizeZ = 1;
 
         #if DEBUG
         _totalRuntimeStopwatch.Start();
