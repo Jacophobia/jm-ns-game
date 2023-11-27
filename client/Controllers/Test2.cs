@@ -1,54 +1,33 @@
 ﻿using System;
 using System.Collections.Generic;
-using client.Decorators;
-using client.Entities;
 using client.Extensions;
-using IO.Input;
-using IO.Output;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using SpatialPartition;
-using SpatialPartition.Interfaces;
+using MonoGame;
+using MonoGame.DataStructures;
+using MonoGame.Decorators;
+using MonoGame.Entities;
+using MonoGame.Input;
+using MonoGame.Interfaces;
+using MonoGame.Output;
 
 namespace client.Controllers;
 
-public class Test2 : Game
+public class Test2 : GameController
 {
-    private readonly Rectangle _backgroundSize;
-    private readonly GraphicsDeviceManager _graphics;
     private readonly ISpatialPartition<Entity> _spatialGrid;
     private List<Entity> _background;
     private Camera _camera;
-    private Listener _listener;
-    private Renderer _renderer;
-    private SpriteBatch _spriteBatch;
 
     public Test2()
     {
-        _graphics = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
         _spatialGrid = new SpatialGrid<Entity>();
-        Window.AllowUserResizing = true;
-        IsMouseVisible = true;
-
-        using var adapter = GraphicsAdapter.DefaultAdapter;
-
-        // Get the current display mode of the primary monitor
-        var displayMode = adapter.CurrentDisplayMode;
-
-        _backgroundSize = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
-
-        _graphics.PreferredBackBufferWidth = displayMode.Width;
-        _graphics.PreferredBackBufferHeight = displayMode.Height;
-
-        // Set fullscreen mode
-        _graphics.IsFullScreen = true;
     }
 
-    protected override void Initialize()
+    protected override void OnInitialize()
     {
-        base.Initialize();
+        // nothing to implement
     }
 
     private static int GetNonZeroRandom(int min, int max)
@@ -59,19 +38,9 @@ public class Test2 : Game
         return randomNum;
     }
 
-    protected override void LoadContent()
+    protected override void OnLoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _listener = new Listener(new Dictionary<Keys, Controls>
-        {
-            { Keys.A, Controls.Left },
-            { Keys.E, Controls.Right },
-            { Keys.OemComma, Controls.Up },
-            { Keys.O, Controls.Down }
-        });
-        _renderer = new Renderer(GraphicsDevice, _spriteBatch);
         SetBackground();
-        var ballTexture = Content.Load<Texture2D>("Test/ball");
 
         var random = new Random();
         const int minBallSize = 1;
@@ -88,7 +57,7 @@ public class Test2 : Game
                 var size = random.Next(minBallSize, maxBallSize);
 
                 var entityBuilder = new EntityBuilder(
-                        ballTexture,
+                        "Test/ball",
                         ballPosition,
                         new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
                         (1f / 0.016f),
@@ -122,7 +91,7 @@ public class Test2 : Game
         backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
         backgroundTexture.Name = "Background";
         _background = new List<Entity>();
-        foreach (var side in _backgroundSize.GetOutline(50).GetSides())
+        foreach (var side in WindowSize.GetOutline(50).GetSides())
             for (var i = -1; i < 50; i++)
                 _background.Add(new EntityBuilder(
                         backgroundTexture,
@@ -137,26 +106,64 @@ public class Test2 : Game
                     .Build());
     }
 
-    protected override void Update(GameTime gameTime)
+    protected override void OnBeginRun()
+    {
+        // nothing to implement
+    }
+
+    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
-
-        var controls = _listener.GetInputState();
-        _spatialGrid.Update(gameTime, controls); // This will call Update on each Ball and handle spatial partitioning
+        // This will call Update on each Ball
+        _spatialGrid.Update(gameTime, controls); 
         _camera.Update(gameTime, controls);
-
-        base.Update(gameTime);
     }
 
-    protected override void Draw(GameTime gameTime)
+    protected override void OnBeginDraw()
     {
-        _renderer.Begin();
-        foreach (var side in _background) side.Draw(_renderer, _camera);
-        _spatialGrid.Draw(_renderer, _camera, gameTime);
-        _renderer.End();
+        // nothing to implement
+    }
 
-        base.Draw(gameTime);
+    protected override void OnDraw(GameTime gameTime)
+    {
+        foreach (var side in _background) side.Draw(Renderer, new []{ _camera });
+        _spatialGrid.Draw(Renderer, new []{ _camera }, gameTime);
+    }
+
+    protected override void OnEndDraw()
+    {
+        // nothing to implement
+    }
+
+    protected override void OnEndRun()
+    {
+        // nothing to implement
+    }
+
+    protected override void OnUnloadContent()
+    {
+        // nothing to implement
+    }
+
+    protected override void OnExit(object sender, EventArgs args)
+    {
+        // nothing to implement
+    }
+
+    protected override void OnDispose(bool disposing)
+    {
+        // nothing to implement
+    }
+
+    protected override void OnWindowFocused(object sender, EventArgs args)
+    {
+        // nothing to implement
+    }
+
+    protected override void OnWindowClosed(object sender, EventArgs args)
+    {
+        // nothing to implement
     }
 }

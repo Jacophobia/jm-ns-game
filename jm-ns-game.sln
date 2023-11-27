@@ -5,9 +5,7 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client", "client\client.csproj", "{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IO", "IO\IO.csproj", "{86FBF863-1CA2-4274-A248-D30C4F73BF9F}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SpatialPartition", "SpatialPartition\SpatialPartition.csproj", "{53B407B9-FA96-42F0-B09F-AFDED8359DAA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame", "MonoGame\MonoGame.csproj", "{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,13 +20,9 @@ Global
 		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CE4D8C36-58F1-44A5-A6B4-7C60F6B3119B}.Release|Any CPU.Build.0 = Release|Any CPU
-		{86FBF863-1CA2-4274-A248-D30C4F73BF9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{86FBF863-1CA2-4274-A248-D30C4F73BF9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{86FBF863-1CA2-4274-A248-D30C4F73BF9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{86FBF863-1CA2-4274-A248-D30C4F73BF9F}.Release|Any CPU.Build.0 = Release|Any CPU
-		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{53B407B9-FA96-42F0-B09F-AFDED8359DAA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
