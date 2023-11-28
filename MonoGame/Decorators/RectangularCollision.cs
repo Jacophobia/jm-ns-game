@@ -2,9 +2,7 @@
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Extensions;
-using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
 
 namespace MonoGame.Decorators;
 
@@ -20,11 +18,6 @@ public class RectangularCollision : EntityDecorator
     }
 
     public RectangularCollision(Entity @base) : base(@base)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
     {
         // no new behavior to add
     }
@@ -140,17 +133,5 @@ public class RectangularCollision : EntityDecorator
 
         Velocity = lhsVelocity;
         rhs.Velocity = rhsVelocity;
-    }
-
-
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnDraw(Renderer renderer, Camera[] cameras)
-    {
-        // no new behavior to add
     }
 }

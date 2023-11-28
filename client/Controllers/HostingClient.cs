@@ -1,8 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using client.Extensions;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGame;
+using MonoGame.Controllers;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
@@ -10,14 +12,13 @@ using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
-// Assuming this is where IRenderable is located
-
 namespace client.Controllers;
 
-public class HostingClient : GameController
+public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
     private ISpatialPartition<Entity> _spatialPartition;
+    private List<Entity> _background;
     private Camera _camera1;
     private Camera _camera2;
 
@@ -28,7 +29,6 @@ public class HostingClient : GameController
 
     protected override void OnInitialize()
     {
-        // Initialize NetworkClient
         _spatialPartition = new SpatialGrid<Entity>();
     }
 
@@ -42,6 +42,8 @@ public class HostingClient : GameController
 
     protected override void OnLoadContent()
     {
+        SetBackground();
+        
         var random = new Random();
         const int minBallSize = 1;
         const int maxBallSize = 5;
@@ -68,7 +70,7 @@ public class HostingClient : GameController
                     .AddDecorator<Inertia>()
                     .AddDecorator<CircularCollision>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
-                    .AddDecorator<PerspectiveRender>(true, -10);
+                    .AddDecorator<PerspectiveRender>(true);
                 if (i == 0)
                 {
                     switch (j)
@@ -104,20 +106,32 @@ public class HostingClient : GameController
         }
     }
 
-    protected override void OnBeginRun()
+    private void SetBackground()
     {
+        var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
+        backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
+        backgroundTexture.Name = "Test/background";
+        _background = new List<Entity>();
+        foreach (var side in WindowSize.GetOutline(50).GetSides())
+            for (var i = -1; i < 50; i++)
+                _background.Add(new EntityBuilder(
+                        backgroundTexture,
+                        new Vector2(side.X, side.Y),
+                        Vector2.Zero,
+                        side.Width,
+                        side.Height)
+                    .SetDepth(5 * i)
+                    .SetStatic(true)
+                    .SetColor(Color.White)
+                    .AddDecorator<PerspectiveRender>(true)
+                    .Build());
     }
 
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
+    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
     {
         _spatialPartition.Update(gameTime, controls);
         _camera1.Update(gameTime, controls);
         _camera2.Update(gameTime, controls);
-    }
-
-    protected override void OnBeginDraw()
-    {
-        // Before drawing
     }
 
     protected override void OnDraw(GameTime gameTime)
@@ -125,52 +139,13 @@ public class HostingClient : GameController
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
+        
         // Draw game elements
+        foreach (var side in _background)
+        {
+            side.Draw(Renderer, _camera1);
+            side.Draw(Renderer, _camera2);
+        }
         _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, gameTime);
-    }
-
-    protected override void OnEndDraw()
-    {
-        // After drawing
-    }
-
-    protected override void OnEndRun()
-    {
-        // Clean up on game end
-    }
-
-    protected override void OnUnloadContent()
-    {
-        // Unload any game content
-    }
-
-    protected override void OnExit(object sender, EventArgs args)
-    {
-        // Handle game exit events
-    }
-
-    protected override void OnDispose(bool disposing)
-    {
-        // Dispose resources
-    }
-
-    protected override void OnWindowFocused(object sender, EventArgs args)
-    {
-        // Handle window focus events
-    }
-
-    protected override void OnWindowClosed(object sender, EventArgs args)
-    {
-        // Handle window close events
-    }
-
-    private void ProcessControlData(Controls control)
-    {
-        // Implement control processing logic
-    }
-
-    private IEnumerable<IRenderable> GetRenderables()
-    {
-        return _spatialPartition;
     }
 }

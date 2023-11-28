@@ -54,9 +54,6 @@ public class NetworkClient : IDisposable
 
     public void Connect()
     {
-        if (_isHosting)
-            return;
-        
         SendInitialPacket();
     }
 
@@ -118,6 +115,9 @@ public class NetworkClient : IDisposable
 
     public void SendRenderableData(IEnumerable<IRenderable> renderableData)
     {
+        if (_remoteEndPoint == null)
+            return;
+        
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
         
@@ -125,8 +125,7 @@ public class NetworkClient : IDisposable
         
         SerializeRenderableData(renderableData, writer);
         
-        if (_remoteEndPoint != null)
-            _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
+        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
     }
 
     public IEnumerable<IRenderable> GetRenderableData()

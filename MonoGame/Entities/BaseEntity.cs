@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
@@ -105,7 +106,7 @@ public sealed class BaseEntity : Entity
         if (depth.HasValue) Depth = depth.Value;
     }
 
-    public override void Update(GameTime gameTime, Controls[] controls)
+    public override void Update(GameTime gameTime, IList<Controls> controls)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.
@@ -125,7 +126,7 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void Draw(Renderer renderer, Camera[] cameras)
+    public override void Draw(Renderer renderer, Camera cameras)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

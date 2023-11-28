@@ -2,9 +2,7 @@
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Extensions;
-using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
 using MonoGame.Sprites;
 
 namespace MonoGame.Decorators;
@@ -12,17 +10,6 @@ namespace MonoGame.Decorators;
 public class PreventOverlap : EntityDecorator
 {
     public PreventOverlap(Entity @base) : base(@base)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
     {
         // no new behavior to add
     }
@@ -62,11 +49,5 @@ public class PreventOverlap : EntityDecorator
 
             tries++;
         }
-    }
-
-
-    protected override void OnDraw(Renderer renderer, Camera[] cameras)
-    {
-        // no new behavior to add
     }
 }

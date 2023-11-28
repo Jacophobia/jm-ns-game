@@ -1,38 +1,22 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Extensions;
 using MonoGame.Input;
-using MonoGame.Interfaces;
-using MonoGame.Output;
 
 namespace MonoGame.Decorators;
 
 public class Gravity : EntityDecorator
 {
+    private const float GravitationalAcceleration = -9.8f;
+    
     public Gravity(Entity @base) : base(@base)
     {
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
+    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
     {
-        // no new behavior to add
-    }
-
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnDraw(Renderer renderer, Camera[] cameras)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
-    {
-        Velocity = new Vector2(Velocity.X, Velocity.Y - 9.8f * gameTime.DeltaTime());
+        Velocity = new Vector2(Velocity.X, Velocity.Y + GravitationalAcceleration * gameTime.DeltaTime());
     }
 }

@@ -59,7 +59,7 @@ internal class Renderable : IRenderable
         Depth = depth;
     }
 
-    void IRenderable.Draw(Renderer renderer, Camera[] cameras)
+    void IRenderable.Draw(Renderer renderer, Camera cameras)
     {
         renderer.Render(this, cameras);
     }
