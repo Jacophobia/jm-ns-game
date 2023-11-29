@@ -17,6 +17,7 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
+    const int numLayers = 50;
     private ISpatialPartition<Entity> _spatialPartition;
     private List<Entity> _background;
     private Camera _camera1;
@@ -45,11 +46,10 @@ public class HostingClient : HostController
         SetBackground();
         
         var random = new Random();
-        const int minBallSize = 1;
-        const int maxBallSize = 5;
-        const int numBalls = 50;
+        const int minBallSize = 100;
+        const int maxBallSize = 100;
 
-        for (var i = -1; i < numBalls; i++)
+        for (var i = -1; i < numLayers; i++)
         {
             var color = new Color(random.Next(200), random.Next(255), random.Next(255));
             for (var j = 0; j < 10; j++)
@@ -63,12 +63,13 @@ public class HostingClient : HostController
                         ballPosition,
                         new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
                         (1f / 0.016f),
-                        50,
-                        50)
+                        size,
+                        size)
                     .SetDepth(i * 5)
                     .SetColor(color)
                     .AddDecorator<Inertia>()
-                    .AddDecorator<CircularCollision>()
+                    .AddDecorator<Collision>()
+                    .AddDecorator<Circular>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                     .AddDecorator<PerspectiveRender>(true);
                 if (i == 0)
@@ -113,7 +114,8 @@ public class HostingClient : HostController
         backgroundTexture.Name = "Test/background";
         _background = new List<Entity>();
         foreach (var side in WindowSize.GetOutline(50).GetSides())
-            for (var i = -1; i < 50; i++)
+            for (var i = -1; i < numLayers; i++)
+            {
                 _background.Add(new EntityBuilder(
                         backgroundTexture,
                         new Vector2(side.X, side.Y),
@@ -123,8 +125,13 @@ public class HostingClient : HostController
                     .SetDepth(5 * i)
                     .SetStatic(true)
                     .SetColor(Color.White)
+                    .AddDecorator<Static>()
+                    .AddDecorator<Collision>()
+                    .AddDecorator<Rectangular>()
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
+                
+            }
     }
 
     protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)

@@ -30,8 +30,7 @@ public abstract class Entity : ICollidable
     public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap);
 
-    public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap);
+    public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
 
     public abstract void Update(GameTime gameTime, IList<Controls> controls);
     public abstract void Draw(Renderer renderer, Camera cameras);

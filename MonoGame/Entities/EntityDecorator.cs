@@ -108,22 +108,29 @@ public abstract class EntityDecorator : Entity
     public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
         Vector2? collisionLocation, Rectangle? overlap)
     {
+        BeforeHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
         OnHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
+        AfterHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
         _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
     }
 
+
+    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap) {}
     protected virtual void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap) {}
+    protected virtual void AfterHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap) {}
 
-    public sealed override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime,
-        Vector2? collisionLocation, Rectangle? overlap)
+    public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
     {
-        OnHandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
-        _base.HandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
+        return OnCalculateCollisionNormal(collidable, collisionLocation) + _base.CalculateCollisionNormal(collidable, collisionLocation);
     }
 
-    protected virtual void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap) {}
+    protected virtual Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
+    {
+        return Vector2.Zero;
+    }
 
     public sealed override void Draw(Renderer renderer, Camera cameras)
     {

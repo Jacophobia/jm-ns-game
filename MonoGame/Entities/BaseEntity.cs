@@ -112,11 +112,9 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
+    public override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
     {
-        // We don't do anything. Entity behavior will be handled by the 
-        //  decorators.
+        return Vector2.Zero;
     }
 
     public override void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,

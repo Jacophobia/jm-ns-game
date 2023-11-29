@@ -39,8 +39,7 @@ public interface ICollidable : IRenderable
     public void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
         Rectangle? overlap);
 
-    public void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap);
+    public Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
 
     public bool CollidesWith(ICollidable rhs, out Vector2? collisionLocation, out Rectangle? overlap)
     {

@@ -1,12 +1,11 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
-using MonoGame.Extensions;
 using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
-public class RectangularCollision : EntityDecorator
+public class Rectangular : EntityDecorator
 {
     private enum IntersectionSide
     {
@@ -16,12 +15,11 @@ public class RectangularCollision : EntityDecorator
         Right,
         None
     }
-
-    public RectangularCollision(Entity @base) : base(@base)
+    
+    public Rectangular(Entity @base) : base(@base)
     {
-        // no new behavior to add
     }
-
+    
     private static Tuple<float?, float?> GetTimeToCollision(ICollidable lhs, ICollidable rhs)
     {
         // Calculate previous center positions
@@ -62,16 +60,6 @@ public class RectangularCollision : EntityDecorator
         }
 
         return new Tuple<float?, float?>(timeToCollisionX, timeToCollisionY);
-    } // ReSharper disable twice PossibleInvalidOperationException
-    private static float? GetMinimumPositiveTime(float? timeX, float? timeY)
-    {
-        return timeY switch
-        {
-            > 0 when timeX is null or < 0 => timeY,
-            null or < 0 when timeX is > 0 => timeX,
-            null or < 0 when timeX is null or < 0 => null,
-            _ => Math.Min(timeX.Value, timeY.Value)
-        };
     }
 
     private static IntersectionSide GetCollisionDirection(ICollidable lhs, ICollidable rhs)
@@ -94,44 +82,16 @@ public class RectangularCollision : EntityDecorator
         return IntersectionSide.None;
     }
 
-
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
+    protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
     {
-        var (timeX, timeY) = GetTimeToCollision(this, rhs);
-
-        var minTime = GetMinimumPositiveTime(timeX, timeY);
-
-        if (minTime.HasValue)
+        return GetCollisionDirection(this, rhs) switch
         {
-            Position -= Velocity * minTime.Value * gameTime.DeltaTime();
-            rhs.Position -= rhs.Velocity * minTime.Value * gameTime.DeltaTime();
-        }
-
-        var lhsVelocity = Velocity;
-        var rhsVelocity = rhs.Velocity;
-
-        switch (GetCollisionDirection(this, rhs))
-        {
-            case IntersectionSide.Top:
-                lhsVelocity.Y = Math.Abs(lhsVelocity.Y) * -1;
-                rhsVelocity.Y = Math.Abs(rhsVelocity.Y);
-                break;
-            case IntersectionSide.Bottom:
-                lhsVelocity.Y = Math.Abs(lhsVelocity.Y);
-                rhsVelocity.Y = Math.Abs(rhsVelocity.Y) * -1;
-                break;
-            case IntersectionSide.Left:
-                lhsVelocity.X = Math.Abs(lhsVelocity.X) * -1;
-                rhsVelocity.X = Math.Abs(rhsVelocity.X);
-                break;
-            case IntersectionSide.Right:
-                lhsVelocity.X = Math.Abs(lhsVelocity.X);
-                rhsVelocity.X = Math.Abs(rhsVelocity.X) * -1;
-                break;
-        }
-
-        Velocity = lhsVelocity;
-        rhs.Velocity = rhsVelocity;
+            IntersectionSide.Top => new Vector2(0, -1),
+            IntersectionSide.Bottom => new Vector2(0, 1),
+            IntersectionSide.Left => new Vector2(-1, 0),
+            IntersectionSide.Right => new Vector2(1, 0),
+            IntersectionSide.None => Vector2.Zero,
+            _ => throw new ArgumentOutOfRangeException()
+        };
     }
 }
