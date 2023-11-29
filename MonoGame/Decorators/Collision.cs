@@ -49,8 +49,8 @@ public class Collision : EntityDecorator
         // Calculate the normal (n) and tangential (t) direction vectors
         var collisionCoordinate = overlap.Value.Center.ToVector2();
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
-        var rhsNormal = CalculateCollisionNormal(this, collisionCoordinate);
-
+        var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
+        
         // Decompose velocities into normal and tangential components
         var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
@@ -60,8 +60,8 @@ public class Collision : EntityDecorator
             // If this object is static, only adjust the other object's velocity
             var newV2N = -rhs.RestitutionCoefficient *
                          (rhsVelocity.X * rhsNormal.X + rhsVelocity.Y * rhsNormal.Y);
-            rhsVelocity.X = newV2N * rhsNormal.X - (rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.Y;
-            rhsVelocity.Y = newV2N * rhsNormal.Y + (rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.X;
+            rhsVelocity.X = newV2N * rhsNormal.X - (-rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.Y;
+            rhsVelocity.Y = newV2N * rhsNormal.Y + (-rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.X;
         }
         else if (rhs.IsStatic)
         {
@@ -76,7 +76,7 @@ public class Collision : EntityDecorator
         {
             // Collision with another dynamic object
             var v2N = rhsVelocity.X * rhsNormal.X + rhsVelocity.Y * rhsNormal.Y;
-            var v2T = rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X;
+            var v2T = -rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X;
 
             // Apply the restitution coefficient
             var combinedRestitution = (RestitutionCoefficient + rhs.RestitutionCoefficient) / 2f;
@@ -95,6 +95,7 @@ public class Collision : EntityDecorator
         }
 
         var currentMagnitude = (lhsVelocity + rhsVelocity).Length();
+        
         if (initialMagnitude != 0 && currentMagnitude >= initialMagnitude)
         {
             lhsVelocity *= initialMagnitude / currentMagnitude;

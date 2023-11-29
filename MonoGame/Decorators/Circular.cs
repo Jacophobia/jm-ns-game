@@ -12,6 +12,6 @@ public class Circular : EntityDecorator
 
     protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
     {
-        return Vector2.Normalize(collisionLocation - Position);
+        return Vector2.Normalize(collisionLocation - Destination.Center.ToVector2());
     }
 }
