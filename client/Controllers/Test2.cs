@@ -4,7 +4,7 @@ using client.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using MonoGame;
+using MonoGame.Controllers;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
@@ -20,7 +20,7 @@ public class Test2 : GameController
     private List<Entity> _background;
     private Camera _camera;
 
-    public Test2()
+    public Test2() : base(true)
     {
         _spatialGrid = new SpatialGrid<Entity>();
     }
@@ -68,7 +68,7 @@ public class Test2 : GameController
                     .AddDecorator<Inertia>()
                     .AddDecorator<CircularCollision>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
-                    .AddDecorator<PerspectiveRender>(true, -10);
+                    .AddDecorator<PerspectiveRender>(true);
 
                 if (i == 0)
                 {
@@ -102,16 +102,11 @@ public class Test2 : GameController
                     .SetDepth(5 * i)
                     .SetStatic(true)
                     .SetColor(Color.White)
-                    .AddDecorator<PerspectiveRender>(true, -10)
+                    .AddDecorator<PerspectiveRender>(true)
                     .Build());
     }
 
-    protected override void OnBeginRun()
-    {
-        // nothing to implement
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
+    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -121,49 +116,9 @@ public class Test2 : GameController
         _camera.Update(gameTime, controls);
     }
 
-    protected override void OnBeginDraw()
-    {
-        // nothing to implement
-    }
-
     protected override void OnDraw(GameTime gameTime)
     {
-        foreach (var side in _background) side.Draw(Renderer, new []{ _camera });
+        foreach (var side in _background) side.Draw(Renderer, _camera);
         _spatialGrid.Draw(Renderer, new []{ _camera }, gameTime);
-    }
-
-    protected override void OnEndDraw()
-    {
-        // nothing to implement
-    }
-
-    protected override void OnEndRun()
-    {
-        // nothing to implement
-    }
-
-    protected override void OnUnloadContent()
-    {
-        // nothing to implement
-    }
-
-    protected override void OnExit(object sender, EventArgs args)
-    {
-        // nothing to implement
-    }
-
-    protected override void OnDispose(bool disposing)
-    {
-        // nothing to implement
-    }
-
-    protected override void OnWindowFocused(object sender, EventArgs args)
-    {
-        // nothing to implement
-    }
-
-    protected override void OnWindowClosed(object sender, EventArgs args)
-    {
-        // nothing to implement
     }
 }

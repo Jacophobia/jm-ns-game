@@ -4,16 +4,15 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Input;
-using MonoGame.Networking;
 using MonoGame.Output;
 
-namespace MonoGame;
+namespace MonoGame.Controllers;
 
 // ReSharper disable once PrivateFieldCanBeConvertedToLocalVariable
 public abstract class GameController : Game
 {
-    protected Renderer Renderer;
-    protected readonly NetworkClient NetworkClient; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
+    protected Renderer Renderer; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
+    protected SpriteBatch SpriteBatch;
 
     protected static Rectangle WindowSize
     {
@@ -30,9 +29,8 @@ public abstract class GameController : Game
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private Listener _inputListener;
-    private SpriteBatch _spriteBatch;
     
-    protected GameController(string serverIpAddress, int serverPort, bool fullscreen = true)
+    protected GameController(bool fullscreen)
     {
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
@@ -45,35 +43,26 @@ public abstract class GameController : Game
         _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
-
-        NetworkClient = new NetworkClient(serverPort, serverIpAddress);
-    }
-
-    protected GameController(int serverPort = 12345, bool fullscreen = true)
-    {
-        _graphicsDeviceManager = new GraphicsDeviceManager(this);
-        Content.RootDirectory = "Content";
-        Window.AllowUserResizing = true;
-        IsMouseVisible = true;
-
-        var windowSize = WindowSize;
-        
-        _graphicsDeviceManager.PreferredBackBufferWidth = windowSize.Width;
-        _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
-        // Set fullscreen mode
-        _graphicsDeviceManager.IsFullScreen = fullscreen;
-
-        NetworkClient = new NetworkClient(serverPort);
     }
 
     /// <summary>
     /// Initializes game component. Called once before the game loop
     /// starts and after the graphics device is initialized.
     /// </summary>
-    protected abstract void OnInitialize();
+    protected virtual void OnInitialize() {}
+
+    protected internal virtual void BeforeOnInitialize() {}
+
+    protected internal virtual void AfterOnInitialize()
+    {
+        if (Renderer == null)
+        {
+            throw new MissingMemberException($"Renderer was not set in {nameof(BeforeOnInitialize)}");
+        }
+    }
     protected sealed override void Initialize()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
         _inputListener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
@@ -81,9 +70,10 @@ public abstract class GameController : Game
             { Keys.OemComma, Controls.Up },
             { Keys.O, Controls.Down }
         });
-        Renderer = new Renderer(GraphicsDevice, _spriteBatch, Content, NetworkClient);
         
+        BeforeOnInitialize();
         OnInitialize();
+        AfterOnInitialize();
         
         base.Initialize();
     }
@@ -91,10 +81,14 @@ public abstract class GameController : Game
     /// <summary>
     /// Called when the game should load its content.
     /// </summary>
-    protected abstract void OnLoadContent();
+    protected virtual void OnLoadContent() {}
+    protected internal virtual void BeforeOnLoadContent() {}
+    protected internal virtual void AfterOnLoadContent() {}
     protected sealed override void LoadContent()
     {
+        BeforeOnLoadContent();
         OnLoadContent();
+        AfterOnLoadContent();
         
         base.LoadContent();
     }
@@ -103,13 +97,14 @@ public abstract class GameController : Game
     /// Called once before the game loop begins. Useful for any one-time
     /// setup.
     /// </summary>
-    protected abstract void OnBeginRun();
+    protected virtual void OnBeginRun() {}
+    protected internal virtual void BeforeOnBeginRun() {}
+    protected internal virtual void AfterOnBeginRun() {}
     protected sealed override void BeginRun()
     {
+        BeforeOnBeginRun();
         OnBeginRun();
-        // Start the network client and its listening process
-        NetworkClient.Connect();
-        NetworkClient.StartListening();
+        AfterOnBeginRun();
         base.BeginRun();
     }
 
@@ -120,12 +115,16 @@ public abstract class GameController : Game
     ///     Snapshot of the game's timing state.
     /// </param>
     /// <param name="controls"></param>
-    protected abstract void OnUpdate(GameTime gameTime, Controls[] controls);
+    protected virtual void OnUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected internal virtual void BeforeOnUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected internal virtual void AfterOnUpdate(GameTime gameTime, IList<Controls> controls) {}
     protected sealed override void Update(GameTime gameTime)
     {
         // Receive control data from the network
-        var controls = NetworkClient.GetControlData();
-        OnUpdate(gameTime, new []{_inputListener.GetInputState(), controls});
+        var controls = new List<Controls>();
+        BeforeOnUpdate(gameTime, controls);
+        OnUpdate(gameTime, controls);
+        AfterOnUpdate(gameTime, controls);
         base.Update(gameTime);
     }
 
@@ -133,11 +132,16 @@ public abstract class GameController : Game
     /// Called before drawing the frame. Allows any necessary pre-draw
     /// operations.
     /// </summary>
-    protected abstract void OnBeginDraw();
+    protected virtual void OnBeginDraw() {}
+    protected internal virtual void BeforeOnBeginDraw() {}
+    protected internal virtual void AfterOnBeginDraw() {}
     protected sealed override bool BeginDraw()
     {
         Renderer.Begin();
+        
+        BeforeOnBeginDraw();
         OnBeginDraw();
+        AfterOnBeginDraw();
         return base.BeginDraw();
     }
 
@@ -147,10 +151,14 @@ public abstract class GameController : Game
     /// <param name="gameTime">
     /// Snapshot of the game's timing state.
     /// </param>
-    protected abstract void OnDraw(GameTime gameTime);
+    protected virtual void OnDraw(GameTime gameTime) {}
+    protected internal virtual void BeforeOnDraw(GameTime gameTime) {}
+    protected internal virtual void AfterOnDraw(GameTime gameTime) {}
     protected sealed override void Draw(GameTime gameTime)
     {
+        BeforeOnDraw(gameTime);
         OnDraw(gameTime);
+        AfterOnDraw(gameTime);
         base.Draw(gameTime);
     }
 
@@ -158,10 +166,14 @@ public abstract class GameController : Game
     /// Called after drawing the frame. Allows any necessary post-draw
     /// operations.
     /// </summary>
-    protected abstract void OnEndDraw();
+    protected virtual void OnEndDraw() {}
+    protected internal virtual void BeforeOnEndDraw() {}
+    protected internal virtual void AfterOnEndDraw() {}
     protected sealed override void EndDraw()
     {
+        BeforeOnEndDraw();
         OnEndDraw();
+        AfterOnEndDraw();
         Renderer.End();
         base.EndDraw();
     }
@@ -169,20 +181,28 @@ public abstract class GameController : Game
     /// <summary>
     /// Called once after the game loop ends. Useful for any cleanup.
     /// </summary>
-    protected abstract void OnEndRun();
+    protected virtual void OnEndRun() {}
+    protected internal virtual void BeforeOnEndRun() {}
+    protected internal virtual void AfterOnEndRun() {}
     protected sealed override void EndRun()
     {
+        BeforeOnEndRun();
         OnEndRun();
+        AfterOnEndRun();
         base.EndRun();
     }
 
     /// <summary>
     /// Called when the game should unload its content.
     /// </summary>
-    protected abstract void OnUnloadContent();
+    protected virtual void OnUnloadContent() {}
+    protected internal virtual void BeforeOnUnloadContent() {}
+    protected internal virtual void AfterOnUnloadContent() {}
     protected sealed override void UnloadContent()
     {
+        BeforeOnUnloadContent();
         OnUnloadContent();
+        AfterOnUnloadContent();
         base.UnloadContent();
     }
 
@@ -192,11 +212,14 @@ public abstract class GameController : Game
     /// </summary>
     /// <param name="sender">The source of the event.</param>
     /// <param name="args">Arguments for the event.</param>
-    protected abstract void OnExit(object sender, EventArgs args);
+    protected virtual void OnExit(object sender, EventArgs args) {}
+    protected internal virtual void BeforeOnExit(object sender, EventArgs args) {}
+    protected internal virtual void AfterOnExit(object sender, EventArgs args) {}
     protected sealed override void OnExiting(object sender, EventArgs args)
     {
+        BeforeOnExit(sender, args);
         OnExit(sender, args);
-        NetworkClient.Disconnect();
+        AfterOnExit(sender, args);
         base.OnExiting(sender, args);
     }
     
@@ -209,14 +232,14 @@ public abstract class GameController : Game
     /// Indicates whether the method call comes from a Dispose method
     /// (its value is true) or from a finalizer (its value is false).
     /// </param>
-    protected abstract void OnDispose(bool disposing);
+    protected virtual void OnDispose(bool disposing) {}
+    protected internal virtual void BeforeOnDispose(bool disposing) {}
+    protected internal virtual void AfterOnDispose(bool disposing) {}
     protected sealed override void Dispose(bool disposing)
     {
+        BeforeOnDispose(disposing);
         OnDispose(disposing);
-        if (disposing)
-        {
-            NetworkClient?.Dispose();
-        }
+        AfterOnDispose(disposing);
         base.Dispose(disposing);
     }
     
@@ -232,10 +255,14 @@ public abstract class GameController : Game
     /// Arguments for the event, containing any additional info about
     /// the activation.
     /// </param>
-    protected abstract void OnWindowFocused(object sender, EventArgs args);
+    protected virtual void OnWindowFocused(object sender, EventArgs args) {}
+    protected internal virtual void BeforeOnWindowFocused(object sender, EventArgs args) {}
+    protected internal virtual void AfterOnWindowFocused(object sender, EventArgs args) {}
     protected sealed override void OnActivated(object sender, EventArgs args)
     {
+        BeforeOnWindowFocused(sender, args);
         OnWindowFocused(sender, args);
+        AfterOnWindowFocused(sender, args);
         base.OnActivated(sender, args);
     }
     
@@ -250,10 +277,14 @@ public abstract class GameController : Game
     /// <param name="args">
     /// Arguments for the event, containing any additional info about the deactivation.
     /// </param>
-    protected abstract void OnWindowClosed(object sender, EventArgs args);
+    protected virtual void OnWindowClosed(object sender, EventArgs args) {}
+    protected internal virtual void BeforeOnWindowClosed(object sender, EventArgs args) {}
+    protected internal virtual void AfterOnWindowClosed(object sender, EventArgs args) {}
     protected sealed override void OnDeactivated(object sender, EventArgs args)
     {
+        BeforeOnWindowClosed(sender, args);
         OnWindowClosed(sender, args);
+        AfterOnWindowClosed(sender, args);
         base.OnDeactivated(sender, args);
     }
 }

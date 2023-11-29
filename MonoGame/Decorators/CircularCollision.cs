@@ -1,9 +1,7 @@
 ﻿using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
-using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
 
 namespace MonoGame.Decorators;
 
@@ -12,6 +10,7 @@ public class CircularCollision : EntityDecorator
 {
     public CircularCollision(Entity @base) : base(@base)
     {
+        // no new behavior to add
     }
 
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
@@ -107,22 +106,5 @@ public class CircularCollision : EntityDecorator
         rhs.Velocity = rhsVelocity;
         // TODO: To make it so that two types of collision can interact, the OnHandleCollisionFrom method should be called on the other object and it should be up to that object whether or not it moves.
         // TODO: We may also need to recalculate so that this method uses the RHS center coordinate which is closest to LHS 
-    }
-
-
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnDraw(Renderer renderer, Camera[] cameras)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
-    {
-        // no new behavior to add
     }
 }

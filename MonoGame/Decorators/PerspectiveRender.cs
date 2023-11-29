@@ -1,67 +1,44 @@
 ﻿using System;
-using Microsoft.Xna.Framework;
 using MonoGame.Entities;
-using MonoGame.Input;
-using MonoGame.Interfaces;
 using MonoGame.Output;
 
 namespace MonoGame.Decorators;
 
 public class PerspectiveRender : EntityDecorator
 {
-    private readonly float _scale;
+    private readonly bool _adjustScale;
+    private float _scale;
 
-    // ReSharper disable once IntroduceOptionalParameters.Global
-    public PerspectiveRender(Entity @base) : this(@base, false, -10f)
+    public PerspectiveRender(Entity @base, bool adjustScale) : base(@base)
     {
+        _adjustScale = adjustScale;
     }
 
-    // ReSharper disable once MemberCanBePrivate.Global
-    public PerspectiveRender(Entity @base, bool adjustScale, float perspectiveDepth) : base(@base)
+    protected override void BeforeDraw(Renderer renderer, Camera camera)
     {
-        var cameraDistance = Depth - perspectiveDepth;
+        var cameraDistance = Depth - camera.Position.Z;
 
         if (cameraDistance == 0) cameraDistance = 0.001f;
 
-        _scale = MathF.Abs(perspectiveDepth / cameraDistance);
+        _scale = MathF.Abs(camera.Position.Z / cameraDistance);
+    }
 
+    protected override void OnDraw(Renderer renderer, Camera camera)
+    {
+        var drawnDestination = Destination;
+        
+        var offset = (camera.View.Center.ToVector2() - Position) * (1 - _scale);
+        
+        drawnDestination.X += (int)Math.Round(offset.X);
+        drawnDestination.Y += (int)Math.Round(offset.Y);
+        
         // scale is focalLength divided by distance
-        if (adjustScale)
+        if (_adjustScale)
         {
-            var destination = Destination;
-            destination.Width = (int)Math.Round(destination.Width * Math.Abs(_scale));
-            destination.Height = (int)Math.Round(destination.Height * Math.Abs(_scale));
-            Destination = destination;
+            drawnDestination.Width = (int)Math.Round(drawnDestination.Width * Math.Abs(_scale));
+            drawnDestination.Height = (int)Math.Round(drawnDestination.Height * Math.Abs(_scale));
         }
-
-        _scale = 1 - _scale;
-    }
-
-    protected override void OnUpdate(GameTime gameTime, Controls[] controls)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap)
-    {
-        // no new behavior to add
-    }
-
-    protected override void OnDraw(Renderer renderer, Camera[] cameras)
-    {
-        foreach (var camera in cameras)
-        {
-            var actualPosition = Position;
-            Position += (camera.View.Center.ToVector2() - Position) * _scale;
-            renderer.Render(this, camera);
-            Position = actualPosition;
-        }
+        
+        renderer.Render(this, camera, destination: drawnDestination);
     }
 }

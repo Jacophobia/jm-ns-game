@@ -23,7 +23,6 @@ public class NetworkClient : IDisposable
     private readonly PriorityQueue<IEnumerable<IRenderable>> _renderableQueue;
     private Thread _listeningThread;
     private bool _listening;
-    private readonly bool _isHosting;
     private readonly byte[] _receiveBuffer;
     private readonly ObjectPool<Renderable> _renderablePool;
 
@@ -40,23 +39,18 @@ public class NetworkClient : IDisposable
     {
         _udpClient = new UdpClient();
         _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-        _isHosting = false;
     }
 
     public NetworkClient(int port) : this()
     {
         _udpClient = new UdpClient(port);
         _remoteEndPoint = null;
-        _isHosting = true;
     }
 
     public long TotalMilliseconds => _stopwatch.ElapsedMilliseconds;
 
     public void Connect()
     {
-        if (_isHosting)
-            return;
-        
         SendInitialPacket();
     }
 
@@ -118,6 +112,9 @@ public class NetworkClient : IDisposable
 
     public void SendRenderableData(IEnumerable<IRenderable> renderableData)
     {
+        if (_remoteEndPoint == null)
+            return;
+        
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
         
@@ -125,8 +122,7 @@ public class NetworkClient : IDisposable
         
         SerializeRenderableData(renderableData, writer);
         
-        if (_remoteEndPoint != null)
-            _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
+        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
     }
 
     public IEnumerable<IRenderable> GetRenderableData()

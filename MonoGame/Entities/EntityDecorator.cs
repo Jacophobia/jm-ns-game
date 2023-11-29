@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
 using MonoGame.Interfaces;
@@ -90,13 +91,19 @@ public abstract class EntityDecorator : Entity
         set => _base.IsStatic = value;
     }
 
-    public sealed override void Update(GameTime gameTime, Controls[] controls)
+    // protected abstract void Initialize();
+
+    public sealed override void Update(GameTime gameTime, IList<Controls> controls)
     {
+        BeforeUpdate(gameTime, controls);
         OnUpdate(gameTime, controls);
+        AfterUpdate(gameTime, controls);
         _base.Update(gameTime, controls);
     }
 
-    protected abstract void OnUpdate(GameTime gameTime, Controls[] controls);
+    protected virtual void BeforeUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected virtual void OnUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected virtual void AfterUpdate(GameTime gameTime, IList<Controls> controls) {}
 
     public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
         Vector2? collisionLocation, Rectangle? overlap)
@@ -105,8 +112,8 @@ public abstract class EntityDecorator : Entity
         _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
     }
 
-    protected abstract void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap);
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap) {}
 
     public sealed override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime,
         Vector2? collisionLocation, Rectangle? overlap)
@@ -115,14 +122,18 @@ public abstract class EntityDecorator : Entity
         _base.HandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
     }
 
-    protected abstract void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap);
+    protected virtual void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+        Rectangle? overlap) {}
 
-    public sealed override void Draw(Renderer renderer, Camera[] cameras)
+    public sealed override void Draw(Renderer renderer, Camera cameras)
     {
+        BeforeDraw(renderer, cameras);
         OnDraw(renderer, cameras);
+        AfterDraw(renderer, cameras);
         _base.Draw(renderer, cameras);
     }
 
-    protected abstract void OnDraw(Renderer renderer, Camera[] cameras);
+    protected virtual void BeforeDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void OnDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void AfterDraw(Renderer renderer, Camera cameras) {}
 }

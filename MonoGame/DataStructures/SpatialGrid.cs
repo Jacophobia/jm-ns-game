@@ -15,21 +15,19 @@ namespace MonoGame.DataStructures;
 public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
 {
     private readonly List<T> _elements;
-    private readonly ObjectPool<HashSet<Vector2>> _hashSetPool;
+    private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
-    private Dictionary<Vector2, HashSet<T>> _partitions;
+    private Dictionary<PartitionKey, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
-    private readonly int _partitionSizeZ; // TODO: Add a z index to the partitions since things in separate layers can't hit eachother
 
     public SpatialGrid()
     {
         _elements = new List<T>();
-        _hashSetPool = new ObjectPool<HashSet<Vector2>>();
+        _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
-        _partitionSizeZ = 1;
 
         #if DEBUG
         _totalRuntimeStopwatch.Start();
@@ -41,7 +39,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         Add(elements);
     }
 
-    private Dictionary<Vector2, HashSet<T>> Partitions => _partitions ??= new Dictionary<Vector2, HashSet<T>>();
+    private Dictionary<PartitionKey, HashSet<T>> Partitions => _partitions ??= new Dictionary<PartitionKey, HashSet<T>>();
 
     void IDisposable.Dispose()
     {
@@ -144,7 +142,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(GameTime gameTime, Controls[] controls)
+    void ISpatialPartition<T>.Update(GameTime gameTime, IList<Controls> controls)
     {
         foreach (var element in _elements)
         {
@@ -173,7 +171,8 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, GameTime gameTime)
     {
         foreach (var element in _elements)
-            element.Draw(renderer, cameras);
+        foreach (var camera in cameras)
+            element.Draw(renderer, camera);
     }
 
     public void Add(IEnumerable<T> items)
@@ -210,14 +209,14 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
-    private void CheckForCollisions(T element, GameTime gameTime, HashSet<Vector2> indices)
+    private void CheckForCollisions(T element, GameTime gameTime, HashSet<PartitionKey> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.Depth == other.Depth &&
-                        element.CollidesWith(other, out var location, out var overlap))
+                    if (!element.Equals(other)
+                        && element.CollidesWith(other, out var location, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
@@ -244,7 +243,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
     }
 
-    private void HandlePartitionTransitions(T item, HashSet<Vector2> previousIndices, HashSet<Vector2> currentIndices)
+    private void HandlePartitionTransitions(T item, HashSet<PartitionKey> previousIndices, HashSet<PartitionKey> currentIndices)
     {
         foreach (var index in previousIndices)
             if (!currentIndices.Contains(index))
@@ -264,7 +263,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
     }
 
-    private void AddIndices(Rectangle rectangle, ISet<Vector2> indices)
+    private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
     {
         indices.Clear();
         var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2f) / (_partitionSizeX * 1f));
@@ -274,12 +273,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
-            indices.Add(new Vector2(x, y));
+            indices.Add(new PartitionKey(x, y, depth));
     }
 
-    private void GetPartitionIndices(T item, ISet<Vector2> indices)
+    private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
     {
-        AddIndices(item.Destination, indices);
+        AddIndices(item.Destination, item.Depth, indices);
     }
 
     private void UpdateAverages(T item)
@@ -323,6 +322,53 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             _hashSetPool.Return(indices);
         }
     }
+    
+    public readonly struct PartitionKey : IEquatable<PartitionKey>
+    {
+        private readonly int _x;
+        private readonly int _y;
+        private readonly int _depth;
+
+        public PartitionKey(int x, int y, int depth)
+        {
+            _x = x;
+            _y = y;
+            _depth = depth;
+        }
+
+        public override bool Equals(object obj)
+        {
+            return obj is PartitionKey key && Equals(key);
+        }
+
+        public bool Equals(PartitionKey other)
+        {
+            return _x == other._x && _y == other._y && _depth == other._depth;
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                var hash = 17;
+                hash = hash * 23 + _x.GetHashCode();
+                hash = hash * 23 + _y.GetHashCode();
+                hash = hash * 23 + _depth.GetHashCode();
+                return hash;
+            }
+        }
+
+        public static bool operator ==(PartitionKey left, PartitionKey right)
+        {
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(PartitionKey left, PartitionKey right)
+        {
+            return !(left == right);
+        }
+    }
+
 
     #if DEBUG
     private readonly Stopwatch _totalRuntimeStopwatch = new();

@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
@@ -92,7 +91,7 @@ public class Renderer
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         int? depth = null)
     {
-        if (!renderable.Destination.Intersects(camera.View))
+        if (!(destination ?? renderable.Destination).Intersects(camera.View))
             return;
 
         var relativeDestination = destination ?? renderable.Destination;
