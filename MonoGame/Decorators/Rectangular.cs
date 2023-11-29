@@ -84,6 +84,9 @@ public class Rectangular : EntityDecorator
 
     protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
     {
+        if (IsStatic)
+            return Vector2.Zero;
+
         return GetCollisionDirection(this, rhs) switch
         {
             IntersectionSide.Top => new Vector2(0, -1),

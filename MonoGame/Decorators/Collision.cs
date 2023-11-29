@@ -36,8 +36,9 @@ public class Collision : EntityDecorator
         Debug.Assert(collisionLocation != null);
         Debug.Assert(overlap != null);
 
+        var collisionCoordinate = overlap.Value.Center.ToVector2();
         // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one
-        if (!AreMovingTowardsEachOther(Position, Velocity, rhs.Position, rhs.Velocity)) return;
+        if (!AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, collisionCoordinate, rhs.Velocity)) return;
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
@@ -47,7 +48,6 @@ public class Collision : EntityDecorator
         var rhsVelocity = rhs.Velocity;
 
         // Calculate the normal (n) and tangential (t) direction vectors
-        var collisionCoordinate = overlap.Value.Center.ToVector2();
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
         var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
         

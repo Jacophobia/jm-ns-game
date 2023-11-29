@@ -72,6 +72,12 @@ public class HostingClient : HostController
                     .AddDecorator<Circular>()
                     .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                     .AddDecorator<PerspectiveRender>(true);
+                if (j == 9)
+                {
+                    entityBuilder.SetVelocity(Vector2.Zero);
+                    entityBuilder.AddDecorator<Static>();
+                }
+                
                 if (i == 0)
                 {
                     switch (j)
@@ -80,6 +86,8 @@ public class HostingClient : HostController
                         {
                             entityBuilder.SetColor(Color.OrangeRed);
                             entityBuilder.SetDepth(0);
+                            entityBuilder.SetVelocity(Vector2.Zero);
+                            entityBuilder.AddDecorator<Static>();
                             var entity = entityBuilder.Build();
                             _camera1 = new Camera(entity, 1, Vector3.Up * 100, j);
                             _camera2 = new Camera(entity, 1, Vector3.Up * 100, j + 1);
@@ -109,10 +117,10 @@ public class HostingClient : HostController
 
     private void SetBackground()
     {
-        var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
-        backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
-        backgroundTexture.Name = "Test/background";
+        var backgroundTexture = Content.Load<Texture2D>("Test/background");
+        
         _background = new List<Entity>();
+        
         foreach (var side in WindowSize.GetOutline(50).GetSides())
             for (var i = -1; i < numLayers; i++)
             {
@@ -130,8 +138,9 @@ public class HostingClient : HostController
                     .AddDecorator<Rectangular>()
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
-                
             }
+        foreach (var entity in _background)
+            _spatialPartition.Add(entity);
     }
 
     protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
