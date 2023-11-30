@@ -53,6 +53,7 @@ public sealed class BaseEntity : Entity
             _collisionData = new CollisionData(value);
             Source = value.Bounds;
             Origin = value.Bounds.Center.ToVector2();
+            _texture = value;
         }
     }
 
@@ -81,7 +82,7 @@ public sealed class BaseEntity : Entity
         set
         {
             if (value is > Renderer.MaxDepth or < Renderer.MinDepth)
-                throw new ArgumentOutOfRangeException(nameof(value), value, $"Depth must be between {Renderer.MinDepth} and {Renderer.MinDepth}");
+                throw new ArgumentOutOfRangeException(nameof(value), value, $"Depth must be between {Renderer.MinDepth} and {Renderer.MaxDepth}");
             _depth = value;
         }
     }

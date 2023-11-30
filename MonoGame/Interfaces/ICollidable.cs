@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using MonoGame.Input;
 using MonoGame.Sprites;
@@ -9,7 +8,7 @@ namespace MonoGame.Interfaces;
 public interface ICollidable
 {
     public CollisionData CollisionData { get; }
-    public Vector2 Position { get; set; }
+    public Vector2 Position { get; }
     public Rectangle Bounds { get; }
     public Vector2 Velocity { get; set; }
     public float RestitutionCoefficient { get; }

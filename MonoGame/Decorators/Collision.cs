@@ -2,7 +2,6 @@
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Interfaces;
-using MonoGame.Sprites;
 
 namespace MonoGame.Decorators;
 
