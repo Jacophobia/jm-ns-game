@@ -70,7 +70,7 @@ public class HostingClient : HostController
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Circular>()
-                    .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
+                    // .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
                     .AddDecorator<PerspectiveRender>(true);
                 if (j == 9)
                 {

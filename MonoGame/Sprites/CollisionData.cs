@@ -116,7 +116,7 @@ internal class CollisionData
 
         public override string ToString()
         {
-            return $"{IsCollidable},{Count}";
+            return $"{IsCollidable}:{Count}";
         }
     }
 }
