@@ -10,7 +10,7 @@ using MonoGame.File;
 
 namespace MonoGame.Sprites;
 
-internal class CollisionData
+public class CollisionData
 {
     // At some point, it would be good to make a custom data structure 
     // which could order points so that you can perform a more specific
@@ -18,10 +18,12 @@ internal class CollisionData
     private static IDictionary<string, List<List<CollisionCheckColumn>>> _collisionData;
 
     private readonly string _name;
+    private readonly Rectangle _bounds;
 
     internal CollisionData(Texture2D texture)
     {
         _name = texture.Name;
+        _bounds = texture.Bounds;
 
         _collisionData ??= new Dictionary<string, List<List<CollisionCheckColumn>>>();
 
@@ -68,12 +70,12 @@ internal class CollisionData
         set => _collisionData[_name] = value;
     }
 
-    internal bool IsCollidableCoord(Point coordinate)
+    internal bool IsCollidableCoord(Vector2 coordinate)
     {
         if (coordinate.X >= Data.Count)
             return false;
         
-        var column = Data[coordinate.X];
+        var column = Data[(int)Math.Round(coordinate.X)];
         var count = 0;
         
         foreach (var check in column)
@@ -85,11 +87,51 @@ internal class CollisionData
 
         return false;
     }
-    
-    internal bool IsCollidableCoord(Vector2 coordinate)
+    internal bool Collides(Rectangle lhsDestination, CollisionData rhs, Rectangle rhsDestination, Rectangle overlap)
     {
-        coordinate.Round();
-        return IsCollidableCoord(coordinate.ToPoint());
+        Debug.Assert(!overlap.IsEmpty, "Overlap cannot be empty. A value must be provided.");
+
+        if ((lhsDestination.Width < 11 && overlap.Width >= lhsDestination.Width / 9f) ||
+            (lhsDestination.Height < 11 && overlap.Height >= lhsDestination.Height / 9f) ||
+            (rhsDestination.Width < 11 && overlap.Width >= rhsDestination.Width / 9f) ||
+            (rhsDestination.Height < 11 && overlap.Height >= rhsDestination.Height / 9f))
+        {
+            return true;
+        }
+
+        // Create rectangles for the entities' collision areas
+        var rect1 = lhsDestination;
+        var rect2 = rhsDestination;
+
+        // Get the textures of the entities
+        var texture1 = _bounds;
+        var texture2 = rhs._bounds;
+
+        // var overlapLeft = (int)Math.Round((double)((overlap.X - rect1.Left) * texture1.Width) / rect1.Width);
+        // var overlapTop = (int)Math.Round((double)((overlap.Y - rect1.Top) * texture1.Height) / rect1.Height);
+        // var overlapRight = (int)Math.Round((double)((overlap.Right - rect1.Left) * texture1.Width) / rect1.Width);
+        // var overlapBottom = (int)Math.Round((double)((overlap.Bottom - rect1.Top) * texture1.Height) / rect1.Height);
+
+        // Iterate through the intersection area and check for pixel-perfect collision
+        for (var x = overlap.Left; x <= overlap.Right; x++)
+        for (var y = overlap.Top; y <= overlap.Bottom; y++)
+        {
+            // Calculate the pixel coordinates within the textures
+            var texCoord1 = new Vector2(
+                (float)(x - rect1.Left) * texture1.Width / rect1.Width,
+                (float)((y - rect1.Top) * texture1.Height) / rect1.Height);
+            var texCoord2 = new Vector2(
+                (float)((x - rect2.Left) * texture2.Width) / rect2.Width,
+                (float)((y - rect2.Top) * texture2.Height) / rect2.Height);
+
+            // Check if the pixels at the current position are not transparent for both entities
+            if (IsCollidableCoord(texCoord1) && rhs.IsCollidableCoord(texCoord2))
+            {
+                return true;
+            }
+        }
+        
+        return false;
     }
 
     private void Save(string filepath)

@@ -27,10 +27,10 @@ public class Rectangular : EntityDecorator
         var prevCenter2 = rhs.Position - rhs.Velocity;
 
         // Calculate half dimensions for easier calculations
-        var halfWidth1 = lhs.Destination.Width / 2f;
-        var halfHeight1 = lhs.Destination.Height / 2f;
-        var halfWidth2 = rhs.Destination.Width / 2f;
-        var halfHeight2 = rhs.Destination.Height / 2f;
+        var halfWidth1 = lhs.Bounds.Width / 2f;
+        var halfHeight1 = lhs.Bounds.Height / 2f;
+        var halfWidth2 = rhs.Bounds.Width / 2f;
+        var halfHeight2 = rhs.Bounds.Height / 2f;
 
         // Calculate relative velocity
         var relativeVelocity = lhs.Velocity - rhs.Velocity;

@@ -13,7 +13,8 @@ public sealed class BaseEntity : Entity
 {
     private int _depth;
     private Rectangle _destination;
-    private Sprite _sprite;
+    private CollisionData _collisionData;
+    private Texture2D _texture;
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
@@ -46,12 +47,12 @@ public sealed class BaseEntity : Entity
 
     public override Texture2D Texture
     {
-        get => Sprite.Texture;
+        get => _texture;
         set
         {
-            _sprite = new Sprite(value);
-            Source = Sprite.Texture.Bounds;
-            Origin = Sprite.Texture.Bounds.Center.ToVector2();
+            _collisionData = new CollisionData(value);
+            Source = value.Bounds;
+            Origin = value.Bounds.Center.ToVector2();
         }
     }
 
@@ -67,7 +68,7 @@ public sealed class BaseEntity : Entity
     }
 
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public override Sprite Sprite => _sprite;
+    public override CollisionData CollisionData => _collisionData;
     public override Rectangle Source { get; set; }
     public override Color Color { get; set; } = Color.White;
     public override float Rotation { get; set; }
@@ -106,6 +107,12 @@ public sealed class BaseEntity : Entity
         if (depth.HasValue) Depth = depth.Value;
     }
 
+    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
+    {
+        overlap = null;
+        return false;
+    }
+
     public override void Update(GameTime gameTime, IList<Controls> controls)
     {
         // We don't do anything. Entity behavior will be handled by the 
@@ -117,7 +124,7 @@ public sealed class BaseEntity : Entity
         return Vector2.Zero;
     }
 
-    public override void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    public override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
         Rectangle? overlap)
     {
         // We don't do anything. Entity behavior will be handled by the 

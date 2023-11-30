@@ -17,7 +17,7 @@ public abstract class EntityDecorator : Entity
         _base = @base;
     }
 
-    public sealed override Sprite Sprite => _base.Sprite;
+    public sealed override CollisionData CollisionData => _base.CollisionData;
 
     public sealed override Texture2D Texture
     {
@@ -105,21 +105,32 @@ public abstract class EntityDecorator : Entity
     protected virtual void OnUpdate(GameTime gameTime, IList<Controls> controls) {}
     protected virtual void AfterUpdate(GameTime gameTime, IList<Controls> controls) {}
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
-        Vector2? collisionLocation, Rectangle? overlap)
+    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
     {
-        BeforeHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
-        OnHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
-        AfterHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
-        _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
+        return _base.CollidesWith(rhs, out overlap) || IsCollidingWith(rhs, out overlap);
+    }
+
+    protected virtual bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    {
+        overlap = null;
+        return false;
+    }
+
+    public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
+        Rectangle? overlap)
+    {
+        BeforeHandleCollisionWith(collidable, gameTime, overlap);
+        OnHandleCollisionWith(collidable, gameTime, overlap);
+        AfterHandleCollisionWith(collidable, gameTime, overlap);
+        _base.HandleCollisionWith(collidable, gameTime, overlap);
     }
 
 
-    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, GameTime gameTime,
         Rectangle? overlap) {}
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime,
         Rectangle? overlap) {}
-    protected virtual void AfterHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected virtual void AfterHandleCollisionWith(ICollidable rhs, GameTime gameTime,
         Rectangle? overlap) {}
 
     public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)

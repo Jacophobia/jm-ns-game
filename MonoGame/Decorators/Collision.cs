@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Interfaces;
+using MonoGame.Sprites;
 
 namespace MonoGame.Decorators;
 
@@ -13,6 +14,15 @@ public class Collision : EntityDecorator
         // no new behavior to add
     }
 
+    protected override bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    {
+        // Find the intersection rectangle
+        overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
+        
+        return overlap is not { IsEmpty: true }
+               && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
+    }
+
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
         Vector2 velocity2)
     {
@@ -22,27 +32,28 @@ public class Collision : EntityDecorator
         // Calculate velocity differences
         var deltaVelocity = velocity2 - velocity1;
 
-        // Calculate the dot product using the static method from the math library
+        // Calculate the dot product
         var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
 
         // If the dot product is negative, objects are moving towards each other
         return dotProduct < 0;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime,
         Rectangle? overlap)
     {
+        if (IsStatic && rhs.IsStatic) 
+            return;
+        
         Debug.Assert(rhs != null);
-        Debug.Assert(collisionLocation != null);
         Debug.Assert(overlap != null);
 
         var collisionCoordinate = overlap.Value.Center.ToVector2();
         // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one
-        if (!AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, collisionCoordinate, rhs.Velocity)) return;
+        if (!AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, collisionCoordinate, rhs.Velocity)) 
+            return;
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
-
-        if (IsStatic && rhs.IsStatic) return;
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
@@ -104,7 +115,5 @@ public class Collision : EntityDecorator
 
         Velocity = lhsVelocity;
         rhs.Velocity = rhsVelocity;
-        // TODO: To make it so that two types of collision can interact, the OnHandleCollisionFrom method should be called on the other object and it should be up to that object whether or not it moves.
-        // TODO: We may also need to recalculate so that this method uses the RHS center coordinate which is closest to LHS 
     }
 }

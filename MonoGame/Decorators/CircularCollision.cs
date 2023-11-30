@@ -29,11 +29,10 @@ public class CircularCollision : EntityDecorator
         return dotProduct < 0;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime,
         Rectangle? overlap)
     {
         Debug.Assert(rhs != null);
-        Debug.Assert(collisionLocation != null);
         Debug.Assert(overlap != null);
 
         // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one

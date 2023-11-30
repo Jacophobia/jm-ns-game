@@ -17,7 +17,8 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    const int numLayers = 50;
+    private const int NumLayers = 1;
+    private const int StartingLayer = 0;
     private ISpatialPartition<Entity> _spatialPartition;
     private List<Entity> _background;
     private Camera _camera1;
@@ -48,11 +49,12 @@ public class HostingClient : HostController
         var random = new Random();
         const int minBallSize = 100;
         const int maxBallSize = 100;
+        const int ballsPerLayer = 1;
 
-        for (var i = -1; i < numLayers; i++)
+        for (var i = StartingLayer; i < NumLayers; i++)
         {
             var color = new Color(random.Next(200), random.Next(255), random.Next(255));
-            for (var j = 0; j < 10; j++)
+            for (var j = 0; j < ballsPerLayer; j++)
             {
                 var ballPosition =
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
@@ -70,13 +72,8 @@ public class HostingClient : HostController
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Circular>()
-                    // .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
+                    .AddDecorator<Bound>(new Rectangle(-2560, -1440, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
-                if (j == 9)
-                {
-                    entityBuilder.SetVelocity(Vector2.Zero);
-                    entityBuilder.AddDecorator<Static>();
-                }
                 
                 if (i == 0)
                 {
@@ -86,11 +83,9 @@ public class HostingClient : HostController
                         {
                             entityBuilder.SetColor(Color.OrangeRed);
                             entityBuilder.SetDepth(0);
-                            entityBuilder.SetVelocity(Vector2.Zero);
-                            entityBuilder.AddDecorator<Static>();
                             var entity = entityBuilder.Build();
-                            _camera1 = new Camera(entity, 1, Vector3.Up * 100, j);
-                            _camera2 = new Camera(entity, 1, Vector3.Up * 100, j + 1);
+                            _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
+                            _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
                             _spatialPartition.Add(entity);
                             continue;
                         }
@@ -118,11 +113,10 @@ public class HostingClient : HostController
     private void SetBackground()
     {
         var backgroundTexture = Content.Load<Texture2D>("Test/background");
-        
         _background = new List<Entity>();
         
         foreach (var side in WindowSize.GetOutline(50).GetSides())
-            for (var i = -1; i < numLayers; i++)
+            for (var i = StartingLayer; i < NumLayers; i++)
             {
                 _background.Add(new EntityBuilder(
                         backgroundTexture,

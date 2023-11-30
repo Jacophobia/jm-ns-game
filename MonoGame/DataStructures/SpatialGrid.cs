@@ -12,7 +12,7 @@ using MonoGame.Output;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
+public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable, IRenderable
 {
     private readonly List<T> _elements;
     private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
@@ -216,14 +216,14 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             {
                 foreach (var other in partition)
                     if (!element.Equals(other)
-                        && element.CollidesWith(other, out var location, out var overlap))
+                        && element.CollidesWith(other, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
 
                         GetPartitionIndices(other, beforeIndices);
 
-                        element.HandleCollisionWith(other, gameTime, location, overlap);
+                        element.HandleCollisionWith(other, gameTime, overlap);
 
                         GetPartitionIndices(other, afterIndices);
 
