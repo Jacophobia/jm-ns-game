@@ -16,7 +16,7 @@ public class NonHostingClient : RemoteController
         
     }
 
-    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -25,7 +25,7 @@ public class NonHostingClient : RemoteController
         NetworkClient.SendControlData(controls.FirstOrDefault());
     }
 
-    protected override void OnDraw(GameTime gameTime)
+    protected override void OnDraw(float deltaTime)
     {
         // Retrieve renderable data from the network and render it
         foreach (var renderable in NetworkClient.GetRenderableData())

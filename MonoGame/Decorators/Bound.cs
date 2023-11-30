@@ -15,7 +15,7 @@ public class Bound : EntityDecorator
         _bounds = bounds;
     }
 
-    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
     {
         var velocity = Velocity;
 

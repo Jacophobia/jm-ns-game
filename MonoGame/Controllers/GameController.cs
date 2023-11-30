@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -29,6 +30,9 @@ public abstract class GameController : Game
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private Listener _inputListener;
+    private readonly Stopwatch _stopwatch;
+    private double _previousTime = 0.0;
+    private float _deltaTime = 0f;
     
     protected GameController(bool fullscreen)
     {
@@ -36,6 +40,12 @@ public abstract class GameController : Game
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
         IsMouseVisible = true;
+    
+        // Disable fixed time step
+        IsFixedTimeStep = false;
+
+        // Disable vertical retrace synchronization
+        _graphicsDeviceManager.SynchronizeWithVerticalRetrace = false;
 
         var windowSize = WindowSize;
         
@@ -43,6 +53,8 @@ public abstract class GameController : Game
         _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
+
+        _stopwatch = new Stopwatch();
     }
 
     /// <summary>
@@ -89,7 +101,7 @@ public abstract class GameController : Game
         BeforeOnLoadContent();
         OnLoadContent();
         AfterOnLoadContent();
-        
+
         base.LoadContent();
     }
     
@@ -105,26 +117,32 @@ public abstract class GameController : Game
         BeforeOnBeginRun();
         OnBeginRun();
         AfterOnBeginRun();
+        
+        _stopwatch.Start();
+        
         base.BeginRun();
     }
 
     /// <summary>
     /// Called each frame to update the game logic.
     /// </summary>
-    /// <param name="gameTime">
-    ///     Snapshot of the game's timing state.
-    /// </param>
+    /// <param name="deltaTime"></param>
     /// <param name="controls"></param>
-    protected virtual void OnUpdate(GameTime gameTime, IList<Controls> controls) {}
-    protected internal virtual void BeforeOnUpdate(GameTime gameTime, IList<Controls> controls) {}
-    protected internal virtual void AfterOnUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
+    protected internal virtual void BeforeOnUpdate(float deltaTime, IList<Controls> controls) {}
+    protected internal virtual void AfterOnUpdate(float deltaTime, IList<Controls> controls) {}
     protected sealed override void Update(GameTime gameTime)
     {
+        var time = _stopwatch.Elapsed.TotalSeconds;
+        _deltaTime = (float)(time - _previousTime);
+        _previousTime = time;
+        
         // Receive control data from the network
         var controls = new List<Controls>();
-        BeforeOnUpdate(gameTime, controls);
-        OnUpdate(gameTime, controls);
-        AfterOnUpdate(gameTime, controls);
+        BeforeOnUpdate(_deltaTime, controls);
+        OnUpdate(_deltaTime, controls);
+        AfterOnUpdate(_deltaTime, controls);
+
         base.Update(gameTime);
     }
 
@@ -148,17 +166,15 @@ public abstract class GameController : Game
     /// <summary>
     /// Called when the game should draw itself.
     /// </summary>
-    /// <param name="gameTime">
-    /// Snapshot of the game's timing state.
-    /// </param>
-    protected virtual void OnDraw(GameTime gameTime) {}
-    protected internal virtual void BeforeOnDraw(GameTime gameTime) {}
-    protected internal virtual void AfterOnDraw(GameTime gameTime) {}
+    /// <param name="deltaTime"></param>
+    protected virtual void OnDraw(float deltaTime) {}
+    protected internal virtual void BeforeOnDraw(float deltaTime) {}
+    protected internal virtual void AfterOnDraw(float deltaTime) {}
     protected sealed override void Draw(GameTime gameTime)
     {
-        BeforeOnDraw(gameTime);
-        OnDraw(gameTime);
-        AfterOnDraw(gameTime);
+        BeforeOnDraw(_deltaTime);
+        OnDraw(_deltaTime);
+        AfterOnDraw(_deltaTime);
         base.Draw(gameTime);
     }
 

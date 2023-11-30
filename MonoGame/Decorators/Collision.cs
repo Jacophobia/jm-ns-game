@@ -43,7 +43,7 @@ public class Collision : EntityDecorator
         return dotProduct < 0;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime,
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime,
         Rectangle? overlap)
     {
         if (IsStatic && rhs.IsStatic) 

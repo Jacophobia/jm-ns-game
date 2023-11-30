@@ -17,10 +17,9 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 1;
-    private const int StartingLayer = 0;
+    private const int NumLayers = 50;
+    private const int StartingLayer = -1;
     private ISpatialPartition<Entity> _spatialPartition;
-    private List<Entity> _background;
     private Camera _camera1;
     private Camera _camera2;
 
@@ -49,7 +48,7 @@ public class HostingClient : HostController
         var random = new Random();
         const int minBallSize = 100;
         const int maxBallSize = 100;
-        const int ballsPerLayer = 1;
+        const int ballsPerLayer = 10;
 
         for (var i = StartingLayer; i < NumLayers; i++)
         {
@@ -60,7 +59,7 @@ public class HostingClient : HostController
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
                 var size = random.Next(minBallSize, maxBallSize);
 
-                var entityBuilder = new EntityBuilder(
+                var entity = new EntityBuilder(
                         "Test/ball",
                         ballPosition,
                         new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
@@ -73,35 +72,32 @@ public class HostingClient : HostController
                     .AddDecorator<Collision>()
                     .AddDecorator<Circular>()
                     .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
-                    .AddDecorator<PerspectiveRender>(true);
+                    .AddDecorator<PerspectiveRender>(true)
+                    .Build();
                 
-                if (i == 0 && j == 0)
+                if (i is 0 && j is 0)
                 {
-                    entityBuilder.SetColor(Color.Red);
-                    entityBuilder.SetVelocity(new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) *
-                                              (5f / 0.016f));
-                    var entity = entityBuilder.Build();
                     _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
                     _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
                 }
                 
-                _spatialPartition.Add(entityBuilder.Build());
+                _spatialPartition.Add(entity);
             }
         }
     }
 
     private void SetBackground()
     {
-        // var backgroundTexture = Content.Load<Texture2D>("Test/background");
-        var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
-        backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
-        backgroundTexture.Name = "Test/background";
-        _background = new List<Entity>();
+        var backgroundTexture = Content.Load<Texture2D>("Test/background");
+        // var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
+        // backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
+        // backgroundTexture.Name = "Test/background";
+        var background = new List<Entity>();
         
         foreach (var side in WindowSize.GetOutline(200).GetSides())
             for (var i = StartingLayer; i < NumLayers; i++)
             {
-                _background.Add(new EntityBuilder(
+                background.Add(new EntityBuilder(
                         backgroundTexture,
                         new Vector2(side.X, side.Y),
                         Vector2.Zero,
@@ -116,35 +112,28 @@ public class HostingClient : HostController
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
             }
-        foreach (var entity in _background)
+        foreach (var entity in background)
             _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
     {
-        _spatialPartition.Update(gameTime, controls);
-        _camera1.Update(gameTime, controls);
-        _camera2.Update(gameTime, controls);
+        _spatialPartition.Update(deltaTime, controls);
+        _camera1.Update(deltaTime, controls);
+        _camera2.Update(deltaTime, controls);
     }
 
-    protected override void OnDraw(GameTime gameTime)
+    protected override void OnDraw(float deltaTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        // Draw game elements
-        foreach (var side in _background)
-        {
-            side.Draw(Renderer, _camera1);
-            side.Draw(Renderer, _camera2);
-        }
-        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, gameTime);
+        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, deltaTime);
     }
 
     protected override void OnDispose(bool disposing)
     {
-        if (disposing)
-            _spatialPartition?.Dispose();
+        _spatialPartition?.Dispose();
     }
 }

@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
@@ -159,7 +160,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(GameTime gameTime, IList<Controls> controls)
+    void ISpatialPartition<T>.Update(float deltaTime, IList<Controls> controls)
     {
         foreach (var element in _elements)
         {
@@ -168,13 +169,13 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
             GetPartitionIndices(element, previousIndices);
 
-            element.Update(gameTime, controls);
+            element.Update(deltaTime, controls);
 
             GetPartitionIndices(element, currentIndices);
 
             HandlePartitionTransitions(element, previousIndices, currentIndices);
 
-            CheckForCollisions(element, gameTime, currentIndices);
+            CheckForCollisions(element, deltaTime, currentIndices);
 
             _hashSetPool.Return(previousIndices);
             _hashSetPool.Return(currentIndices);
@@ -185,9 +186,12 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, GameTime gameTime)
+    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, float deltaTime)
     {
         foreach (var element in _elements)
+        foreach (var camera in cameras)
+            element.Draw(renderer, camera);
+        foreach (var element in _staticElements)
         foreach (var camera in cameras)
             element.Draw(renderer, camera);
     }
@@ -226,7 +230,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         }
     }
 
-    private void CheckForCollisions(T element, GameTime gameTime, HashSet<Vector3> indices)
+    private void CheckForCollisions(T element, float deltaTime, HashSet<Vector3> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
@@ -239,7 +243,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
                         GetPartitionIndices(other, beforeIndices);
 
-                        element.HandleCollisionWith(other, gameTime, overlap);
+                        element.HandleCollisionWith(other, deltaTime, overlap);
 
                         GetPartitionIndices(other, afterIndices);
 

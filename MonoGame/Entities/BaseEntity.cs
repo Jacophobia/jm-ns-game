@@ -114,7 +114,7 @@ public sealed class BaseEntity : Entity
         return false;
     }
 
-    public override void Update(GameTime gameTime, IList<Controls> controls)
+    public override void Update(float deltaTime, IList<Controls> controls)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.
@@ -125,7 +125,7 @@ public sealed class BaseEntity : Entity
         return Vector2.Zero;
     }
 
-    public override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
+    public override void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap)
     {
         // We don't do anything. Entity behavior will be handled by the 

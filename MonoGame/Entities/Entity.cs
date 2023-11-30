@@ -28,13 +28,13 @@ public abstract class Entity : ICollidable, IRenderable
     public float Mass => Destination.Width * Destination.Height;
     public Rectangle Bounds => Destination;
 
-    public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
+    public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap);
 
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
     public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
 
-    public abstract void Update(GameTime gameTime, IList<Controls> controls);
+    public abstract void Update(float deltaTime, IList<Controls> controls);
     public abstract void Draw(Renderer renderer, Camera cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
