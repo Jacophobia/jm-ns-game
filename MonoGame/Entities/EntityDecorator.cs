@@ -152,6 +152,6 @@ public abstract class EntityDecorator : Entity
     }
 
     protected virtual void BeforeDraw(Renderer renderer, Camera cameras) {}
-    protected virtual void OnDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void OnDraw(Renderer renderer, Camera camera) {}
     protected virtual void AfterDraw(Renderer renderer, Camera cameras) {}
 }

@@ -72,50 +72,33 @@ public class HostingClient : HostController
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Circular>()
-                    .AddDecorator<Bound>(new Rectangle(-2560, -1440, 2560 * 2, 1440 * 2))
+                    .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
-                if (i == 0)
+                if (i == 0 && j == 0)
                 {
-                    switch (j)
-                    {
-                        case 0:
-                        {
-                            entityBuilder.SetColor(Color.OrangeRed);
-                            entityBuilder.SetDepth(0);
-                            var entity = entityBuilder.Build();
-                            _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
-                            _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
-                            _spatialPartition.Add(entity);
-                            continue;
-                        }
-                        case 1:
-                        {
-                            entityBuilder.SetColor(Color.IndianRed);
-                            entityBuilder.SetDepth(0);
-                            var entity = entityBuilder.Build();
-                            _spatialPartition.Add(entity);
-                            continue;
-                        }
-                        default:
-                            _spatialPartition.Add(entityBuilder.Build());
-                            break;
-                    }
+                    entityBuilder.SetColor(Color.Red);
+                    entityBuilder.SetVelocity(new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) *
+                                              (5f / 0.016f));
+                    var entity = entityBuilder.Build();
+                    _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
+                    _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
                 }
-                else
-                {
-                    _spatialPartition.Add(entityBuilder.Build());
-                }
+                
+                _spatialPartition.Add(entityBuilder.Build());
             }
         }
     }
 
     private void SetBackground()
     {
-        var backgroundTexture = Content.Load<Texture2D>("Test/background");
+        // var backgroundTexture = Content.Load<Texture2D>("Test/background");
+        var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
+        backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
+        backgroundTexture.Name = "Test/background";
         _background = new List<Entity>();
         
-        foreach (var side in WindowSize.GetOutline(50).GetSides())
+        foreach (var side in WindowSize.GetOutline(200).GetSides())
             for (var i = StartingLayer; i < NumLayers; i++)
             {
                 _background.Add(new EntityBuilder(
@@ -157,5 +140,11 @@ public class HostingClient : HostController
             side.Draw(Renderer, _camera2);
         }
         _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, gameTime);
+    }
+
+    protected override void OnDispose(bool disposing)
+    {
+        if (disposing)
+            _spatialPartition?.Dispose();
     }
 }

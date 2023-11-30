@@ -12,20 +12,22 @@ using MonoGame.Output;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable, IRenderable
+public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable
 {
     private readonly List<T> _elements;
-    private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
+    private readonly List<T> _staticElements;
+    private readonly ObjectPool<HashSet<Vector3>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
-    private Dictionary<PartitionKey, HashSet<T>> _partitions;
+    private Dictionary<Vector3, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
 
     public SpatialGrid()
     {
         _elements = new List<T>();
-        _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
+        _staticElements = new List<T>();
+        _hashSetPool = new ObjectPool<HashSet<Vector3>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
 
@@ -39,7 +41,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         Add(elements);
     }
 
-    private Dictionary<PartitionKey, HashSet<T>> Partitions => _partitions ??= new Dictionary<PartitionKey, HashSet<T>>();
+    private Dictionary<Vector3, HashSet<T>> Partitions => _partitions ??= new Dictionary<Vector3, HashSet<T>>();
 
     void IDisposable.Dispose()
     {
@@ -59,10 +61,17 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     void ICollection<T>.Add(T item)
     {
-        _elements.Add(item);
-        UpdateAverages(item);
-        CheckAndOptimize();
-
+        if (item?.IsStatic ?? false)
+        {
+            _staticElements.Add(item);
+        }
+        else
+        {
+            _elements.Add(item);
+            UpdateAverages(item);
+            CheckAndOptimize();
+        }
+        
         var indices = _hashSetPool.Get();
         GetPartitionIndices(item, indices);
         foreach (var partitionIndex in indices)
@@ -81,14 +90,30 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     bool ICollection<T>.Remove(T item)
     {
+        Debug.Assert(item != null, nameof(item) + " should not be null");
+        
+        if (item.IsStatic && !_staticElements.Remove(item))
+            // Item not found, no need to update averages or remove from partitions
+            return false;
+        
         if (!_elements.Remove(item))
             // Item not found, no need to update averages or remove from partitions
             return false;
+        
+        // Remove item from partitions
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var partitionIndex in indices)
+            if (Partitions.TryGetValue(partitionIndex, out var partition))
+                partition.Remove(item);
+        _hashSetPool.Return(indices);
+        
+        if (item.IsStatic)
+            return true;
 
         // Update averages
         if (_elements.Count > 0)
         {
-            Debug.Assert(item != null, nameof(item) + " should not be null");
             _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
             _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
         }
@@ -100,14 +125,6 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         // Check and optimize if necessary
         CheckAndOptimize();
-
-        // Remove item from partitions
-        var indices = _hashSetPool.Get();
-        GetPartitionIndices(item, indices);
-        foreach (var partitionIndex in indices)
-            if (Partitions.TryGetValue(partitionIndex, out var partition))
-                partition.Remove(item);
-        _hashSetPool.Return(indices);
 
         return true;
     }
@@ -209,14 +226,13 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
-    private void CheckForCollisions(T element, GameTime gameTime, HashSet<PartitionKey> indices)
+    private void CheckForCollisions(T element, GameTime gameTime, HashSet<Vector3> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other)
-                        && element.CollidesWith(other, out var overlap))
+                    if (!element.Equals(other) && element.CollidesWith(other, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
@@ -243,7 +259,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
     }
 
-    private void HandlePartitionTransitions(T item, HashSet<PartitionKey> previousIndices, HashSet<PartitionKey> currentIndices)
+    private void HandlePartitionTransitions(T item, HashSet<Vector3> previousIndices, HashSet<Vector3> currentIndices)
     {
         foreach (var index in previousIndices)
             if (!currentIndices.Contains(index))
@@ -263,20 +279,20 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
             }
     }
 
-    private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
+    private void AddIndices(Rectangle rectangle, int depth, ISet<Vector3> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2f) / (_partitionSizeX * 1f));
-        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2f) / (_partitionSizeX * 1f));
-        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2f) / (_partitionSizeY * 1f));
-        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2f) / (_partitionSizeY * 1f));
+        var minX = (int)MathF.Floor((rectangle.Center.X - rectangle.Width / 2f) / _partitionSizeX);
+        var maxX = (int)MathF.Ceiling((rectangle.Center.X + rectangle.Width / 2f) / _partitionSizeX);
+        var minY = (int)MathF.Floor((rectangle.Center.Y - rectangle.Height / 2f) / _partitionSizeY);
+        var maxY = (int)MathF.Ceiling((rectangle.Center.Y + rectangle.Height / 2f) / _partitionSizeY);
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
-            indices.Add(new PartitionKey(x, y, depth));
+            indices.Add(new Vector3(x, y, depth));
     }
 
-    private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
+    private void GetPartitionIndices(T item, ISet<Vector3> indices)
     {
         AddIndices(item.Destination, item.Depth, indices);
     }
@@ -306,68 +322,78 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _partitions?.Clear();
         foreach (var element in _elements)
         {
-            var indices = _hashSetPool.Get();
-            GetPartitionIndices(element, indices);
-            foreach (var index in indices)
-            {
-                if (!Partitions.TryGetValue(index, out var partition))
-                {
-                    partition = new HashSet<T>();
-                    Partitions[index] = partition;
-                }
+            InsertItem(element);
+        }
 
-                partition.Add(element);
+        foreach (var element in _staticElements)
+        {
+            InsertItem(element);
+        }
+    }
+
+    private void InsertItem(T item)
+    {
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var index in indices)
+        {
+            if (!Partitions.TryGetValue(index, out var partition))
+            {
+                partition = new HashSet<T>();
+                Partitions[index] = partition;
             }
 
-            _hashSetPool.Return(indices);
+            partition.Add(item);
         }
+
+        _hashSetPool.Return(indices);
     }
     
-    public readonly struct PartitionKey : IEquatable<PartitionKey>
-    {
-        private readonly int _x;
-        private readonly int _y;
-        private readonly int _depth;
-
-        public PartitionKey(int x, int y, int depth)
-        {
-            _x = x;
-            _y = y;
-            _depth = depth;
-        }
-
-        public override bool Equals(object obj)
-        {
-            return obj is PartitionKey key && Equals(key);
-        }
-
-        public bool Equals(PartitionKey other)
-        {
-            return _x == other._x && _y == other._y && _depth == other._depth;
-        }
-
-        public override int GetHashCode()
-        {
-            unchecked // Overflow is fine, just wrap
-            {
-                var hash = 17;
-                hash = hash * 23 + _x.GetHashCode();
-                hash = hash * 23 + _y.GetHashCode();
-                hash = hash * 23 + _depth.GetHashCode();
-                return hash;
-            }
-        }
-
-        public static bool operator ==(PartitionKey left, PartitionKey right)
-        {
-            return left.Equals(right);
-        }
-
-        public static bool operator !=(PartitionKey left, PartitionKey right)
-        {
-            return !(left == right);
-        }
-    }
+    // public readonly struct Vector3 : IEquatable<Vector3>
+    // {
+    //     private readonly int _x;
+    //     private readonly int _y;
+    //     private readonly int _depth;
+    //
+    //     public Vector3(int x, int y, int depth)
+    //     {
+    //         _x = x;
+    //         _y = y;
+    //         _depth = depth;
+    //     }
+    //
+    //     public override bool Equals(object obj)
+    //     {
+    //         return obj is Vector3 key && Equals(key);
+    //     }
+    //
+    //     public bool Equals(Vector3 other)
+    //     {
+    //         return _x == other._x && _y == other._y && _depth == other._depth;
+    //     }
+    //
+    //     public override int GetHashCode()
+    //     {
+    //         unchecked // Overflow is fine, just wrap
+    //         {
+    //             var hash = 17;
+    //             hash = hash * 23 + _x.GetHashCode();
+    //             hash = hash * 23 + _y.GetHashCode();
+    //             hash = hash * 23 + _depth.GetHashCode();
+    //             return hash;
+    //         }
+    //     }
+    //
+    //     public static bool operator ==(Vector3 left, Vector3 right)
+    //     {
+    //         return left.Equals(right);
+    //     }
+    //
+    //     public static bool operator !=(Vector3 left, Vector3 right)
+    //     {
+    //         return !(left == right);
+    //     }
+    // }
 
 
     #if DEBUG

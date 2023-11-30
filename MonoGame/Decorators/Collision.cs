@@ -15,11 +15,16 @@ public class Collision : EntityDecorator
 
     protected override bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
     {
+        if (IsStatic && rhs.IsStatic)
+        {
+            overlap = null;
+            return false;
+        }
+        
         // Find the intersection rectangle
         overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
         
-        return overlap is not { IsEmpty: true }
-               && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
+        return overlap is not { IsEmpty: true } && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
     }
 
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,

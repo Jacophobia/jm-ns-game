@@ -52,7 +52,7 @@ public sealed class BaseEntity : Entity
         {
             _collisionData = new CollisionData(value);
             Source = value.Bounds;
-            Origin = value.Bounds.Center.ToVector2();
+            Origin = value.Bounds.Location.ToVector2();
             _texture = value;
         }
     }

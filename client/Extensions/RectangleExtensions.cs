@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework;
 
 namespace client.Extensions;
 
-public struct Outline
+public readonly struct Outline
 {
-    public Rectangle Top { get; set; }
-    public Rectangle Bottom { get; set; }
-    public Rectangle Left { get; set; }
-    public Rectangle Right { get; set; }
+    public Rectangle Top { get; init; }
+    public Rectangle Bottom { get; init; }
+    public Rectangle Left { get; init; }
+    public Rectangle Right { get; init; }
 
     public IEnumerable<Rectangle> GetSides()
     {
@@ -23,15 +23,14 @@ public static class RectangleExtensions
 {
     public static Outline GetOutline(this Rectangle rectangle, int? width = null)
     {
-        var thickness = width ?? (rectangle.Width + rectangle.Height) / 20;
-        var halfThickness = thickness / 2;
+        width ??= (rectangle.Width + rectangle.Height) / 20;
 
         return new Outline
         {
-            Top = new Rectangle(rectangle.Center.X, rectangle.Top - halfThickness, rectangle.Width, thickness),
-            Bottom = new Rectangle(rectangle.Center.X, rectangle.Bottom + halfThickness, rectangle.Width, thickness),
-            Right = new Rectangle(rectangle.Right + halfThickness, rectangle.Center.Y, thickness, rectangle.Height),
-            Left = new Rectangle(rectangle.Left - halfThickness, rectangle.Center.Y, thickness, rectangle.Height)
+            Top = new Rectangle(rectangle.Left, rectangle.Top - width.Value, rectangle.Width, width.Value),
+            Bottom = new Rectangle(rectangle.Left, rectangle.Bottom, rectangle.Width, width.Value),
+            Right = new Rectangle(rectangle.Right, rectangle.Top, width.Value, rectangle.Height),
+            Left = new Rectangle(rectangle.Left - width.Value, rectangle.Top, width.Value, rectangle.Height)
         };
     }
 }
