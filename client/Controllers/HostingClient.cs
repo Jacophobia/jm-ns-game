@@ -17,8 +17,10 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
+    private const int NumLayers = 50;
+    private const int StartingLayer = 0;
+    private const int LayerDepth = 1;
     private ISpatialPartition<Entity> _spatialPartition;
-    private List<Entity> _background;
     private Camera _camera1;
     private Camera _camera2;
 
@@ -45,107 +47,95 @@ public class HostingClient : HostController
         SetBackground();
         
         var random = new Random();
-        const int minBallSize = 1;
-        const int maxBallSize = 5;
-        const int numBalls = 50;
+        const int minBallSize = 10;
+        const int maxBallSize = 100;
+        const int ballsPerLayer = 10;
 
-        for (var i = -1; i < numBalls; i++)
+        for (var i = StartingLayer; i < NumLayers; i++)
         {
             var color = new Color(random.Next(200), random.Next(255), random.Next(255));
-            for (var j = 0; j < 10; j++)
+            for (var j = 0; j < ballsPerLayer; j++)
             {
                 var ballPosition =
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
                 var size = random.Next(minBallSize, maxBallSize);
 
-                var entityBuilder = new EntityBuilder(
+                var entity = new EntityBuilder(
                         "Test/ball",
                         ballPosition,
                         new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
                         (1f / 0.016f),
-                        50,
-                        50)
-                    .SetDepth(i * 5)
+                        size,
+                        size)
+                    .SetDepth(i * LayerDepth)
                     .SetColor(color)
                     .AddDecorator<Inertia>()
-                    .AddDecorator<CircularCollision>()
-                    .AddDecorator<Bound>(new Rectangle(0, 0, 2560, 1440))
-                    .AddDecorator<PerspectiveRender>(true);
-                if (i == 0)
+                    .AddDecorator<Collision>()
+                    .AddDecorator<Circular>()
+                    .AddDecorator<Gravity>()
+                    .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
+                    .AddDecorator<PerspectiveRender>(true)
+                    .Build();
+                
+                if (i is 0 && j is 0)
                 {
-                    switch (j)
-                    {
-                        case 0:
-                        {
-                            entityBuilder.SetColor(Color.OrangeRed);
-                            entityBuilder.SetDepth(0);
-                            var entity = entityBuilder.Build();
-                            _camera1 = new Camera(entity, 1, Vector3.Up * 100, j);
-                            _camera2 = new Camera(entity, 1, Vector3.Up * 100, j + 1);
-                            _spatialPartition.Add(entity);
-                            continue;
-                        }
-                        case 1:
-                        {
-                            entityBuilder.SetColor(Color.IndianRed);
-                            entityBuilder.SetDepth(0);
-                            var entity = entityBuilder.Build();
-                            _spatialPartition.Add(entity);
-                            continue;
-                        }
-                        default:
-                            _spatialPartition.Add(entityBuilder.Build());
-                            break;
-                    }
+                    _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
+                    _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
                 }
-                else
-                {
-                    _spatialPartition.Add(entityBuilder.Build());
-                }
+                
+                _spatialPartition.Add(entity);
             }
         }
     }
 
     private void SetBackground()
     {
-        var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
-        backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
-        backgroundTexture.Name = "Test/background";
-        _background = new List<Entity>();
-        foreach (var side in WindowSize.GetOutline(50).GetSides())
-            for (var i = -1; i < 50; i++)
-                _background.Add(new EntityBuilder(
+        var backgroundTexture = Content.Load<Texture2D>("Test/background");
+        // var backgroundTexture = new Texture2D(GraphicsDevice, 1, 1);
+        // backgroundTexture.SetData(new[] { Color.White }); // Set the pixel to black
+        // backgroundTexture.Name = "Test/background";
+        var background = new List<Entity>();
+        
+        foreach (var side in WindowSize.GetOutline(200).GetSides())
+            for (var i = StartingLayer; i < NumLayers; i++)
+            {
+                background.Add(new EntityBuilder(
                         backgroundTexture,
                         new Vector2(side.X, side.Y),
                         Vector2.Zero,
                         side.Width,
                         side.Height)
-                    .SetDepth(5 * i)
+                    .SetDepth(i * LayerDepth)
                     .SetStatic(true)
                     .SetColor(Color.White)
+                    .AddDecorator<Static>()
+                    .AddDecorator<Collision>()
+                    .AddDecorator<Rectangular>()
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
+            }
+        foreach (var entity in background)
+            _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(GameTime gameTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
     {
-        _spatialPartition.Update(gameTime, controls);
-        _camera1.Update(gameTime, controls);
-        _camera2.Update(gameTime, controls);
+        _spatialPartition.Update(deltaTime, controls);
+        _camera1.Update(deltaTime, controls);
+        _camera2.Update(deltaTime, controls);
     }
 
-    protected override void OnDraw(GameTime gameTime)
+    protected override void OnDraw(float deltaTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        // Draw game elements
-        foreach (var side in _background)
-        {
-            side.Draw(Renderer, _camera1);
-            side.Draw(Renderer, _camera2);
-        }
-        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, gameTime);
+        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, deltaTime);
+    }
+
+    protected override void OnDispose(bool disposing)
+    {
+        _spatialPartition?.Dispose();
     }
 }

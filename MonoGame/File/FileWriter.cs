@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+using MonoGame.Sprites;
 
 namespace MonoGame.File;
 
@@ -13,15 +13,11 @@ internal static class FileWriter
         writer.WriteAsync(data);
     }
 
-    internal static void Save(string filepath, IEnumerable<IEnumerable<int>> csv)
-    {
-        Save(filepath, csv.Select(row => string.Join(",", row.Select(cell => cell.ToString()))));
-    }
-
-    internal static void Save(string filepath, IEnumerable<string> csv)
+    internal static void SaveCollisionData(string filepath, IEnumerable<IEnumerable<CollisionData.CollisionCheckColumn>> csv)
     {
         using var writer = new StreamWriter(filepath);
 
-        foreach (var row in csv) writer.WriteLine(row);
+        foreach (var row in csv)
+            writer.WriteLine(string.Join(',', row));
     }
 }

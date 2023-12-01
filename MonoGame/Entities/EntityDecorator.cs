@@ -17,7 +17,7 @@ public abstract class EntityDecorator : Entity
         _base = @base;
     }
 
-    public sealed override Sprite Sprite => _base.Sprite;
+    public sealed override CollisionData CollisionData => _base.CollisionData;
 
     public sealed override Texture2D Texture
     {
@@ -93,37 +93,55 @@ public abstract class EntityDecorator : Entity
 
     // protected abstract void Initialize();
 
-    public sealed override void Update(GameTime gameTime, IList<Controls> controls)
+    public sealed override void Update(float deltaTime, IList<Controls> controls)
     {
-        BeforeUpdate(gameTime, controls);
-        OnUpdate(gameTime, controls);
-        AfterUpdate(gameTime, controls);
-        _base.Update(gameTime, controls);
+        BeforeUpdate(deltaTime, controls);
+        OnUpdate(deltaTime, controls);
+        AfterUpdate(deltaTime, controls);
+        _base.Update(deltaTime, controls);
     }
 
-    protected virtual void BeforeUpdate(GameTime gameTime, IList<Controls> controls) {}
-    protected virtual void OnUpdate(GameTime gameTime, IList<Controls> controls) {}
-    protected virtual void AfterUpdate(GameTime gameTime, IList<Controls> controls) {}
+    protected virtual void BeforeUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void AfterUpdate(float deltaTime, IList<Controls> controls) {}
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, GameTime gameTime,
-        Vector2? collisionLocation, Rectangle? overlap)
+    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
     {
-        OnHandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
-        _base.HandleCollisionWith(collidable, gameTime, collisionLocation, overlap);
+        return _base.CollidesWith(rhs, out overlap) || IsCollidingWith(rhs, out overlap);
     }
 
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, GameTime gameTime, Vector2? collisionLocation,
+    protected virtual bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    {
+        overlap = null;
+        return false;
+    }
+
+    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime,
+        Rectangle? overlap)
+    {
+        BeforeHandleCollisionWith(collidable, deltaTime, overlap);
+        OnHandleCollisionWith(collidable, deltaTime, overlap);
+        AfterHandleCollisionWith(collidable, deltaTime, overlap);
+        _base.HandleCollisionWith(collidable, deltaTime, overlap);
+    }
+
+
+    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime,
+        Rectangle? overlap) {}
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime,
+        Rectangle? overlap) {}
+    protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime,
         Rectangle? overlap) {}
 
-    public sealed override void HandleCollisionFrom(ICollidable collidable, GameTime gameTime,
-        Vector2? collisionLocation, Rectangle? overlap)
+    public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
     {
-        OnHandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
-        _base.HandleCollisionFrom(collidable, gameTime, collisionLocation, overlap);
+        return OnCalculateCollisionNormal(collidable, collisionLocation) + _base.CalculateCollisionNormal(collidable, collisionLocation);
     }
 
-    protected virtual void OnHandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap) {}
+    protected virtual Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
+    {
+        return Vector2.Zero;
+    }
 
     public sealed override void Draw(Renderer renderer, Camera cameras)
     {
@@ -134,6 +152,6 @@ public abstract class EntityDecorator : Entity
     }
 
     protected virtual void BeforeDraw(Renderer renderer, Camera cameras) {}
-    protected virtual void OnDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void OnDraw(Renderer renderer, Camera camera) {}
     protected virtual void AfterDraw(Renderer renderer, Camera cameras) {}
 }

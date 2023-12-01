@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 using MonoGame.Input;
 using MonoGame.Networking;
 using MonoGame.Output;
@@ -24,11 +23,11 @@ public abstract class HostController : GameController
         base.BeforeOnInitialize();
     }
 
-    protected internal override void BeforeOnUpdate(GameTime gameTime, IList<Controls> controls)
+    protected internal override void BeforeOnUpdate(float deltaTime, IList<Controls> controls)
     {
         controls.Add(_networkClient.GetControlData());
         
-        base.BeforeOnUpdate(gameTime, controls);
+        base.BeforeOnUpdate(deltaTime, controls);
     }
 
     protected internal override void AfterOnExit(object sender, EventArgs args)

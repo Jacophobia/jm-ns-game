@@ -12,9 +12,10 @@ using MonoGame.Output;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : ICollidable
+public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable
 {
     private readonly List<T> _elements;
+    private readonly List<T> _staticElements;
     private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
@@ -25,6 +26,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     public SpatialGrid()
     {
         _elements = new List<T>();
+        _staticElements = new List<T>();
         _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
@@ -59,10 +61,17 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     void ICollection<T>.Add(T item)
     {
-        _elements.Add(item);
-        UpdateAverages(item);
-        CheckAndOptimize();
-
+        if (item?.IsStatic ?? false)
+        {
+            _staticElements.Add(item);
+        }
+        else
+        {
+            _elements.Add(item);
+            UpdateAverages(item);
+            CheckAndOptimize();
+        }
+        
         var indices = _hashSetPool.Get();
         GetPartitionIndices(item, indices);
         foreach (var partitionIndex in indices)
@@ -81,14 +90,30 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
     bool ICollection<T>.Remove(T item)
     {
+        Debug.Assert(item != null, nameof(item) + " should not be null");
+        
+        if (item.IsStatic && !_staticElements.Remove(item))
+            // Item not found, no need to update averages or remove from partitions
+            return false;
+        
         if (!_elements.Remove(item))
             // Item not found, no need to update averages or remove from partitions
             return false;
+        
+        // Remove item from partitions
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var partitionIndex in indices)
+            if (Partitions.TryGetValue(partitionIndex, out var partition))
+                partition.Remove(item);
+        _hashSetPool.Return(indices);
+        
+        if (item.IsStatic)
+            return true;
 
         // Update averages
         if (_elements.Count > 0)
         {
-            Debug.Assert(item != null, nameof(item) + " should not be null");
             _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
             _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
         }
@@ -100,14 +125,6 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
         // Check and optimize if necessary
         CheckAndOptimize();
-
-        // Remove item from partitions
-        var indices = _hashSetPool.Get();
-        GetPartitionIndices(item, indices);
-        foreach (var partitionIndex in indices)
-            if (Partitions.TryGetValue(partitionIndex, out var partition))
-                partition.Remove(item);
-        _hashSetPool.Return(indices);
 
         return true;
     }
@@ -142,7 +159,7 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(GameTime gameTime, IList<Controls> controls)
+    void ISpatialPartition<T>.Update(float deltaTime, IList<Controls> controls)
     {
         foreach (var element in _elements)
         {
@@ -151,13 +168,13 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
 
             GetPartitionIndices(element, previousIndices);
 
-            element.Update(gameTime, controls);
+            element.Update(deltaTime, controls);
 
             GetPartitionIndices(element, currentIndices);
 
             HandlePartitionTransitions(element, previousIndices, currentIndices);
 
-            CheckForCollisions(element, gameTime, currentIndices);
+            CheckForCollisions(element, deltaTime, currentIndices);
 
             _hashSetPool.Return(previousIndices);
             _hashSetPool.Return(currentIndices);
@@ -168,9 +185,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, GameTime gameTime)
+    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, float deltaTime)
     {
         foreach (var element in _elements)
+        foreach (var camera in cameras)
+            element.Draw(renderer, camera);
+        foreach (var element in _staticElements)
         foreach (var camera in cameras)
             element.Draw(renderer, camera);
     }
@@ -209,21 +229,20 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         }
     }
 
-    private void CheckForCollisions(T element, GameTime gameTime, HashSet<PartitionKey> indices)
+    private void CheckForCollisions(T element, float deltaTime, HashSet<PartitionKey> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other)
-                        && element.CollidesWith(other, out var location, out var overlap))
+                    if (!element.Equals(other) && element.CollidesWith(other, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
 
                         GetPartitionIndices(other, beforeIndices);
 
-                        element.HandleCollisionWith(other, gameTime, location, overlap);
+                        element.HandleCollisionWith(other, deltaTime, overlap);
 
                         GetPartitionIndices(other, afterIndices);
 
@@ -266,10 +285,10 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
     private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Round((rectangle.Center.X - rectangle.Width / 2f) / (_partitionSizeX * 1f));
-        var maxX = (int)MathF.Round((rectangle.Center.X + rectangle.Width / 2f) / (_partitionSizeX * 1f));
-        var minY = (int)MathF.Round((rectangle.Center.Y - rectangle.Height / 2f) / (_partitionSizeY * 1f));
-        var maxY = (int)MathF.Round((rectangle.Center.Y + rectangle.Height / 2f) / (_partitionSizeY * 1f));
+        var minX = (int)MathF.Floor((rectangle.Center.X - rectangle.Width / 2f) / _partitionSizeX);
+        var maxX = (int)MathF.Ceiling((rectangle.Center.X + rectangle.Width / 2f) / _partitionSizeX);
+        var minY = (int)MathF.Floor((rectangle.Center.Y - rectangle.Height / 2f) / _partitionSizeY);
+        var maxY = (int)MathF.Ceiling((rectangle.Center.Y + rectangle.Height / 2f) / _partitionSizeY);
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
@@ -306,21 +325,31 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         _partitions?.Clear();
         foreach (var element in _elements)
         {
-            var indices = _hashSetPool.Get();
-            GetPartitionIndices(element, indices);
-            foreach (var index in indices)
-            {
-                if (!Partitions.TryGetValue(index, out var partition))
-                {
-                    partition = new HashSet<T>();
-                    Partitions[index] = partition;
-                }
+            InsertItem(element);
+        }
 
-                partition.Add(element);
+        foreach (var element in _staticElements)
+        {
+            InsertItem(element);
+        }
+    }
+
+    private void InsertItem(T item)
+    {
+        var indices = _hashSetPool.Get();
+        GetPartitionIndices(item, indices);
+        foreach (var index in indices)
+        {
+            if (!Partitions.TryGetValue(index, out var partition))
+            {
+                partition = new HashSet<T>();
+                Partitions[index] = partition;
             }
 
-            _hashSetPool.Return(indices);
+            partition.Add(item);
         }
+
+        _hashSetPool.Return(indices);
     }
     
     public readonly struct PartitionKey : IEquatable<PartitionKey>
@@ -328,24 +357,24 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
         private readonly int _x;
         private readonly int _y;
         private readonly int _depth;
-
+    
         public PartitionKey(int x, int y, int depth)
         {
             _x = x;
             _y = y;
             _depth = depth;
         }
-
+    
         public override bool Equals(object obj)
         {
             return obj is PartitionKey key && Equals(key);
         }
-
+    
         public bool Equals(PartitionKey other)
         {
             return _x == other._x && _y == other._y && _depth == other._depth;
         }
-
+    
         public override int GetHashCode()
         {
             unchecked // Overflow is fine, just wrap
@@ -357,12 +386,12 @@ public class SpatialGrid<T> : ISpatialPartition<T>, IDisposable where T : IColli
                 return hash;
             }
         }
-
+    
         public static bool operator ==(PartitionKey left, PartitionKey right)
         {
             return left.Equals(right);
         }
-
+    
         public static bool operator !=(PartitionKey left, PartitionKey right)
         {
             return !(left == right);

@@ -3,12 +3,12 @@ using Microsoft.Xna.Framework;
 
 namespace client.Extensions;
 
-public struct Outline
+public readonly struct Outline
 {
-    public Rectangle Top { get; set; }
-    public Rectangle Bottom { get; set; }
-    public Rectangle Left { get; set; }
-    public Rectangle Right { get; set; }
+    public Rectangle Top { get; init; }
+    public Rectangle Bottom { get; init; }
+    public Rectangle Left { get; init; }
+    public Rectangle Right { get; init; }
 
     public IEnumerable<Rectangle> GetSides()
     {

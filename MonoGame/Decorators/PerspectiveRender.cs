@@ -18,6 +18,13 @@ public class PerspectiveRender : EntityDecorator
     {
         var cameraDistance = Depth - camera.Position.Z;
 
+        if (cameraDistance < 10) // TODO: decide if we want to keep this. It's nice to see the character, but it might not be the right aesthetic
+        {
+            var color = Color;
+            color.A = (byte)(byte.MaxValue * (cameraDistance / 10f));
+            Color = color;
+        }
+
         if (cameraDistance == 0) cameraDistance = 0.001f;
 
         _scale = MathF.Abs(camera.Position.Z / cameraDistance);

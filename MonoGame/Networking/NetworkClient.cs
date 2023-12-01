@@ -16,6 +16,8 @@ namespace MonoGame.Networking;
 
 public class NetworkClient : IDisposable
 {
+    private const int ReceiveTimeout = 2000; // Timeout in milliseconds
+    
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
     private readonly Stopwatch _stopwatch;
@@ -64,28 +66,48 @@ public class NetworkClient : IDisposable
     public void StartListening()
     {
         _listening = true;
+        _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
         _listeningThread = new Thread(ListenLoop);
         _listeningThread.Start();
     }
     
+    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
     private void ListenLoop()
     {
         while (_listening)
         {
-            // Create an endpoint for any IP. This will be populated with the sender's info.
-            EndPoint senderEndPoint = new IPEndPoint(IPAddress.Any, 0);
-
-            // Use the same buffer for each receive operation
-            var receivedBytes = _udpClient.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
-
-            // The senderEndPoint is now populated with the sender's address and port
-            if (senderEndPoint is IPEndPoint senderIp)
+            try
             {
-                // You can now use senderIP.Address and senderIP.Port
-                _remoteEndPoint = senderIp;
-            }
+                // Create an endpoint for any IP. This will be populated with the sender's info.
+                EndPoint senderEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            ProcessReceivedData(new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes));
+                // Use the same buffer for each receive operation
+                var receivedBytes = _udpClient.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
+                
+                // The senderEndPoint is now populated with the sender's address and port
+                if (senderEndPoint is IPEndPoint senderIp)
+                {
+                    // You can now use senderIP.Address and senderIP.Port
+                    _remoteEndPoint = senderIp;
+                }
+
+                ProcessReceivedData(new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes));
+            }
+            catch (SocketException ex)
+            {
+                // If the exception is due to the socket being closed, exit the loop
+                switch (ex.SocketErrorCode)
+                {
+                    case SocketError.Interrupted:
+                    case SocketError.ConnectionReset:
+                    case SocketError.Shutdown:
+                        return;
+                    case SocketError.TimedOut:
+                        break;
+                    default:
+                        throw;
+                }
+            }
         }
     }
 

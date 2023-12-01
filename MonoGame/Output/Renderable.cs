@@ -7,39 +7,6 @@ namespace MonoGame.Output;
 
 internal class Renderable : IRenderable
 {
-    Texture2D IRenderable.Texture => Texture;
-    internal Texture2D Texture { get; set; }
-
-    internal string TextureName
-    {
-        get => Texture.Name;
-        set => Texture = GetTextureByName(value);
-    }
-
-    Rectangle IRenderable.Destination
-    {
-        get => Destination;
-        set => Destination = value;
-    }
-    internal Rectangle Destination { get; set; }
-
-    Rectangle IRenderable.Source => Source;
-    internal Rectangle Source { get; set; }
-
-    Color IRenderable.Color => Color;
-    internal Color Color { get; set; }
-
-    float IRenderable.Rotation => Rotation;
-    internal float Rotation { get; set; }
-
-    Vector2 IRenderable.Origin => Origin;
-    internal Vector2 Origin { get; set; }
-
-    SpriteEffects IRenderable.Effect => Effect;
-    internal SpriteEffects Effect { get; set; }
-
-    int IRenderable.Depth => Depth;
-    internal int Depth { get; set; }
 
     public Renderable()
     {
@@ -48,7 +15,6 @@ internal class Renderable : IRenderable
 
     internal Renderable(string textureName, Rectangle destination, Rectangle source, Color color, float rotation, Vector2 origin, SpriteEffects effect, int depth)
     {
-        // Assuming you have a way to get Texture2D from textureName
         TextureName = textureName;
         Destination = destination;
         Source = source;
@@ -58,6 +24,20 @@ internal class Renderable : IRenderable
         Effect = effect;
         Depth = depth;
     }
+
+    public Texture2D Texture { get; set; }
+
+    public string TextureName
+    {
+        set => Texture = GetTextureByName(value);
+    }
+    public Rectangle Destination { get; set; }
+    public Rectangle Source { get; set; }
+    public Color Color { get; set; }
+    public float Rotation { get; set; }
+    public Vector2 Origin { get; set; }
+    public SpriteEffects Effect { get; set; }
+    public int Depth { get; set; }
 
     void IRenderable.Draw(Renderer renderer, Camera cameras)
     {

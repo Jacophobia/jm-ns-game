@@ -9,9 +9,8 @@ using MonoGame.Sprites;
 
 namespace MonoGame.Entities;
 
-public abstract class Entity : ICollidable
+public abstract class Entity : ICollidable, IRenderable
 {
-    Texture2D IRenderable.Texture => Texture;
     public abstract Texture2D Texture { get; set; }
     public abstract Rectangle Destination { get; set; }
     public abstract Rectangle Source { get; set; }
@@ -20,20 +19,22 @@ public abstract class Entity : ICollidable
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
     public abstract int Depth { get; set; }
-    public abstract Sprite Sprite { get; }
+    public abstract CollisionData CollisionData { get; }
     public abstract Vector2 Position { get; set; }
     public abstract Vector2 Velocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
+    
     public float Mass => Destination.Width * Destination.Height;
+    public Rectangle Bounds => Destination;
 
-    public abstract void HandleCollisionWith(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
+    public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap);
 
-    public abstract void HandleCollisionFrom(ICollidable collidable, GameTime gameTime, Vector2? collisionLocation,
-        Rectangle? overlap);
+    public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
+    public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
 
-    public abstract void Update(GameTime gameTime, IList<Controls> controls);
+    public abstract void Update(float deltaTime, IList<Controls> controls);
     public abstract void Draw(Renderer renderer, Camera cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
