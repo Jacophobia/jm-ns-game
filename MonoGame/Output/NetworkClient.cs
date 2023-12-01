@@ -5,18 +5,20 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
 
-namespace MonoGame.Networking;
+namespace MonoGame.Output;
 
 public class NetworkClient : IDisposable
 {
     private const int ReceiveTimeout = 2000; // Timeout in milliseconds
+    private const byte Control = 0;
+    private const byte Renderable = 0;
     
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
@@ -132,7 +134,7 @@ public class NetworkClient : IDisposable
         return controls;
     }
 
-    public void SendRenderableData(IEnumerable<IRenderable> renderableData)
+    public void PrepareRenderableBatch()
     {
         if (_remoteEndPoint == null)
             return;
@@ -140,12 +142,23 @@ public class NetworkClient : IDisposable
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
         
-        AddHeaders(1, writer);
+        AddHeaders(Renderable, writer);
         
         SerializeRenderableData(renderableData, writer);
-        
-        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
     }
+
+    public void Enqueue(IRenderable renderable, Texture2D texture = null, 
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
+    {
+        
+    }
+
+    public void SendRenderableBatch()
+    {
+        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
+    } 
 
     public IEnumerable<IRenderable> GetRenderableData()
     {  

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
+using MonoGame.Collision;
 using MonoGame.Input;
-using MonoGame.Sprites;
 
 namespace MonoGame.Interfaces;
 

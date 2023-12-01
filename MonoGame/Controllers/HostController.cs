@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using MonoGame.Input;
-using MonoGame.Networking;
 using MonoGame.Output;
 
 namespace MonoGame.Controllers;
@@ -17,7 +16,7 @@ public abstract class HostController : GameController
 
     protected internal override void BeforeOnInitialize()
     {
-        Renderer = new Renderer(GraphicsDevice, SpriteBatch, Content, _networkClient);
+        Renderer = new Renderer(GraphicsDevice, SpriteBatch, Content);
         _networkClient.StartListening();
 
         base.BeforeOnInitialize();

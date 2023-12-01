@@ -8,7 +8,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extensions;
 using MonoGame.File;
 
-namespace MonoGame.Sprites;
+namespace MonoGame.Collision;
 
 public class CollisionData
 {

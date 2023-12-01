@@ -1,10 +1,10 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-using MonoGame.Sprites;
 
 namespace MonoGame.Entities;
 

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using MonoGame.Sprites;
+using MonoGame.Collision;
 
 namespace MonoGame.File;
 
