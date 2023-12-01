@@ -18,7 +18,8 @@ public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
     private const int NumLayers = 50;
-    private const int StartingLayer = -1;
+    private const int StartingLayer = 0;
+    private const int LayerDepth = 1;
     private ISpatialPartition<Entity> _spatialPartition;
     private Camera _camera1;
     private Camera _camera2;
@@ -46,7 +47,7 @@ public class HostingClient : HostController
         SetBackground();
         
         var random = new Random();
-        const int minBallSize = 100;
+        const int minBallSize = 10;
         const int maxBallSize = 100;
         const int ballsPerLayer = 10;
 
@@ -66,11 +67,12 @@ public class HostingClient : HostController
                         (1f / 0.016f),
                         size,
                         size)
-                    .SetDepth(i * 5)
+                    .SetDepth(i * LayerDepth)
                     .SetColor(color)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Circular>()
+                    .AddDecorator<Gravity>()
                     .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true)
                     .Build();
@@ -103,7 +105,7 @@ public class HostingClient : HostController
                         Vector2.Zero,
                         side.Width,
                         side.Height)
-                    .SetDepth(5 * i)
+                    .SetDepth(i * LayerDepth)
                     .SetStatic(true)
                     .SetColor(Color.White)
                     .AddDecorator<Static>()

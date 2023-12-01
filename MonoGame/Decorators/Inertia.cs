@@ -1,7 +1,5 @@
 ﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
 using MonoGame.Entities;
-using MonoGame.Extensions;
 using MonoGame.Input;
 
 namespace MonoGame.Decorators;

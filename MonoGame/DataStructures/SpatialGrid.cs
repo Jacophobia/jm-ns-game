@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
@@ -17,10 +16,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 {
     private readonly List<T> _elements;
     private readonly List<T> _staticElements;
-    private readonly ObjectPool<HashSet<Vector3>> _hashSetPool;
+    private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
-    private Dictionary<Vector3, HashSet<T>> _partitions;
+    private Dictionary<PartitionKey, HashSet<T>> _partitions;
     private int _partitionSizeX;
     private int _partitionSizeY;
 
@@ -28,7 +27,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     {
         _elements = new List<T>();
         _staticElements = new List<T>();
-        _hashSetPool = new ObjectPool<HashSet<Vector3>>();
+        _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
 
@@ -42,7 +41,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         Add(elements);
     }
 
-    private Dictionary<Vector3, HashSet<T>> Partitions => _partitions ??= new Dictionary<Vector3, HashSet<T>>();
+    private Dictionary<PartitionKey, HashSet<T>> Partitions => _partitions ??= new Dictionary<PartitionKey, HashSet<T>>();
 
     void IDisposable.Dispose()
     {
@@ -230,7 +229,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         }
     }
 
-    private void CheckForCollisions(T element, float deltaTime, HashSet<Vector3> indices)
+    private void CheckForCollisions(T element, float deltaTime, HashSet<PartitionKey> indices)
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
@@ -263,7 +262,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             }
     }
 
-    private void HandlePartitionTransitions(T item, HashSet<Vector3> previousIndices, HashSet<Vector3> currentIndices)
+    private void HandlePartitionTransitions(T item, HashSet<PartitionKey> previousIndices, HashSet<PartitionKey> currentIndices)
     {
         foreach (var index in previousIndices)
             if (!currentIndices.Contains(index))
@@ -283,7 +282,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             }
     }
 
-    private void AddIndices(Rectangle rectangle, int depth, ISet<Vector3> indices)
+    private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
     {
         indices.Clear();
         var minX = (int)MathF.Floor((rectangle.Center.X - rectangle.Width / 2f) / _partitionSizeX);
@@ -293,10 +292,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
-            indices.Add(new Vector3(x, y, depth));
+            indices.Add(new PartitionKey(x, y, depth));
     }
 
-    private void GetPartitionIndices(T item, ISet<Vector3> indices)
+    private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
     {
         AddIndices(item.Destination, item.Depth, indices);
     }
@@ -353,51 +352,51 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         _hashSetPool.Return(indices);
     }
     
-    // public readonly struct Vector3 : IEquatable<Vector3>
-    // {
-    //     private readonly int _x;
-    //     private readonly int _y;
-    //     private readonly int _depth;
-    //
-    //     public Vector3(int x, int y, int depth)
-    //     {
-    //         _x = x;
-    //         _y = y;
-    //         _depth = depth;
-    //     }
-    //
-    //     public override bool Equals(object obj)
-    //     {
-    //         return obj is Vector3 key && Equals(key);
-    //     }
-    //
-    //     public bool Equals(Vector3 other)
-    //     {
-    //         return _x == other._x && _y == other._y && _depth == other._depth;
-    //     }
-    //
-    //     public override int GetHashCode()
-    //     {
-    //         unchecked // Overflow is fine, just wrap
-    //         {
-    //             var hash = 17;
-    //             hash = hash * 23 + _x.GetHashCode();
-    //             hash = hash * 23 + _y.GetHashCode();
-    //             hash = hash * 23 + _depth.GetHashCode();
-    //             return hash;
-    //         }
-    //     }
-    //
-    //     public static bool operator ==(Vector3 left, Vector3 right)
-    //     {
-    //         return left.Equals(right);
-    //     }
-    //
-    //     public static bool operator !=(Vector3 left, Vector3 right)
-    //     {
-    //         return !(left == right);
-    //     }
-    // }
+    public readonly struct PartitionKey : IEquatable<PartitionKey>
+    {
+        private readonly int _x;
+        private readonly int _y;
+        private readonly int _depth;
+    
+        public PartitionKey(int x, int y, int depth)
+        {
+            _x = x;
+            _y = y;
+            _depth = depth;
+        }
+    
+        public override bool Equals(object obj)
+        {
+            return obj is PartitionKey key && Equals(key);
+        }
+    
+        public bool Equals(PartitionKey other)
+        {
+            return _x == other._x && _y == other._y && _depth == other._depth;
+        }
+    
+        public override int GetHashCode()
+        {
+            unchecked // Overflow is fine, just wrap
+            {
+                var hash = 17;
+                hash = hash * 23 + _x.GetHashCode();
+                hash = hash * 23 + _y.GetHashCode();
+                hash = hash * 23 + _depth.GetHashCode();
+                return hash;
+            }
+        }
+    
+        public static bool operator ==(PartitionKey left, PartitionKey right)
+        {
+            return left.Equals(right);
+        }
+    
+        public static bool operator !=(PartitionKey left, PartitionKey right)
+        {
+            return !(left == right);
+        }
+    }
 
 
     #if DEBUG

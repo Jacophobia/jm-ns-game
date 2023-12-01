@@ -53,7 +53,7 @@ public class Collision : EntityDecorator
         Debug.Assert(overlap != null);
 
         var collisionCoordinate = overlap.Value.Center.ToVector2();
-        // TODO: there is a tunneling issue where if two things intersect at the edge, this check will prevent a collision where there needs to be one
+        // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
         if (!AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, collisionCoordinate, rhs.Velocity)) 
             return;
 

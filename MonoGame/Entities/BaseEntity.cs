@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
@@ -82,7 +83,7 @@ public sealed class BaseEntity : Entity
         set
         {
             if (value is > Renderer.MaxDepth or < Renderer.MinDepth)
-                throw new ArgumentOutOfRangeException(nameof(value), value, $"Depth must be between {Renderer.MinDepth} and {Renderer.MaxDepth}");
+                Debug.WriteLine($"Depth must be between {Renderer.MinDepth} and {Renderer.MaxDepth}");
             _depth = value;
         }
     }
