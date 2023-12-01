@@ -56,8 +56,10 @@ public class Camera
             _objectsToFollow.Pop();
     }
 
-    public void Update(float deltaTime, IList<Controls> controls)
+    public void Update(float deltaTime, Controls controls)
     {
+        
+        
         _position.X += (_objectsToFollow.Peek().Destination.Center.X - _offset.X - _view.Center.X)
                        * (_followSpeed * deltaTime);
         _position.Y += (_objectsToFollow.Peek().Destination.Center.Y - _offset.Y - _view.Center.Y)

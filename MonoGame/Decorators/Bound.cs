@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Input;
@@ -15,7 +14,7 @@ public class Bound : EntityDecorator
         _bounds = bounds;
     }
 
-    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, Controls controls)
     {
         var velocity = Velocity;
 

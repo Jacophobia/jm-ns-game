@@ -18,7 +18,7 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 50;
+    private const int NumLayers = 1;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
     private const int BallsPerLayer = 10;
@@ -53,7 +53,7 @@ public class HostingClient : HostController
 
         for (var i = StartingLayer; i < NumLayers; i++)
         {
-            var color = new Color(random.Next(200), random.Next(255), random.Next(255));
+            var color = new Color(random.Next(150), random.Next(255), random.Next(255));
             for (var j = 0; j < BallsPerLayer; j++)
             {
                 var ballPosition =
@@ -69,8 +69,12 @@ public class HostingClient : HostController
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
+                    .AddDecorator<Drag>(0.8f)
+                    .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
+                    .AddDecorator<Friction>(12f)
+                    // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
                     .AddDecorator<Gravity>()
                     .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
@@ -111,7 +115,6 @@ public class HostingClient : HostController
                     .AddDecorator<Static>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Rectangular>()
-                    .AddDecorator<Drag>(0.0f)
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
             }
@@ -119,7 +122,7 @@ public class HostingClient : HostController
             _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, Controls controls)
     {
         _spatialPartition.Update(deltaTime, controls);
     }

@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using MonoGame.Collision;
 using MonoGame.Input;
 
@@ -15,7 +14,7 @@ public interface ICollidable
     public bool IsStatic { get; }
     public float Mass { get; }
 
-    public void Update(float deltaTime, IList<Controls> controls);
+    public void Update(float deltaTime, Controls controls);
 
     public void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap);

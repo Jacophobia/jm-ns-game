@@ -159,7 +159,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(float deltaTime, IList<Controls> controls)
+    void ISpatialPartition<T>.Update(float deltaTime, Controls controls)
     {
         foreach (var element in _elements)
         {

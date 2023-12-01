@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Input;
@@ -12,7 +11,7 @@ public abstract class EntityDecorator : Entity
 {
     private readonly Entity _base;
 
-    protected internal EntityDecorator(Entity @base)
+    protected EntityDecorator(Entity @base)
     {
         _base = @base;
     }
@@ -93,7 +92,7 @@ public abstract class EntityDecorator : Entity
 
     // protected abstract void Initialize();
 
-    public sealed override void Update(float deltaTime, IList<Controls> controls)
+    public sealed override void Update(float deltaTime, Controls controls)
     {
         BeforeUpdate(deltaTime, controls);
         OnUpdate(deltaTime, controls);
@@ -101,9 +100,9 @@ public abstract class EntityDecorator : Entity
         _base.Update(deltaTime, controls);
     }
 
-    protected virtual void BeforeUpdate(float deltaTime, IList<Controls> controls) {}
-    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected virtual void AfterUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void BeforeUpdate(float deltaTime, Controls controls) {}
+    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
+    protected virtual void AfterUpdate(float deltaTime, Controls controls) {}
 
     public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
     {

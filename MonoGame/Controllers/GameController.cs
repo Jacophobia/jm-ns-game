@@ -131,20 +131,21 @@ public abstract class GameController : Game
     /// </summary>
     /// <param name="deltaTime"></param>
     /// <param name="controls"></param>
-    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected internal virtual void BeforeOnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected internal virtual void AfterOnUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
+    protected internal virtual void BeforeOnUpdate(float deltaTime, Controls controls) {}
+    protected internal virtual void AfterOnUpdate(float deltaTime, Controls controls) {}
     protected sealed override void Update(GameTime gameTime)
     {
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
+            Exit();
+        
         var time = _stopwatch.Elapsed.TotalSeconds;
         _deltaTime = (float)(time - _previousTime);
         _previousTime = time;
         
         // Receive control data from the network
-        var controls = new List<Controls>
-        {
-            _inputListener.GetInputState()
-        };
+        var controls = _inputListener.GetInputState();
 
         BeforeOnUpdate(_deltaTime, controls);
         

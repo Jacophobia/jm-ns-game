@@ -1,8 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Input;
-using MonoGame.Controllers;
+﻿using MonoGame.Controllers;
 using MonoGame.Input;
 
 namespace client.Controllers;
@@ -13,13 +9,9 @@ public class NonHostingClient : RemoteController
 
     public NonHostingClient() : base(ServerIpAddress, ServerPort, false) {}
 
-    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, Controls controls)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
-            Keyboard.GetState().IsKeyDown(Keys.Escape))
-            Exit();
-        
-        NetworkClient.SendControlData(controls.FirstOrDefault());
+        NetworkClient.SendControlData(controls);
     }
 
     protected override void OnDraw(float deltaTime)

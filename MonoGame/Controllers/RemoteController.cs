@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using MonoGame.Input;
 using MonoGame.Output;
 
 namespace MonoGame.Controllers;
@@ -26,13 +24,6 @@ public abstract class RemoteController : GameController
         // Start the network client and its listening process
         NetworkClient.Connect();
         NetworkClient.StartListening();
-    }
-
-    protected internal override void BeforeOnUpdate(float deltaTime, IList<Controls> controls)
-    {
-        controls.Add(NetworkClient.GetControlData());
-        
-        base.BeforeOnUpdate(deltaTime, controls);
     }
 
     protected internal override void AfterOnExit(object sender, EventArgs args)

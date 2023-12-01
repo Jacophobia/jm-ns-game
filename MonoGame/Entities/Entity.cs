@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
@@ -34,7 +33,7 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
     public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
 
-    public abstract void Update(float deltaTime, IList<Controls> controls);
+    public abstract void Update(float deltaTime, Controls controls);
     public abstract void Draw(Player cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator

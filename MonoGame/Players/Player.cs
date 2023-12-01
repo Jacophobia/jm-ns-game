@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
 using MonoGame.Interfaces;
@@ -16,7 +15,7 @@ public abstract class Player
         Perspective = perspective;
     }
 
-    public void Update(float deltaTime, IList<Controls> controls)
+    public void Update(float deltaTime, Controls controls)
     {
         Perspective.Update(deltaTime, controls);
     }
@@ -38,9 +37,9 @@ public abstract class Player
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
     }
 
-    public abstract void EndDisplay();
-
     protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, 
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null, 
         SpriteEffects effect = SpriteEffects.None, int? depth = null);
+    
+    public abstract void EndDisplay();
 }

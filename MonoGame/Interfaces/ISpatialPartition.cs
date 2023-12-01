@@ -7,6 +7,6 @@ namespace MonoGame.Interfaces;
 
 public interface ISpatialPartition<T> : ICollection<T>, IDisposable where T : ICollidable, IRenderable
 {
-    public void Update(float deltaTime, IList<Controls> controls);
+    public void Update(float deltaTime, Controls controls);
     public void Draw(IList<Player> players, float deltaTime);
 }

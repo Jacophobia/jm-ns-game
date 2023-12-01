@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -63,8 +62,7 @@ public sealed class BaseEntity : Entity
     {
         get
         {
-            _destination.X = (int)MathF.Round(Position.X);
-            _destination.Y = (int)MathF.Round(Position.Y);
+            _destination.Location = Vector2.Round(Position).ToPoint();
             return _destination;
         }
         set => _destination = value;
@@ -116,7 +114,7 @@ public sealed class BaseEntity : Entity
         return false;
     }
 
-    public override void Update(float deltaTime, IList<Controls> controls)
+    public override void Update(float deltaTime, Controls controls)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

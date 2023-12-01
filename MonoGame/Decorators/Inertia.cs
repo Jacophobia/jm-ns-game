@@ -1,5 +1,4 @@
-﻿using System.Collections.Generic;
-using MonoGame.Entities;
+﻿using MonoGame.Entities;
 using MonoGame.Input;
 
 namespace MonoGame.Decorators;
@@ -11,7 +10,7 @@ public class Inertia : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, Controls controls)
     {
         Position += Velocity * deltaTime;
     }
