@@ -7,6 +7,7 @@ using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -133,7 +134,7 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void Draw(Renderer renderer, Camera cameras)
+    public override void Draw(Player cameras)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

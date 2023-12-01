@@ -103,6 +103,8 @@ public class NetworkClient : IDisposable
                     case SocketError.Interrupted:
                     case SocketError.ConnectionReset:
                     case SocketError.Shutdown:
+                        _remoteEndPoint = null;
+                        _connected = false;
                         return;
                     case SocketError.TimedOut:
                         break;
@@ -134,17 +136,23 @@ public class NetworkClient : IDisposable
         return controls;
     }
 
+    private MemoryStream _memoryStream;
+    private BinaryWriter _binaryWriter;
+    private bool _connected;
+
     public void PrepareRenderableBatch()
     {
+        _connected = true;
         if (_remoteEndPoint == null)
+        {
+            _connected = false;
             return;
+        }
+
+        _memoryStream = new MemoryStream();
+        _binaryWriter = new BinaryWriter(_memoryStream);
         
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms);
-        
-        AddHeaders(Renderable, writer);
-        
-        SerializeRenderableData(renderableData, writer);
+        AddHeaders(Renderable, _binaryWriter);
     }
 
     public void Enqueue(IRenderable renderable, Texture2D texture = null, 
@@ -152,12 +160,27 @@ public class NetworkClient : IDisposable
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         int? depth = null)
     {
+        if (!_connected)
+            return;
         
+        _binaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
+        _binaryWriter.WriteRectangle(destination ?? renderable.Destination);
+        _binaryWriter.WriteRectangle(source ?? renderable.Source);
+        _binaryWriter.WriteColor(color ?? renderable.Color);
+        _binaryWriter.Write(rotation ?? renderable.Rotation);
+        _binaryWriter.WriteVector2(origin ?? renderable.Origin);
+        _binaryWriter.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
+        _binaryWriter.Write(depth ?? renderable.Depth);
     }
 
     public void SendRenderableBatch()
     {
-        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
+        if (!_connected)
+            return;
+        
+        _udpClient.Send(_memoryStream.GetBuffer(), (int)_memoryStream.Length, _remoteEndPoint);
+        _memoryStream?.Dispose();
+        _binaryWriter?.Dispose();
     } 
 
     public IEnumerable<IRenderable> GetRenderableData()

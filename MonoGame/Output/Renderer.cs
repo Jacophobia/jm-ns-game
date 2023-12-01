@@ -24,8 +24,8 @@ public class Renderer
         _graphicsAreRendered = false;
         _shouldClear = true;
     }
-    
-    internal void Draw(IRenderable renderable, Texture2D texture = null, 
+
+    public void Draw(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         int? depth = null)

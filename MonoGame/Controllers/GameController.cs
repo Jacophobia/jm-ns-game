@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Input;
 using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.Controllers;
 
@@ -14,6 +15,7 @@ public abstract class GameController : Game
 {
     protected Renderer Renderer; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
     protected SpriteBatch SpriteBatch;
+    protected List<Player> Players;
 
     protected static Rectangle WindowSize
     {
@@ -75,6 +77,7 @@ public abstract class GameController : Game
     protected sealed override void Initialize()
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
+        Players = new List<Player>();
         _inputListener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
@@ -138,8 +141,16 @@ public abstract class GameController : Game
         _previousTime = time;
         
         // Receive control data from the network
-        var controls = new List<Controls>();
+        var controls = new List<Controls>
+        {
+            _inputListener.GetInputState()
+        };
+
         BeforeOnUpdate(_deltaTime, controls);
+        
+        foreach (var player in Players)
+            player.Update(_deltaTime, controls);
+        
         OnUpdate(_deltaTime, controls);
         AfterOnUpdate(_deltaTime, controls);
 
@@ -155,7 +166,8 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnBeginDraw() {}
     protected sealed override bool BeginDraw()
     {
-        Renderer.Begin();
+        foreach (var player in Players)
+            player.BeginDisplay();
         
         BeforeOnBeginDraw();
         OnBeginDraw();
@@ -190,7 +202,10 @@ public abstract class GameController : Game
         BeforeOnEndDraw();
         OnEndDraw();
         AfterOnEndDraw();
-        Renderer.End();
+        
+        foreach (var player in Players)
+            player.EndDisplay();
+        
         base.EndDraw();
     }
 
@@ -276,6 +291,8 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnWindowFocused(object sender, EventArgs args) {}
     protected sealed override void OnActivated(object sender, EventArgs args)
     {
+        if (!_stopwatch.IsRunning)
+            _stopwatch.Start();
         BeforeOnWindowFocused(sender, args);
         OnWindowFocused(sender, args);
         AfterOnWindowFocused(sender, args);
@@ -298,6 +315,7 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnWindowClosed(object sender, EventArgs args) {}
     protected sealed override void OnDeactivated(object sender, EventArgs args)
     {
+        _stopwatch.Stop();
         BeforeOnWindowClosed(sender, args);
         OnWindowClosed(sender, args);
         AfterOnWindowClosed(sender, args);

@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -143,15 +143,15 @@ public abstract class EntityDecorator : Entity
         return Vector2.Zero;
     }
 
-    public sealed override void Draw(Renderer renderer, Camera cameras)
+    public sealed override void Draw(Player player)
     {
-        BeforeDraw(renderer, cameras);
-        OnDraw(renderer, cameras);
-        AfterDraw(renderer, cameras);
-        _base.Draw(renderer, cameras);
+        BeforeDraw(player);
+        OnDraw(player);
+        AfterDraw(player);
+        _base.Draw(player);
     }
 
-    protected virtual void BeforeDraw(Renderer renderer, Camera cameras) {}
-    protected virtual void OnDraw(Renderer renderer, Camera camera) {}
-    protected virtual void AfterDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void BeforeDraw(Player player) {}
+    protected virtual void OnDraw(Player player) {}
+    protected virtual void AfterDraw(Player player) {}
 }

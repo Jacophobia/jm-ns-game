@@ -29,8 +29,8 @@ public static class RectangleExtensions
         {
             Top = new Rectangle(rectangle.Left, rectangle.Top - width.Value, rectangle.Width, width.Value),
             Bottom = new Rectangle(rectangle.Left, rectangle.Bottom, rectangle.Width, width.Value),
-            Right = new Rectangle(rectangle.Right, rectangle.Top, width.Value, rectangle.Height),
-            Left = new Rectangle(rectangle.Left - width.Value, rectangle.Top, width.Value, rectangle.Height)
+            Right = new Rectangle(rectangle.Right, rectangle.Top - width.Value, width.Value, rectangle.Height + width.Value * 2),
+            Left = new Rectangle(rectangle.Left - width.Value, rectangle.Top - width.Value, width.Value, rectangle.Height + width.Value * 2)
         };
     }
 }

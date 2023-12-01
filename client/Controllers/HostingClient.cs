@@ -11,18 +11,19 @@ using MonoGame.Entities;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
+using MonoGame.Players;
 
 namespace client.Controllers;
 
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 990;
+    private const int NumLayers = 50;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
+    private const int BallsPerLayer = 10;
+    
     private ISpatialPartition<Entity> _spatialPartition;
-    private Camera _camera1;
-    private Camera _camera2;
 
     public HostingClient() : base(ServerPort, fullscreen: false)
     {
@@ -49,12 +50,11 @@ public class HostingClient : HostController
         var random = new Random();
         const int minBallSize = 10;
         const int maxBallSize = 100;
-        const int ballsPerLayer = 10;
 
         for (var i = StartingLayer; i < NumLayers; i++)
         {
             var color = new Color(random.Next(200), random.Next(255), random.Next(255));
-            for (var j = 0; j < ballsPerLayer; j++)
+            for (var j = 0; j < BallsPerLayer; j++)
             {
                 var ballPosition =
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
@@ -79,8 +79,8 @@ public class HostingClient : HostController
                 
                 if (i is 0 && j is 0)
                 {
-                    _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
-                    _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
+                    Players.Add(new Host(new Camera(entity, 1, Vector3.Up * 100), Renderer));
+                    Players.Add(new Remote(new Camera(entity, 1, Vector3.Up * 100), NetworkClient));
                 }
                 
                 _spatialPartition.Add(entity);
@@ -111,6 +111,7 @@ public class HostingClient : HostController
                     .AddDecorator<Static>()
                     .AddDecorator<Collision>()
                     .AddDecorator<Rectangular>()
+                    .AddDecorator<Drag>(0.0f)
                     .AddDecorator<PerspectiveRender>(true)
                     .Build());
             }
@@ -121,8 +122,6 @@ public class HostingClient : HostController
     protected override void OnUpdate(float deltaTime, IList<Controls> controls)
     {
         _spatialPartition.Update(deltaTime, controls);
-        _camera1.Update(deltaTime, controls);
-        _camera2.Update(deltaTime, controls);
     }
 
     protected override void OnDraw(float deltaTime)
@@ -131,7 +130,7 @@ public class HostingClient : HostController
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, deltaTime);
+        _spatialPartition.Draw(Players, deltaTime);
     }
 
     protected override void OnDispose(bool disposing)

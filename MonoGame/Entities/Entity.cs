@@ -5,7 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -35,7 +35,7 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
 
     public abstract void Update(float deltaTime, IList<Controls> controls);
-    public abstract void Draw(Renderer renderer, Camera cameras);
+    public abstract void Draw(Player cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

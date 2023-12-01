@@ -8,7 +8,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.DataStructures;
 
@@ -185,14 +185,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, float deltaTime)
+    void ISpatialPartition<T>.Draw(IList<Player> players, float deltaTime)
     {
         foreach (var element in _elements)
-        foreach (var camera in cameras)
-            element.Draw(renderer, camera);
+        foreach (var player in players)
+            element.Draw(player);
         foreach (var element in _staticElements)
-        foreach (var camera in cameras)
-            element.Draw(renderer, camera);
+        foreach (var player in players)
+            element.Draw(player);
     }
 
     public void Add(IEnumerable<T> items)
