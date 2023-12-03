@@ -59,7 +59,7 @@ internal class Listener
         var controllerState = GamePad.GetState(0);
 
         var controls = _keyboardMapping.Keys
-            .Where(key => keyboardState[key] == KeyState.Up)
+            .Where(key => keyboardState[key] == KeyState.Down)
             .Aggregate(Controls.None, (current, key) => current | _keyboardMapping[key]);
 
         controls |= _controllerMapping.Keys

@@ -255,10 +255,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             else
             {
                 Debug.WriteLine($"Index: {index} has yet to be created");
-                // Debug.Assert(false,
-                //     $"The partition {index} that was checked does not " +
-                //     "exist. There is likely an issue with " +
-                //     "HandlePartitionTransitions");
+                Debug.Assert(false,
+                    $"The partition {index} that was checked does not " +
+                    "exist. There is likely an issue with " +
+                    "HandlePartitionTransitions");
             }
     }
 

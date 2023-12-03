@@ -1,4 +1,6 @@
-﻿using MonoGame.Entities;
+﻿using System.Diagnostics;
+using Microsoft.Xna.Framework;
+using MonoGame.Entities;
 using MonoGame.Input;
 
 namespace MonoGame.Decorators;
@@ -12,6 +14,12 @@ public class Inertia : EntityDecorator
 
     protected override void OnUpdate(float deltaTime, Controls controls)
     {
+        if (IsStatic)
+            return;
+        var position = Position;
+        
         Position += Velocity * deltaTime;
+        
+        Debug.Assert(Position != position && Velocity != Vector2.Zero, "Position should have changed but did not");
     }
 }

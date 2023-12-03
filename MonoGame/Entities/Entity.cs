@@ -23,8 +23,7 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract Vector2 Velocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
-    
-    public float Mass => Destination.Width * Destination.Height;
+    public abstract float Mass { get; set; }
     public Rectangle Bounds => Destination;
 
     public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,

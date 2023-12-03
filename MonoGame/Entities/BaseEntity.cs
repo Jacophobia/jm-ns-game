@@ -3,6 +3,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
+using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
@@ -16,6 +17,7 @@ public sealed class BaseEntity : Entity
     private Rectangle _destination;
     private CollisionData _collisionData;
     private Texture2D _texture;
+    private float? _mass;
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
@@ -32,18 +34,18 @@ public sealed class BaseEntity : Entity
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects? effect = null, int? depth = null)
+        SpriteEffects? effect = null, int? depth = null, float? mass = null)
         : this(texture, position, velocity, width, height)
     {
-        SetOptionalValues(source, color, rotation, origin, effect, depth);
+        SetOptionalValues(source, color, rotation, origin, effect, depth, mass);
     }
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, float scale,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects? effect = null, int? depth = null)
+        SpriteEffects? effect = null, int? depth = null, float? mass = null)
         : this(texture, position, velocity, scale)
     {
-        SetOptionalValues(source, color, rotation, origin, effect, depth);
+        SetOptionalValues(source, color, rotation, origin, effect, depth, mass);
     }
 
     public override Texture2D Texture
@@ -92,8 +94,14 @@ public sealed class BaseEntity : Entity
     public override float RestitutionCoefficient { get; set; } = 1;
     public override bool IsStatic { get; set; } = false;
 
-    private void SetOptionalValues(Rectangle? source = null, Color? color = null, float? rotation = null,
-        Vector2? origin = null, SpriteEffects? effect = null, int? depth = null)
+    public override float Mass
+    {
+        get => _mass ?? Destination.Mass();
+        set => _mass = value;
+    }
+
+    private void SetOptionalValues(Rectangle? source, Color? color, float? rotation,
+        Vector2? origin, SpriteEffects? effect, int? depth, float? mass)
     {
         if (source.HasValue) Source = source.Value;
 
@@ -106,6 +114,8 @@ public sealed class BaseEntity : Entity
         if (effect.HasValue) Effect = effect.Value;
 
         if (depth.HasValue) Depth = depth.Value;
+
+        if (mass.HasValue) Mass = mass.Value;
     }
 
     public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)

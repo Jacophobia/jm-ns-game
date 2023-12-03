@@ -21,7 +21,7 @@ public class HostingClient : HostController
     private const int NumLayers = 1;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
-    private const int BallsPerLayer = 10;
+    private const int BallsPerLayer = 100;
     
     private ISpatialPartition<Entity> _spatialPartition;
 
@@ -48,7 +48,7 @@ public class HostingClient : HostController
         SetBackground();
         
         var random = new Random();
-        const int minBallSize = 10;
+        const int minBallSize = 1;
         const int maxBallSize = 100;
 
         for (var i = StartingLayer; i < NumLayers; i++)
@@ -69,25 +69,30 @@ public class HostingClient : HostController
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
-                    .AddDecorator<Drag>(0.8f)
+                    .AddDecorator<Friction>(0.1f)
                     .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
-                    .AddDecorator<Friction>(12f)
+                    // .AddDecorator<Friction>(200f)
+                    .AddDecorator<BasicMovement>()
                     // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
                     .AddDecorator<Gravity>()
-                    .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
-                    .AddDecorator<PerspectiveRender>(true)
-                    .Build();
+                    // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
+                    .AddDecorator<PerspectiveRender>(true);
                 
                 if (i is 0 && j is 0)
                 {
-                    Players.Add(new Host(new Camera(entity, 1, Vector3.Up * 100), Renderer));
-                    Players.Add(new Remote(new Camera(entity, 1, Vector3.Up * 100), NetworkClient));
+                    entity.SetColor(Color.Red);
+                    var mainEntity = entity.Build();
+                    Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
+                    Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
+                    _spatialPartition.Add(mainEntity);
                 }
-                
-                _spatialPartition.Add(entity);
+                else
+                {
+                    _spatialPartition.Add(entity.Build());
+                }
             }
         }
     }

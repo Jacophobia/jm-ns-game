@@ -4,6 +4,7 @@ using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Output;
 using MonoGame.Players;
@@ -32,9 +33,6 @@ public abstract class GameController : Game
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private Listener _inputListener;
-    private readonly Stopwatch _stopwatch;
-    private double _previousTime = 0.0;
-    private float _deltaTime = 0f;
     
     protected GameController(bool fullscreen)
     {
@@ -55,8 +53,6 @@ public abstract class GameController : Game
         _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
-
-        _stopwatch = new Stopwatch();
     }
 
     /// <summary>
@@ -83,7 +79,8 @@ public abstract class GameController : Game
             { Keys.A, Controls.Left },
             { Keys.E, Controls.Right },
             { Keys.OemComma, Controls.Up },
-            { Keys.O, Controls.Down }
+            { Keys.O, Controls.Down },
+            { Keys.X, Controls.Jump }
         });
         
         BeforeOnInitialize();
@@ -120,11 +117,10 @@ public abstract class GameController : Game
         BeforeOnBeginRun();
         OnBeginRun();
         AfterOnBeginRun();
-        
-        _stopwatch.Start();
-        
         base.BeginRun();
     }
+
+    private float deltaTime = 0f;
 
     /// <summary>
     /// Called each frame to update the game logic.
@@ -140,20 +136,24 @@ public abstract class GameController : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        var time = _stopwatch.Elapsed.TotalSeconds;
-        _deltaTime = (float)(time - _previousTime);
-        _previousTime = time;
+        deltaTime = gameTime.DeltaTime();
+        
+        if (deltaTime == 0f)
+        {
+            base.Update(gameTime);
+            return;
+        }
         
         // Receive control data from the network
         var controls = _inputListener.GetInputState();
 
-        BeforeOnUpdate(_deltaTime, controls);
+        BeforeOnUpdate(deltaTime, controls);
         
         foreach (var player in Players)
-            player.Update(_deltaTime, controls);
+            player.Update(deltaTime, controls);
         
-        OnUpdate(_deltaTime, controls);
-        AfterOnUpdate(_deltaTime, controls);
+        OnUpdate(deltaTime, controls);
+        AfterOnUpdate(deltaTime, controls);
 
         base.Update(gameTime);
     }
@@ -185,9 +185,17 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnDraw(float deltaTime) {}
     protected sealed override void Draw(GameTime gameTime)
     {
-        BeforeOnDraw(_deltaTime);
-        OnDraw(_deltaTime);
-        AfterOnDraw(_deltaTime);
+        // var deltaTime = gameTime.DeltaTime();
+
+        if (deltaTime == 0f)
+        {
+            base.Draw(gameTime);
+            return;
+        }
+        
+        BeforeOnDraw(deltaTime);
+        OnDraw(deltaTime);
+        AfterOnDraw(deltaTime);
         base.Draw(gameTime);
     }
 
@@ -292,8 +300,6 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnWindowFocused(object sender, EventArgs args) {}
     protected sealed override void OnActivated(object sender, EventArgs args)
     {
-        if (!_stopwatch.IsRunning)
-            _stopwatch.Start();
         BeforeOnWindowFocused(sender, args);
         OnWindowFocused(sender, args);
         AfterOnWindowFocused(sender, args);
@@ -316,7 +322,6 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnWindowClosed(object sender, EventArgs args) {}
     protected sealed override void OnDeactivated(object sender, EventArgs args)
     {
-        _stopwatch.Stop();
         BeforeOnWindowClosed(sender, args);
         OnWindowClosed(sender, args);
         AfterOnWindowClosed(sender, args);
