@@ -31,22 +31,28 @@ public class Collision : EntityDecorator
         return dotProduct < 0;
     }
 
-    protected override bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
         if (IsStatic && rhs.IsStatic)
         {
             overlap = null;
             return false;
         }
+
+        var lhsBounds = Bounds;
+        var rhsBounds = rhs.Bounds;
+
+        lhsBounds.Location += (Velocity * deltaTime).ToPoint();
+        rhsBounds.Location += (rhs.Velocity * deltaTime).ToPoint();
         
         // Find the intersection rectangle
-        overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
+        overlap = Rectangle.Intersect(lhsBounds, rhsBounds);
 
         // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
         // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
         return overlap is not { IsEmpty: true }
-                && AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, overlap.Value.Center.ToVector2(), rhs.Velocity) 
-                && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
+                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, overlap.Value.Center.ToVector2(), rhs.Velocity)
+                && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
     }
 
     protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)
@@ -70,8 +76,10 @@ public class Collision : EntityDecorator
         var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
 
-        var lhsRestitution = Math.Max(overlap.Value.Mass() / Mass, RestitutionCoefficient);
-        var rhsRestitution = Math.Max(overlap.Value.Mass() / rhs.Mass, rhs.RestitutionCoefficient);
+        var overlapMass = overlap.Value.Mass();
+
+        var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
+        var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
 
         if (IsStatic)
         {

@@ -28,7 +28,7 @@ public class SeparateOnCollision : EntityDecorator
             if (!rhs.IsStatic)
                 rhs.Position -= rhs.Velocity * deltaTime;
 
-            if (CollidesWith(rhs, out _))
+            if (CollidesWith(rhs, deltaTime, out _))
                 tries = maxTries;
 
             tries++;

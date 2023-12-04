@@ -21,5 +21,5 @@ public interface ICollidable
 
     public Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
 
-    public bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
+    public bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 }

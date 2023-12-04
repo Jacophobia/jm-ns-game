@@ -110,12 +110,12 @@ public abstract class EntityDecorator : Entity
     protected virtual void OnUpdate(float deltaTime, Controls controls) {}
     protected virtual void AfterUpdate(float deltaTime, Controls controls) {}
 
-    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
+    public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
-        return _base.CollidesWith(rhs, out overlap) || IsCollidingWith(rhs, out overlap);
+        return _base.CollidesWith(rhs, deltaTime, out overlap) || IsCollidingWith(rhs, deltaTime, out overlap);
     }
 
-    protected virtual bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    protected virtual bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
         overlap = null;
         return false;

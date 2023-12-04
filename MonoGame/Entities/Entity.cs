@@ -30,7 +30,7 @@ public abstract class Entity : ICollidable, IRenderable
         Rectangle? overlap);
 
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
-    public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
+    public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 
     public abstract void Update(float deltaTime, Controls controls);
     public abstract void Draw(Player cameras);

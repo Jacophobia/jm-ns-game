@@ -235,7 +235,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.CollidesWith(other, out var overlap))
+                    if (!element.Equals(other) && element.CollidesWith(other, deltaTime, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();

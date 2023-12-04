@@ -69,7 +69,7 @@ public class HostingClient : HostController
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
-                    .AddDecorator<Friction>(0.1f)
+                    .AddDecorator<Friction>(1f)
                     .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()

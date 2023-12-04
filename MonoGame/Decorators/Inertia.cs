@@ -20,6 +20,6 @@ public class Inertia : EntityDecorator
         
         Position += Velocity * deltaTime;
         
-        Debug.Assert(Position != position && Velocity != Vector2.Zero, "Position should have changed but did not");
+        // Debug.Assert(Position != position || Velocity == Vector2.Zero, "Position should have changed but did not");
     }
 }

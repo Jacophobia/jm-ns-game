@@ -118,7 +118,7 @@ public sealed class BaseEntity : Entity
         if (mass.HasValue) Mass = mass.Value;
     }
 
-    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
+    public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
         overlap = null;
         return false;

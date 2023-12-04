@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -120,8 +119,6 @@ public abstract class GameController : Game
         base.BeginRun();
     }
 
-    private float deltaTime = 0f;
-
     /// <summary>
     /// Called each frame to update the game logic.
     /// </summary>
@@ -136,7 +133,7 @@ public abstract class GameController : Game
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        deltaTime = gameTime.DeltaTime();
+        var deltaTime = gameTime.DeltaTime();
         
         if (deltaTime == 0f)
         {
@@ -185,7 +182,7 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnDraw(float deltaTime) {}
     protected sealed override void Draw(GameTime gameTime)
     {
-        // var deltaTime = gameTime.DeltaTime();
+        var deltaTime = gameTime.DeltaTime();
 
         if (deltaTime == 0f)
         {
