@@ -25,7 +25,7 @@ public class Collision : EntityDecorator
         var deltaVelocity = velocity2 - velocity1;
 
         // Calculate the dot product
-        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
+        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity * 100);
 
         // If the dot product is negative, objects are moving towards each other
         return dotProduct < 0;
@@ -50,8 +50,12 @@ public class Collision : EntityDecorator
 
         // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
         // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
+        var collisionLocation = overlap.Value.Center.ToVector2();
+        
+        var reverseLhsNormal = -CalculateCollisionNormal(rhs, collisionLocation);
+        
         return overlap is not { IsEmpty: true }
-                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, overlap.Value.Center.ToVector2(), rhs.Velocity)
+                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
                 && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
     }
 
