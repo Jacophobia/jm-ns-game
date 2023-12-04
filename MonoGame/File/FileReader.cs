@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MonoGame.Sprites;
+using MonoGame.Collision;
 
 namespace MonoGame.File;
 

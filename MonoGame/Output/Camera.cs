@@ -13,7 +13,7 @@ public class Camera
     private readonly float _followSpeed;
 
     private readonly Stack<IRenderable> _objectsToFollow;
-    private readonly Vector3 _offset;
+    private Vector3 _offset;
     private Vector3 _position;
     private Rectangle _view;
 
@@ -56,7 +56,7 @@ public class Camera
             _objectsToFollow.Pop();
     }
 
-    public void Update(float deltaTime, IList<Controls> controls)
+    public void Update(float deltaTime, Controls controls)
     {
         _position.X += (_objectsToFollow.Peek().Destination.Center.X - _offset.X - _view.Center.X)
                        * (_followSpeed * deltaTime);

@@ -1,7 +1,6 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
+using MonoGame.Collision;
 using MonoGame.Input;
-using MonoGame.Sprites;
 
 namespace MonoGame.Interfaces;
 
@@ -15,12 +14,12 @@ public interface ICollidable
     public bool IsStatic { get; }
     public float Mass { get; }
 
-    public void Update(float deltaTime, IList<Controls> controls);
+    public void Update(float deltaTime, Controls controls);
 
     public void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap);
 
     public Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
 
-    public bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
+    public bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 }

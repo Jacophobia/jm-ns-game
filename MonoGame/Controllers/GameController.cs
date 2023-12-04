@@ -1,11 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.Controllers;
 
@@ -14,6 +15,7 @@ public abstract class GameController : Game
 {
     protected Renderer Renderer; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
     protected SpriteBatch SpriteBatch;
+    protected List<Player> Players;
 
     protected static Rectangle WindowSize
     {
@@ -30,9 +32,6 @@ public abstract class GameController : Game
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
     private Listener _inputListener;
-    private readonly Stopwatch _stopwatch;
-    private double _previousTime = 0.0;
-    private float _deltaTime = 0f;
     
     protected GameController(bool fullscreen)
     {
@@ -53,8 +52,6 @@ public abstract class GameController : Game
         _graphicsDeviceManager.PreferredBackBufferHeight = windowSize.Height;
         // Set fullscreen mode
         _graphicsDeviceManager.IsFullScreen = fullscreen;
-
-        _stopwatch = new Stopwatch();
     }
 
     /// <summary>
@@ -75,12 +72,14 @@ public abstract class GameController : Game
     protected sealed override void Initialize()
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
+        Players = new List<Player>();
         _inputListener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
             { Keys.E, Controls.Right },
             { Keys.OemComma, Controls.Up },
-            { Keys.O, Controls.Down }
+            { Keys.O, Controls.Down },
+            { Keys.X, Controls.Jump }
         });
         
         BeforeOnInitialize();
@@ -117,9 +116,6 @@ public abstract class GameController : Game
         BeforeOnBeginRun();
         OnBeginRun();
         AfterOnBeginRun();
-        
-        _stopwatch.Start();
-        
         base.BeginRun();
     }
 
@@ -128,20 +124,33 @@ public abstract class GameController : Game
     /// </summary>
     /// <param name="deltaTime"></param>
     /// <param name="controls"></param>
-    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected internal virtual void BeforeOnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected internal virtual void AfterOnUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
+    protected internal virtual void BeforeOnUpdate(float deltaTime, Controls controls) {}
+    protected internal virtual void AfterOnUpdate(float deltaTime, Controls controls) {}
     protected sealed override void Update(GameTime gameTime)
     {
-        var time = _stopwatch.Elapsed.TotalSeconds;
-        _deltaTime = (float)(time - _previousTime);
-        _previousTime = time;
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
+            Keyboard.GetState().IsKeyDown(Keys.Escape))
+            Exit();
+        
+        var deltaTime = gameTime.DeltaTime();
+        
+        if (deltaTime == 0f)
+        {
+            base.Update(gameTime);
+            return;
+        }
         
         // Receive control data from the network
-        var controls = new List<Controls>();
-        BeforeOnUpdate(_deltaTime, controls);
-        OnUpdate(_deltaTime, controls);
-        AfterOnUpdate(_deltaTime, controls);
+        var controls = _inputListener.GetInputState();
+
+        BeforeOnUpdate(deltaTime, controls);
+        
+        foreach (var player in Players)
+            player.Update(deltaTime, controls);
+        
+        OnUpdate(deltaTime, controls);
+        AfterOnUpdate(deltaTime, controls);
 
         base.Update(gameTime);
     }
@@ -155,7 +164,8 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnBeginDraw() {}
     protected sealed override bool BeginDraw()
     {
-        Renderer.Begin();
+        foreach (var player in Players)
+            player.BeginDisplay();
         
         BeforeOnBeginDraw();
         OnBeginDraw();
@@ -172,9 +182,17 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnDraw(float deltaTime) {}
     protected sealed override void Draw(GameTime gameTime)
     {
-        BeforeOnDraw(_deltaTime);
-        OnDraw(_deltaTime);
-        AfterOnDraw(_deltaTime);
+        var deltaTime = gameTime.DeltaTime();
+
+        if (deltaTime == 0f)
+        {
+            base.Draw(gameTime);
+            return;
+        }
+        
+        BeforeOnDraw(deltaTime);
+        OnDraw(deltaTime);
+        AfterOnDraw(deltaTime);
         base.Draw(gameTime);
     }
 
@@ -190,7 +208,10 @@ public abstract class GameController : Game
         BeforeOnEndDraw();
         OnEndDraw();
         AfterOnEndDraw();
-        Renderer.End();
+        
+        foreach (var player in Players)
+            player.EndDisplay();
+        
         base.EndDraw();
     }
 

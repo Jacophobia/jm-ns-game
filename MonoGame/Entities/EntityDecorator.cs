@@ -1,10 +1,9 @@
-﻿using System.Collections.Generic;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
-using MonoGame.Sprites;
+using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -12,7 +11,7 @@ public abstract class EntityDecorator : Entity
 {
     private readonly Entity _base;
 
-    protected internal EntityDecorator(Entity @base)
+    protected EntityDecorator(Entity @base)
     {
         _base = @base;
     }
@@ -67,6 +66,12 @@ public abstract class EntityDecorator : Entity
         set => _base.Depth = value;
     }
 
+    public sealed override float Mass
+    {
+        get => _base.Mass;
+        set => _base.Mass = value;
+    }
+
     public override Vector2 Position
     {
         get => _base.Position;
@@ -93,7 +98,7 @@ public abstract class EntityDecorator : Entity
 
     // protected abstract void Initialize();
 
-    public sealed override void Update(float deltaTime, IList<Controls> controls)
+    public sealed override void Update(float deltaTime, Controls controls)
     {
         BeforeUpdate(deltaTime, controls);
         OnUpdate(deltaTime, controls);
@@ -101,23 +106,22 @@ public abstract class EntityDecorator : Entity
         _base.Update(deltaTime, controls);
     }
 
-    protected virtual void BeforeUpdate(float deltaTime, IList<Controls> controls) {}
-    protected virtual void OnUpdate(float deltaTime, IList<Controls> controls) {}
-    protected virtual void AfterUpdate(float deltaTime, IList<Controls> controls) {}
+    protected virtual void BeforeUpdate(float deltaTime, Controls controls) {}
+    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
+    protected virtual void AfterUpdate(float deltaTime, Controls controls) {}
 
-    public override bool CollidesWith(ICollidable rhs, out Rectangle? overlap)
+    public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
-        return _base.CollidesWith(rhs, out overlap) || IsCollidingWith(rhs, out overlap);
+        return _base.CollidesWith(rhs, deltaTime, out overlap) || IsCollidingWith(rhs, deltaTime, out overlap);
     }
 
-    protected virtual bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
+    protected virtual bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
         overlap = null;
         return false;
     }
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap)
+    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle? overlap)
     {
         BeforeHandleCollisionWith(collidable, deltaTime, overlap);
         OnHandleCollisionWith(collidable, deltaTime, overlap);
@@ -126,12 +130,9 @@ public abstract class EntityDecorator : Entity
     }
 
 
-    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime,
-        Rectangle? overlap) {}
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime,
-        Rectangle? overlap) {}
-    protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime,
-        Rectangle? overlap) {}
+    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
+    protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
 
     public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
     {
@@ -143,15 +144,15 @@ public abstract class EntityDecorator : Entity
         return Vector2.Zero;
     }
 
-    public sealed override void Draw(Renderer renderer, Camera cameras)
+    public sealed override void Draw(Player player)
     {
-        BeforeDraw(renderer, cameras);
-        OnDraw(renderer, cameras);
-        AfterDraw(renderer, cameras);
-        _base.Draw(renderer, cameras);
+        BeforeDraw(player);
+        OnDraw(player);
+        AfterDraw(player);
+        _base.Draw(player);
     }
 
-    protected virtual void BeforeDraw(Renderer renderer, Camera cameras) {}
-    protected virtual void OnDraw(Renderer renderer, Camera camera) {}
-    protected virtual void AfterDraw(Renderer renderer, Camera cameras) {}
+    protected virtual void BeforeDraw(Player player) {}
+    protected virtual void OnDraw(Player player) {}
+    protected virtual void AfterDraw(Player player) {}
 }

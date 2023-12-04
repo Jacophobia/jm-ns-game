@@ -1,11 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
-using MonoGame.Sprites;
+using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -24,18 +23,17 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract Vector2 Velocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
-    
-    public float Mass => Destination.Width * Destination.Height;
+    public abstract float Mass { get; set; }
     public Rectangle Bounds => Destination;
 
     public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle? overlap);
 
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
-    public abstract bool CollidesWith(ICollidable rhs, out Rectangle? overlap);
+    public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 
-    public abstract void Update(float deltaTime, IList<Controls> controls);
-    public abstract void Draw(Renderer renderer, Camera cameras);
+    public abstract void Update(float deltaTime, Controls controls);
+    public abstract void Draw(Player cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

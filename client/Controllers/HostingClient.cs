@@ -11,18 +11,19 @@ using MonoGame.Entities;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
+using MonoGame.Players;
 
 namespace client.Controllers;
 
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 50;
+    private const int NumLayers = 1;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
+    private const int BallsPerLayer = 100;
+    
     private ISpatialPartition<Entity> _spatialPartition;
-    private Camera _camera1;
-    private Camera _camera2;
 
     public HostingClient() : base(ServerPort, fullscreen: false)
     {
@@ -47,14 +48,13 @@ public class HostingClient : HostController
         SetBackground();
         
         var random = new Random();
-        const int minBallSize = 10;
+        const int minBallSize = 1;
         const int maxBallSize = 100;
-        const int ballsPerLayer = 10;
 
         for (var i = StartingLayer; i < NumLayers; i++)
         {
-            var color = new Color(random.Next(200), random.Next(255), random.Next(255));
-            for (var j = 0; j < ballsPerLayer; j++)
+            var color = new Color(random.Next(150), random.Next(255), random.Next(255));
+            for (var j = 0; j < BallsPerLayer; j++)
             {
                 var ballPosition =
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
@@ -69,21 +69,30 @@ public class HostingClient : HostController
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
+                    .AddDecorator<Friction>(1f)
+                    .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
+                    // .AddDecorator<Friction>(200f)
+                    .AddDecorator<BasicMovement>()
+                    // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
                     .AddDecorator<Gravity>()
-                    .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
-                    .AddDecorator<PerspectiveRender>(true)
-                    .Build();
+                    // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
+                    .AddDecorator<PerspectiveRender>(true);
                 
                 if (i is 0 && j is 0)
                 {
-                    _camera1 = new Camera(entity, 1, Vector3.Up * 100, 0);
-                    _camera2 = new Camera(entity, 1, Vector3.Up * 100, 1);
+                    entity.SetColor(Color.Red);
+                    var mainEntity = entity.Build();
+                    Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
+                    Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
+                    _spatialPartition.Add(mainEntity);
                 }
-                
-                _spatialPartition.Add(entity);
+                else
+                {
+                    _spatialPartition.Add(entity.Build());
+                }
             }
         }
     }
@@ -118,11 +127,9 @@ public class HostingClient : HostController
             _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(float deltaTime, IList<Controls> controls)
+    protected override void OnUpdate(float deltaTime, Controls controls)
     {
         _spatialPartition.Update(deltaTime, controls);
-        _camera1.Update(deltaTime, controls);
-        _camera2.Update(deltaTime, controls);
     }
 
     protected override void OnDraw(float deltaTime)
@@ -131,7 +138,7 @@ public class HostingClient : HostController
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        _spatialPartition.Draw(Renderer, new []{ _camera1, _camera2 }, deltaTime);
+        _spatialPartition.Draw(Players, deltaTime);
     }
 
     protected override void OnDispose(bool disposing)

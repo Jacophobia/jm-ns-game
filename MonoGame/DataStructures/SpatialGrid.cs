@@ -8,7 +8,7 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
+using MonoGame.Players;
 
 namespace MonoGame.DataStructures;
 
@@ -159,7 +159,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(float deltaTime, IList<Controls> controls)
+    void ISpatialPartition<T>.Update(float deltaTime, Controls controls)
     {
         foreach (var element in _elements)
         {
@@ -185,14 +185,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(Renderer renderer, Camera[] cameras, float deltaTime)
+    void ISpatialPartition<T>.Draw(IList<Player> players, float deltaTime)
     {
         foreach (var element in _elements)
-        foreach (var camera in cameras)
-            element.Draw(renderer, camera);
+        foreach (var player in players)
+            element.Draw(player);
         foreach (var element in _staticElements)
-        foreach (var camera in cameras)
-            element.Draw(renderer, camera);
+        foreach (var player in players)
+            element.Draw(player);
     }
 
     public void Add(IEnumerable<T> items)
@@ -235,7 +235,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             if (Partitions.TryGetValue(index, out var partition))
             {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.CollidesWith(other, out var overlap))
+                    if (!element.Equals(other) && element.CollidesWith(other, deltaTime, out var overlap))
                     {
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
@@ -255,10 +255,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             else
             {
                 Debug.WriteLine($"Index: {index} has yet to be created");
-                // Debug.Assert(false,
-                //     $"The partition {index} that was checked does not " +
-                //     "exist. There is likely an issue with " +
-                //     "HandlePartitionTransitions");
+                Debug.Assert(false,
+                    $"The partition {index} that was checked does not " +
+                    "exist. There is likely an issue with " +
+                    "HandlePartitionTransitions");
             }
     }
 

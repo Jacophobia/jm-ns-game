@@ -5,18 +5,20 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Output;
 
-namespace MonoGame.Networking;
+namespace MonoGame.Output;
 
 public class NetworkClient : IDisposable
 {
     private const int ReceiveTimeout = 2000; // Timeout in milliseconds
+    private const byte Control = 0;
+    private const byte Renderable = 0;
     
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
@@ -101,6 +103,8 @@ public class NetworkClient : IDisposable
                     case SocketError.Interrupted:
                     case SocketError.ConnectionReset:
                     case SocketError.Shutdown:
+                        _remoteEndPoint = null;
+                        _connected = false;
                         return;
                     case SocketError.TimedOut:
                         break;
@@ -132,20 +136,52 @@ public class NetworkClient : IDisposable
         return controls;
     }
 
-    public void SendRenderableData(IEnumerable<IRenderable> renderableData)
+    private MemoryStream _memoryStream;
+    private BinaryWriter _binaryWriter;
+    private bool _connected;
+
+    public void PrepareRenderableBatch()
     {
+        _connected = true;
         if (_remoteEndPoint == null)
+        {
+            _connected = false;
+            return;
+        }
+
+        _memoryStream = new MemoryStream();
+        _binaryWriter = new BinaryWriter(_memoryStream);
+        
+        AddHeaders(Renderable, _binaryWriter);
+    }
+
+    public void Enqueue(IRenderable renderable, Texture2D texture = null, 
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        int? depth = null)
+    {
+        if (!_connected)
             return;
         
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms);
-        
-        AddHeaders(1, writer);
-        
-        SerializeRenderableData(renderableData, writer);
-        
-        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
+        _binaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
+        _binaryWriter.WriteRectangle(destination ?? renderable.Destination);
+        _binaryWriter.WriteRectangle(source ?? renderable.Source);
+        _binaryWriter.WriteColor(color ?? renderable.Color);
+        _binaryWriter.Write(rotation ?? renderable.Rotation);
+        _binaryWriter.WriteVector2(origin ?? renderable.Origin);
+        _binaryWriter.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
+        _binaryWriter.Write(depth ?? renderable.Depth);
     }
+
+    public void SendRenderableBatch()
+    {
+        if (!_connected)
+            return;
+        
+        _udpClient.Send(_memoryStream.GetBuffer(), (int)_memoryStream.Length, _remoteEndPoint);
+        _memoryStream?.Dispose();
+        _binaryWriter?.Dispose();
+    } 
 
     public IEnumerable<IRenderable> GetRenderableData()
     {  

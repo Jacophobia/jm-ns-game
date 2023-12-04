@@ -8,13 +8,10 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extensions;
 using MonoGame.File;
 
-namespace MonoGame.Sprites;
+namespace MonoGame.Collision;
 
 public class CollisionData
 {
-    // At some point, it would be good to make a custom data structure 
-    // which could order points so that you can perform a more specific
-    // search.
     private static IDictionary<string, List<List<CollisionCheckColumn>>> _collisionData;
 
     private readonly string _name;
@@ -70,7 +67,7 @@ public class CollisionData
         set => _collisionData[_name] = value;
     }
 
-    internal bool IsCollidableCoord(Vector2 coordinate)
+    private bool IsCollidableCoord(Vector2 coordinate)
     {
         if (coordinate.X >= Data.Count)
             return false;

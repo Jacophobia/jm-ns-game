@@ -1,6 +1,8 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
+using MonoGame.Extensions;
 using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
@@ -11,20 +13,6 @@ public class Collision : EntityDecorator
     public Collision(Entity @base) : base(@base)
     {
         // no new behavior to add
-    }
-
-    protected override bool IsCollidingWith(ICollidable rhs, out Rectangle? overlap)
-    {
-        if (IsStatic && rhs.IsStatic)
-        {
-            overlap = null;
-            return false;
-        }
-        
-        // Find the intersection rectangle
-        overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
-        
-        return overlap is not { IsEmpty: true } && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
     }
 
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
@@ -43,24 +31,42 @@ public class Collision : EntityDecorator
         return dotProduct < 0;
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime,
-        Rectangle? overlap)
+    protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
-        if (IsStatic && rhs.IsStatic) 
-            return;
+        if (IsStatic && rhs.IsStatic)
+        {
+            overlap = null;
+            return false;
+        }
+
+        var lhsBounds = Bounds;
+        var rhsBounds = rhs.Bounds;
+
+        lhsBounds.Location += (Velocity * deltaTime).ToPoint();
+        rhsBounds.Location += (rhs.Velocity * deltaTime).ToPoint();
         
+        // Find the intersection rectangle
+        overlap = Rectangle.Intersect(lhsBounds, rhsBounds);
+
+        // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
+        // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
+        return overlap is not { IsEmpty: true }
+                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, overlap.Value.Center.ToVector2(), rhs.Velocity)
+                && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
+    }
+
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)
+    {
+        Debug.Assert(!IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
         Debug.Assert(overlap != null);
-
-        var collisionCoordinate = overlap.Value.Center.ToVector2();
-        // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
-        if (!AreMovingTowardsEachOther(Destination.Center.ToVector2(), Velocity, collisionCoordinate, rhs.Velocity)) 
-            return;
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
+        
+        var collisionCoordinate = overlap.Value.Center.ToVector2();
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
@@ -70,10 +76,15 @@ public class Collision : EntityDecorator
         var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
 
+        var overlapMass = overlap.Value.Mass();
+
+        var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
+        var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
+
         if (IsStatic)
         {
             // If this object is static, only adjust the other object's velocity
-            var newV2N = -rhs.RestitutionCoefficient *
+            var newV2N = -rhsRestitution *
                          (rhsVelocity.X * rhsNormal.X + rhsVelocity.Y * rhsNormal.Y);
             rhsVelocity.X = newV2N * rhsNormal.X - (-rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.Y;
             rhsVelocity.Y = newV2N * rhsNormal.Y + (-rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X) * rhsNormal.X;
@@ -81,7 +92,7 @@ public class Collision : EntityDecorator
         else if (rhs.IsStatic)
         {
             // Collision with a static object
-            var newV1N = -RestitutionCoefficient * v1N;
+            var newV1N = -lhsRestitution * v1N;
 
             // Recompose velocity for the dynamic object
             lhsVelocity.X = newV1N * lhsNormal.X - v1T * lhsNormal.Y;
@@ -94,7 +105,7 @@ public class Collision : EntityDecorator
             var v2T = -rhsVelocity.X * rhsNormal.Y + rhsVelocity.Y * rhsNormal.X;
 
             // Apply the restitution coefficient
-            var combinedRestitution = (RestitutionCoefficient + rhs.RestitutionCoefficient) / 2f;
+            var combinedRestitution = (lhsRestitution + rhsRestitution) / 2f;
 
             // Exchange normal components in an inelastic collision
             var newV1N = combinedRestitution * (v1N * (Mass - rhs.Mass) + 2f * rhs.Mass * v2N) /
