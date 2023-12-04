@@ -121,7 +121,7 @@ public abstract class EntityDecorator : Entity
         return false;
     }
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle? overlap)
+    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle overlap)
     {
         BeforeHandleCollisionWith(collidable, deltaTime, overlap);
         OnHandleCollisionWith(collidable, deltaTime, overlap);
@@ -131,7 +131,7 @@ public abstract class EntityDecorator : Entity
 
 
     protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap) {}
     protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
 
     public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)

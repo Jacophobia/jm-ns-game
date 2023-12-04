@@ -27,7 +27,7 @@ public abstract class Entity : ICollidable, IRenderable
     public Rectangle Bounds => Destination;
 
     public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap);
+        Rectangle overlap);
 
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
     public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);

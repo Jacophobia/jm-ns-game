@@ -88,14 +88,6 @@ public class CollisionData
     {
         Debug.Assert(!overlap.IsEmpty, "Overlap cannot be empty. A value must be provided.");
 
-        if ((lhsDestination.Width < 11 && overlap.Width >= lhsDestination.Width / 9f) ||
-            (lhsDestination.Height < 11 && overlap.Height >= lhsDestination.Height / 9f) ||
-            (rhsDestination.Width < 11 && overlap.Width >= rhsDestination.Width / 9f) ||
-            (rhsDestination.Height < 11 && overlap.Height >= rhsDestination.Height / 9f))
-        {
-            return true;
-        }
-
         // Create rectangles for the entities' collision areas
         var rect1 = lhsDestination;
         var rect2 = rhsDestination;

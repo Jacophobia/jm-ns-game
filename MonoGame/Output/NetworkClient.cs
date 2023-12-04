@@ -176,7 +176,9 @@ public class NetworkClient : IDisposable
     public void SendRenderableBatch()
     {
         if (!_connected)
+        {
             return;
+        }
         
         _udpClient.Send(_memoryStream.GetBuffer(), (int)_memoryStream.Length, _remoteEndPoint);
         _memoryStream?.Dispose();
@@ -229,21 +231,6 @@ public class NetworkClient : IDisposable
     {
         var renderableData = DeserializeRenderableData(payload);
         _renderableQueue.Put(renderableData, timestamp);
-    }
-    
-    private static void SerializeRenderableData(IEnumerable<IRenderable> renderables, BinaryWriter writer)
-    {
-        foreach (var renderable in renderables)
-        {
-            writer.WriteString(renderable.Texture.Name);
-            writer.WriteRectangle(renderable.Destination);
-            writer.WriteRectangle(renderable.Source);
-            writer.WriteColor(renderable.Color);
-            writer.Write(renderable.Rotation);
-            writer.WriteVector2(renderable.Origin);
-            writer.Write((int)renderable.Effect);
-            writer.Write(renderable.Depth);
-        }
     }
 
     private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)

@@ -77,7 +77,7 @@ public class HostingClient : HostController
                     .AddDecorator<BasicMovement>()
                     // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
-                    .AddDecorator<Gravity>()
+                    // .AddDecorator<Gravity>()
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
@@ -86,12 +86,13 @@ public class HostingClient : HostController
                     entity.SetColor(Color.Red);
                     var mainEntity = entity.Build();
                     Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                    Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
                     _spatialPartition.Add(mainEntity);
                 }
                 else
                 {
-                    _spatialPartition.Add(entity.Build());
+                    var otherEntity = entity.Build();
+                    Players.Add(new Remote(new Camera(otherEntity, 1, Vector3.Up * 100), NetworkClient));
+                    _spatialPartition.Add(otherEntity);
                 }
             }
         }

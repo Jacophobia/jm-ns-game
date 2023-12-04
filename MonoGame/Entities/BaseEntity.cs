@@ -136,7 +136,7 @@ public sealed class BaseEntity : Entity
     }
 
     public override void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap)
+        Rectangle overlap)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

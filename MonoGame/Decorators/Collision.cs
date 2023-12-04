@@ -50,27 +50,35 @@ public class Collision : EntityDecorator
 
         // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
         // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
+        var collisionRhsDelta = overlap.Value.Center - rhsBounds.Center;
+        
         var collisionLocation = overlap.Value.Center.ToVector2();
         
-        var reverseLhsNormal = -CalculateCollisionNormal(rhs, collisionLocation);
+        if (Math.Abs(collisionRhsDelta.X) > Math.Abs(collisionRhsDelta.Y))
+        {
+            collisionLocation.Y = rhsBounds.Center.Y;
+        }
+        else
+        {
+            collisionLocation.X = rhsBounds.Center.X;
+        }
         
         return overlap is not { IsEmpty: true }
                 && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
                 && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
     {
         Debug.Assert(!IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
-        Debug.Assert(overlap != null);
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
         
-        var collisionCoordinate = overlap.Value.Center.ToVector2();
+        var collisionCoordinate = overlap.Center.ToVector2();
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
@@ -80,10 +88,10 @@ public class Collision : EntityDecorator
         var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
 
-        var overlapMass = overlap.Value.Mass();
+        var overlapMass = overlap.Mass();
 
-        var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
-        var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
+        var lhsRestitution = Math.Min(2 * overlapMass / Mass, RestitutionCoefficient);
+        var rhsRestitution = Math.Min(2 * overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
 
         if (IsStatic)
         {
@@ -96,7 +104,7 @@ public class Collision : EntityDecorator
         else if (rhs.IsStatic)
         {
             // Collision with a static object
-            var newV1N = -lhsRestitution * v1N;
+            var newV1N = -lhsRestitution * v1N * 2;
 
             // Recompose velocity for the dynamic object
             lhsVelocity.X = newV1N * lhsNormal.X - v1T * lhsNormal.Y;

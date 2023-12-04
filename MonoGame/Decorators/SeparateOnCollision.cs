@@ -12,9 +12,8 @@ public class SeparateOnCollision : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
     {
-        Debug.Assert(overlap != null, "This method should not be called if overlap is null");
 
         if (IsStatic && rhs.IsStatic)
             return;

@@ -237,12 +237,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
                 foreach (var other in partition)
                     if (!element.Equals(other) && element.CollidesWith(other, deltaTime, out var overlap))
                     {
+                        Debug.Assert(overlap != null, $"{nameof(overlap)} should not be null");
+                        
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
 
                         GetPartitionIndices(other, beforeIndices);
 
-                        element.HandleCollisionWith(other, deltaTime, overlap);
+                        element.HandleCollisionWith(other, deltaTime, overlap.Value);
 
                         GetPartitionIndices(other, afterIndices);
 

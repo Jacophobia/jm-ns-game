@@ -17,7 +17,7 @@ public interface ICollidable
     public void Update(float deltaTime, Controls controls);
 
     public void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap);
+        Rectangle overlap);
 
     public Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
 
