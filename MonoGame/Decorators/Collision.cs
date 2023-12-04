@@ -16,8 +16,8 @@ public class Collision : EntityDecorator
 
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2, Vector2 velocity2)
     {
-        var deltaPosition = position2 - position1;
-        var deltaVelocity = velocity2 - velocity1;
+        var deltaPosition = Vector2.Normalize(position2 - position1);
+        var deltaVelocity = Vector2.Normalize(velocity2 - velocity1);
         return Vector2.Dot(deltaPosition, deltaVelocity) < 0;
     }
 
