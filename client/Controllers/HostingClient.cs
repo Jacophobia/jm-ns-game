@@ -18,10 +18,10 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 1;
-    private const int StartingLayer = 0;
-    private const int LayerDepth = 1;
-    private const int BallsPerLayer = 100;
+    private const int NumLayers = 20;
+    private const int StartingLayer = -1;
+    private const int LayerDepth = 5;
+    private const int BallsPerLayer = 50;
     
     private ISpatialPartition<Entity> _spatialPartition;
 
@@ -81,18 +81,26 @@ public class HostingClient : HostController
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
-                if (i is 0 && j is 0)
+                switch (i)
                 {
-                    entity.SetColor(Color.Red);
-                    var mainEntity = entity.Build();
-                    Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                    _spatialPartition.Add(mainEntity);
-                }
-                else
-                {
-                    var otherEntity = entity.Build();
-                    Players.Add(new Remote(new Camera(otherEntity, 1, Vector3.Up * 100), NetworkClient));
-                    _spatialPartition.Add(otherEntity);
+                    case 0 when j is 0:
+                    {
+                        entity.SetColor(Color.Red);
+                        var mainEntity = entity.Build();
+                        Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
+                        _spatialPartition.Add(mainEntity);
+                        break;
+                    }
+                    case 1 when j is 0:
+                    {
+                        var otherEntity = entity.Build();
+                        Players.Add(new Remote(new Camera(otherEntity, 1, new Vector3(0f, -100f, -15f)), NetworkClient));
+                        _spatialPartition.Add(otherEntity);
+                        break;
+                    }
+                    default:
+                        _spatialPartition.Add(entity.Build());
+                        break;
                 }
             }
         }

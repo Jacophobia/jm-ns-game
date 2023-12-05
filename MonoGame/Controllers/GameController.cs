@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extensions;
 using MonoGame.Input;
+using MonoGame.Interfaces;
 using MonoGame.Output;
 using MonoGame.Players;
 
@@ -15,7 +16,7 @@ public abstract class GameController : Game
 {
     protected Renderer Renderer; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
     protected SpriteBatch SpriteBatch;
-    protected List<Player> Players;
+    protected List<IPlayer> Players;
 
     protected static Rectangle WindowSize
     {
@@ -72,7 +73,7 @@ public abstract class GameController : Game
     protected sealed override void Initialize()
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
-        Players = new List<Player>();
+        Players = new List<IPlayer>();
         _inputListener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },

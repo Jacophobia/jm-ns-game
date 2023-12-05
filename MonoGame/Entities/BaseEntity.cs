@@ -142,7 +142,7 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void Draw(Player cameras)
+    public override void Draw(IPlayer cameras)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

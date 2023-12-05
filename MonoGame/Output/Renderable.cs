@@ -40,7 +40,7 @@ internal class Renderable : IRenderable
     public SpriteEffects Effect { get; set; }
     public int Depth { get; set; }
 
-    void IRenderable.Draw(Player player)
+    void IRenderable.Draw(IPlayer player)
     {
         player.Display(this);
     }

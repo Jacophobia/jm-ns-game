@@ -185,7 +185,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         #endif
     }
 
-    void ISpatialPartition<T>.Draw(IList<Player> players, float deltaTime)
+    void ISpatialPartition<T>.Draw(List<IPlayer> players, float deltaTime)
     {
         foreach (var element in _elements)
         foreach (var player in players)
