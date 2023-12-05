@@ -172,9 +172,11 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
             GetPartitionIndices(element, currentIndices);
 
-            HandlePartitionTransitions(element, previousIndices, currentIndices);
-
             CheckForCollisions(element, deltaTime, currentIndices);
+            
+            GetPartitionIndices(element, currentIndices);
+
+            HandlePartitionTransitions(element, previousIndices, currentIndices);
 
             _hashSetPool.Return(previousIndices);
             _hashSetPool.Return(currentIndices);
@@ -238,7 +240,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
                     if (!element.Equals(other) && element.CollidesWith(other, deltaTime, out var overlap))
                     {
                         Debug.Assert(overlap != null, $"{nameof(overlap)} should not be null");
-                        
+
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
 
@@ -253,14 +255,6 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
                         _hashSetPool.Return(beforeIndices);
                         _hashSetPool.Return(afterIndices);
                     }
-            }
-            else
-            {
-                Debug.WriteLine($"Index: {index} has yet to be created");
-                Debug.Assert(false,
-                    $"The partition {index} that was checked does not " +
-                    "exist. There is likely an issue with " +
-                    "HandlePartitionTransitions");
             }
     }
 

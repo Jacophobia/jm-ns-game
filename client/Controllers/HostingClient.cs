@@ -77,7 +77,8 @@ public class HostingClient : HostController
                     .AddDecorator<BasicMovement>()
                     // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
-                    // .AddDecorator<Gravity>()
+                    .AddDecorator<Gravity>()
+                    // .AddDecorator<Bound>(WindowSize)
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 

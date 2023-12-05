@@ -1,4 +1,5 @@
-﻿using System;
+using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Interfaces;
@@ -7,94 +8,63 @@ namespace MonoGame.Decorators;
 
 public class Rectangular : EntityDecorator
 {
-    private enum IntersectionSide
-    {
-        Top,
-        Bottom,
-        Left,
-        Right,
-        None
-    }
-    
     public Rectangular(Entity @base) : base(@base)
     {
-    }
-    
-    private static Tuple<float?, float?> GetTimeToCollision(ICollidable lhs, ICollidable rhs)
-    {
-        // Calculate previous center positions
-        var prevCenter1 = lhs.Position - lhs.Velocity;
-        var prevCenter2 = rhs.Position - rhs.Velocity;
-
-        // Calculate half dimensions for easier calculations
-        var halfWidth1 = lhs.Bounds.Width / 2f;
-        var halfHeight1 = lhs.Bounds.Height / 2f;
-        var halfWidth2 = rhs.Bounds.Width / 2f;
-        var halfHeight2 = rhs.Bounds.Height / 2f;
-
-        // Calculate relative velocity
-        var relativeVelocity = lhs.Velocity - rhs.Velocity;
-
-        // Determine time to collision for each axis (if any)
-        float? timeToCollisionX = null;
-        float? timeToCollisionY = null;
-
-        if (relativeVelocity.X != 0)
-        {
-            if (relativeVelocity.X > 0)
-                timeToCollisionX = (prevCenter2.X - halfWidth2 - (prevCenter1.X + halfWidth1)) / relativeVelocity.X;
-            else
-                timeToCollisionX = (prevCenter2.X + halfWidth2 - (prevCenter1.X - halfWidth1)) / relativeVelocity.X;
-        }
-
-        if (relativeVelocity.Y != 0)
-        {
-            if (relativeVelocity.Y > 0)
-                timeToCollisionY
-                    = (prevCenter2.Y + halfHeight2 - (prevCenter1.Y - halfHeight1)) /
-                      relativeVelocity.Y; // Inverted Y-axis
-            else
-                timeToCollisionY
-                    = (prevCenter2.Y - halfHeight2 - (prevCenter1.Y + halfHeight1)) /
-                      relativeVelocity.Y; // Inverted Y-axis
-        }
-
-        return new Tuple<float?, float?>(timeToCollisionX, timeToCollisionY);
-    }
-
-    private static IntersectionSide GetCollisionDirection(ICollidable lhs, ICollidable rhs)
-    {
-        var (timeToCollisionX, timeToCollisionY) = GetTimeToCollision(lhs, rhs);
-
-        var timeX = timeToCollisionX ?? float.MaxValue;
-        var timeY = timeToCollisionY ?? float.MaxValue;
-
-
-        // Calculate relative velocity
-        var relativeVelocity = lhs.Velocity - rhs.Velocity;
-
-        // Determine the first side hit based on the smallest positive time to collision
-        if (timeX >= 0 && timeX < timeY)
-            return relativeVelocity.X > 0 ? IntersectionSide.Left : IntersectionSide.Right;
-        if (timeY >= 0 && timeY < timeX)
-            return relativeVelocity.Y > 0 ? IntersectionSide.Top : IntersectionSide.Bottom;
-
-        return IntersectionSide.None;
+        // Initialization code if necessary
     }
 
     protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
     {
-        if (IsStatic)
-            return Vector2.Zero;
+        var lhsBounds = Bounds;
+        var rhsBounds = rhs.Bounds;
 
-        return GetCollisionDirection(this, rhs) switch
+        // Determine the side of the collision
+        return CalculateCollisionNormal(lhsBounds, rhsBounds, collisionLocation);
+    }
+
+    private static Vector2 CalculateCollisionNormal(Rectangle lhsBounds, Rectangle rhsBounds, Vector2 collisionLocation)
+    {
+        // Center points of the rectangles
+        var lhsCenter = lhsBounds.Center.ToVector2();
+        var rhsCenter = rhsBounds.Center.ToVector2();
+
+        // Distance between the centers
+        var distance = rhsCenter - lhsCenter;
+
+        // Half extents along each axis
+        var lhsHalfWidth = lhsBounds.Width / 2f;
+        var lhsHalfHeight = lhsBounds.Height / 2f;
+        var rhsHalfWidth = rhsBounds.Width / 2f;
+        var rhsHalfHeight = rhsBounds.Height / 2f;
+
+        // Calculate overlap on each axis
+        var overlapX = lhsHalfWidth + rhsHalfWidth - Math.Abs(distance.X);
+        var overlapY = lhsHalfHeight + rhsHalfHeight - Math.Abs(distance.Y);
+
+        // The axis with the smallest overlap determines the normal
+        return overlapX < overlapY ? new Vector2(Math.Sign(distance.X), 0) : new Vector2(0, Math.Sign(distance.Y));
+    }
+
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
+    {
+        const float percent = 1f; // Penetration percentage to correct
+        const float slop = 0.01f; // Allowable penetration
+        
+        var collisionCoordinate = overlap.Center.ToVector2();
+
+        var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
+        var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
+        
+        var lhsCorrection = Math.Max(overlap.Height - slop, 0.0f) / (1 / Mass + 1 / rhs.Mass) * percent * lhsNormal;
+        var rhsCorrection = Math.Max(overlap.Height - slop, 0.0f) / (1 / rhs.Mass + 1 / Mass) * percent * rhsNormal;
+        
+        if (!IsStatic)
         {
-            IntersectionSide.Top => new Vector2(0, -1),
-            IntersectionSide.Bottom => new Vector2(0, 1),
-            IntersectionSide.Left => new Vector2(-1, 0),
-            IntersectionSide.Right => new Vector2(1, 0),
-            IntersectionSide.None => Vector2.Zero,
-            _ => throw new ArgumentOutOfRangeException()
-        };
+            Position -= lhsCorrection / Mass;
+        }
+        if (!rhs.IsStatic)
+        {
+            rhs.Position += rhsCorrection / rhs.Mass;
+        }
     }
 }

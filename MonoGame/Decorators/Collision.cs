@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using MonoGame.Entities;
@@ -7,25 +7,24 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
-// ReSharper disable once ClassNeverInstantiated.Global
 public class Collision : EntityDecorator
 {
     public Collision(Entity @base) : base(@base)
     {
-        // no new behavior to add
+        // No new behavior to add
     }
 
     private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
         Vector2 velocity2)
     {
         // Calculate position differences
-        var deltaPosition = position2 - position1;
+        var deltaPosition = Vector2.Normalize(position2 - position1);
 
         // Calculate velocity differences
-        var deltaVelocity = velocity2 - velocity1;
+        var deltaVelocity = Vector2.Normalize(velocity2 - velocity1);
 
         // Calculate the dot product
-        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity * 100);
+        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
 
         // If the dot product is negative, objects are moving towards each other
         return dotProduct < 0;
@@ -64,34 +63,34 @@ public class Collision : EntityDecorator
         }
         
         return overlap is not { IsEmpty: true }
-                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
+                // && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
                 && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
     }
 
     protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
     {
+        Debug.Assert(!IsStatic);
         Debug.Assert(!IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
-
+        Debug.Assert(overlap is not { IsEmpty: true });
+        
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
-        
-        var collisionCoordinate = overlap.Center.ToVector2();
 
-        // Calculate the normal (n) and tangential (t) direction vectors
+        var collisionCoordinate = overlap.Center.ToVector2();
+        
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
         var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
         
-        // Decompose velocities into normal and tangential components
-        var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
+        var v1N = Vector2.Dot(lhsVelocity, lhsNormal); // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
 
         var overlapMass = overlap.Mass();
 
-        var lhsRestitution = Math.Min(2 * overlapMass / Mass, RestitutionCoefficient);
-        var rhsRestitution = Math.Min(2 * overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
+        var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
+        var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
 
         if (IsStatic)
         {
@@ -104,7 +103,7 @@ public class Collision : EntityDecorator
         else if (rhs.IsStatic)
         {
             // Collision with a static object
-            var newV1N = -lhsRestitution * v1N * 2;
+            var newV1N = -lhsRestitution * v1N;
 
             // Recompose velocity for the dynamic object
             lhsVelocity.X = newV1N * lhsNormal.X - v1T * lhsNormal.Y;
