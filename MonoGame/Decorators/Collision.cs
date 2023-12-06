@@ -47,21 +47,21 @@ public class Collision : EntityDecorator
         
         return overlap is not { IsEmpty: true }
                 && AreMovingTowardsEachOther(Bounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
-                && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
+                && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, out overlap);
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
     {
         Debug.Assert(!IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
-        Debug.Assert(overlap != null);
+        Debug.Assert(overlap is not { IsEmpty: true });
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
         
-        var collisionCoordinate = overlap.Value.Center.ToVector2();
+        var collisionCoordinate = overlap.Center.ToVector2();
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
@@ -71,7 +71,7 @@ public class Collision : EntityDecorator
         var v1N = lhsVelocity.X * lhsNormal.X + lhsVelocity.Y * lhsNormal.Y; // Dot product
         var v1T = -lhsVelocity.X * lhsNormal.Y + lhsVelocity.Y * lhsNormal.X; // Perpendicular dot product
 
-        var overlapMass = overlap.Value.Mass();
+        var overlapMass = overlap.Mass();
 
         var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
         var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
