@@ -95,7 +95,7 @@ public class HostingClient : HostController
                         
                         var mainEntity = entity.Build();
                         Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                        Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
+                        Players.Add(new Remote(new Camera(mainEntity, 1, new Vector3(0, 100, 5)), NetworkClient));
                         _spatialPartition.Add(mainEntity);
                         break;
                     }

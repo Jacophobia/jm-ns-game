@@ -17,7 +17,7 @@ public class Camera
     private Vector3 _position;
     private Rectangle _view;
 
-    public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset, int clientIndex = 0)
+    public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset)
     {
         using var adapter = GraphicsAdapter.DefaultAdapter;
         var displayMode = adapter.CurrentDisplayMode;
@@ -29,11 +29,9 @@ public class Camera
         _objectsToFollow.Push(objectToFollow);
         _followSpeed = followSpeed;
         _offset = offset;
-        ClientIndex = clientIndex;
     }
 
     internal Vector3 Position => _position;
-    internal int ClientIndex { get; }
 
     internal Rectangle View
     {
@@ -58,9 +56,7 @@ public class Camera
 
     public void Update(float deltaTime, Controls controls)
     {
-        _position.X += (_objectsToFollow.Peek().Destination.Center.X - _offset.X - _view.Center.X)
-                       * (_followSpeed * deltaTime);
-        _position.Y += (_objectsToFollow.Peek().Destination.Center.Y - _offset.Y - _view.Center.Y)
-                       * (_followSpeed * deltaTime);
+        _position += ((_objectsToFollow.Peek().Destination.Center - _view.Center).ToVector3() - _offset) 
+                     * (_followSpeed * deltaTime);
     }
 }

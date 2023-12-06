@@ -284,6 +284,11 @@ public class NetworkClient : IDisposable
                 _renderablePool.Return(renderable);
                 yield break;
             }
+            catch (IOException)
+            {
+                _renderablePool.Return(renderable);
+                yield break;
+            }
 
             yield return renderable;
             
