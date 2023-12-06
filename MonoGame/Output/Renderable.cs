@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 using MonoGame.Singletons;
 
 namespace MonoGame.Output;
@@ -40,7 +39,7 @@ internal class Renderable : IRenderable
     public SpriteEffects Effect { get; set; }
     public int Depth { get; set; }
 
-    void IRenderable.Draw(Player player)
+    void IRenderable.Draw(IPlayer player)
     {
         player.Display(this);
     }

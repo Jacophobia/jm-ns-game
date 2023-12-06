@@ -1,5 +1,5 @@
 ﻿using MonoGame.Entities;
-using MonoGame.Players;
+using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
@@ -10,7 +10,7 @@ public class Render : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnDraw(Player player)
+    protected override void OnDraw(IPlayer player)
     {
         player.Display(this);
     }

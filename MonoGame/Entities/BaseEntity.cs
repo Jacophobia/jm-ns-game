@@ -7,7 +7,6 @@ using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -136,13 +135,13 @@ public sealed class BaseEntity : Entity
     }
 
     public override void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap)
+        Rectangle overlap)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.
     }
 
-    public override void Draw(Player cameras)
+    public override void Draw(IPlayer cameras)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

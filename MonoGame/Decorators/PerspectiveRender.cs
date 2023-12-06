@@ -1,6 +1,6 @@
 ﻿using System;
 using MonoGame.Entities;
-using MonoGame.Players;
+using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
@@ -14,9 +14,9 @@ public class PerspectiveRender : EntityDecorator
         _adjustScale = adjustScale;
     }
 
-    protected override void BeforeDraw(Player player)
+    protected override void BeforeDraw(IPlayer player)
     {
-        var cameraDistance = Depth - player.Perspective.Position.Z;
+        var cameraDistance = Depth - player.Depth;
 
         if (cameraDistance < 10) // TODO: decide if we want to keep this. It's nice to see the character, but it might not be the right aesthetic
         {
@@ -27,14 +27,14 @@ public class PerspectiveRender : EntityDecorator
 
         if (cameraDistance == 0) cameraDistance = 0.001f;
 
-        _scale = MathF.Abs(player.Perspective.Position.Z / cameraDistance);
+        _scale = MathF.Abs(player.Depth / cameraDistance);
     }
 
-    protected override void OnDraw(Player player)
+    protected override void OnDraw(IPlayer player)
     {
         var drawnDestination = Destination;
         
-        var offset = (player.Perspective.View.Center.ToVector2() - Position) * (1 - _scale);
+        var offset = (player.Perspective.Center.ToVector2() - Position) * (1 - _scale);
         
         drawnDestination.X += (int)Math.Round(offset.X);
         drawnDestination.Y += (int)Math.Round(offset.Y);

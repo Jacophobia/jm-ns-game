@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -27,13 +26,13 @@ public abstract class Entity : ICollidable, IRenderable
     public Rectangle Bounds => Destination;
 
     public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle? overlap);
+        Rectangle overlap);
 
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
     public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 
     public abstract void Update(float deltaTime, Controls controls);
-    public abstract void Draw(Player cameras);
+    public abstract void Draw(IPlayer cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator
     {

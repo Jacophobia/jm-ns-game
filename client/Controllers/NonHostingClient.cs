@@ -1,5 +1,6 @@
 ﻿using MonoGame.Controllers;
 using MonoGame.Input;
+using MonoGame.Players;
 
 namespace client.Controllers;
 public class NonHostingClient : RemoteController
@@ -7,7 +8,15 @@ public class NonHostingClient : RemoteController
     private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
     private const int ServerPort = 12345; // Replace with the server's port
 
-    public NonHostingClient() : base(ServerIpAddress, ServerPort, false) {}
+    public NonHostingClient() : base(ServerIpAddress, ServerPort, false)
+    {
+        
+    }
+
+    protected override void OnLoadContent()
+    {
+        Players.Add(new Basic(WindowSize, -10, Renderer));
+    }
 
     protected override void OnUpdate(float deltaTime, Controls controls)
     {
