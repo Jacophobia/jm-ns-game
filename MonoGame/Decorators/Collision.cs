@@ -38,25 +38,16 @@ public class Collision : EntityDecorator
             overlap = null;
             return false;
         }
-
-        var lhsBounds = Bounds;
-        var rhsBounds = rhs.Bounds;
-
-        lhsBounds.Location += (Velocity * deltaTime).ToPoint();
-        rhsBounds.Location += (rhs.Velocity * deltaTime).ToPoint();
         
         // Find the intersection rectangle
-        overlap = Rectangle.Intersect(lhsBounds, rhsBounds);
+        overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
 
-        // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
         // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
         var collisionLocation = overlap.Value.Center.ToVector2();
         
-        var reverseLhsNormal = -CalculateCollisionNormal(rhs, collisionLocation);
-        
         return overlap is not { IsEmpty: true }
-                && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
-                && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
+                && AreMovingTowardsEachOther(Bounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
+                && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, overlap.Value);
     }
 
     protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap)

@@ -18,12 +18,11 @@ public class Circular : EntityDecorator
     protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
     {
         var location = Destination.Center.ToVector2();
-        
-        // Debug.Assert(_previousLocation != location, "The object did not move between frames");
 
         var normal = location != collisionLocation
             ? Vector2.Normalize(collisionLocation - location)
             : _previousNormal;
+        
         _previousNormal = normal;
         
         Debug.Assert(!float.IsNaN(normal.X) && !float.IsNaN(normal.Y));
