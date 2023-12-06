@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 using MonoGame.Singletons;
 
 namespace MonoGame.Output;

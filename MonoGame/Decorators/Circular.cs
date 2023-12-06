@@ -20,11 +20,27 @@ public class Circular : EntityDecorator
     {
         var location = Destination.Center.ToVector2();
         
-        // Debug.Assert(_previousLocation != location, "The object did not move between frames");
+        if (location == collisionLocation)
+        {
+            var collisionRhsDelta = collisionLocation - rhs.Bounds.Center.ToVector2();
+        
+            if (Math.Abs(collisionRhsDelta.X) > Math.Abs(collisionRhsDelta.Y))
+            {
+                collisionLocation.Y = rhs.Bounds.Center.Y;
+            }
+            else
+            {
+                collisionLocation.X = rhs.Bounds.Center.X;
+            }
+        }
 
-        var normal = location != collisionLocation
-            ? Vector2.Normalize(collisionLocation - location)
-            : _previousNormal;
+        if (location == collisionLocation)
+        {
+            return _previousNormal;
+        }
+        
+        var normal = Vector2.Normalize(collisionLocation - location);
+
         _previousNormal = normal;
         
         Debug.Assert(!float.IsNaN(normal.X) && !float.IsNaN(normal.Y));
@@ -32,55 +48,30 @@ public class Circular : EntityDecorator
         return normal;
     }
     
-    private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
-        Vector2 velocity2)
+    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle _)
     {
-        // Calculate position differences
-        var deltaPosition = Vector2.Normalize(position2 - position1);
-
-        // Calculate velocity differences
-        var deltaVelocity = Vector2.Normalize(velocity2 - velocity1);
-
-        // Calculate the dot product
-        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
-
-        // If the dot product is negative, objects are moving towards each other
-        return dotProduct < 0;
-    }
-    
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
-    {
-        const float percent = 0.5f; // Penetration percentage to correct
-        const float slop = 0.0001f; // Allowable penetration
+        const float percent = 0.1f; // Penetration percentage to correct
+        const float slop = 0.01f; // Allowable penetration
         
-        var collisionCoordinate = overlap.Center.ToVector2();
-        
-        var collisionRhsDelta = overlap.Center - rhs.Bounds.Center;
-        
-        var collisionLocation = collisionCoordinate;
-        
-        if (Math.Abs(collisionRhsDelta.X) > Math.Abs(collisionRhsDelta.Y))
+        while (CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, out var overlap) && overlap is { IsEmpty: false })
         {
-            collisionLocation.Y = rhs.Bounds.Center.Y;
-        }
-        else
-        {
-            collisionLocation.X = rhs.Bounds.Center.X;
-        }
+            var collisionCoordinate = overlap.Value.Center.ToVector2();
 
-        var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
-        var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
-        
-        var lhsCorrection = Math.Max(overlap.Height - slop, 0.0f) / (1 / Mass + 1 / rhs.Mass) * percent * lhsNormal;
-        var rhsCorrection = Math.Max(overlap.Height - slop, 0.0f) / (1 / rhs.Mass + 1 / Mass) * percent * rhsNormal;
-        
-        if (!IsStatic)
-        {
-            Position -= lhsCorrection / Mass;
-        }
-        if (!rhs.IsStatic)
-        {
-            rhs.Position += rhsCorrection / rhs.Mass;
+            var lhsNormal = CalculateCollisionNormal(rhs, collisionCoordinate);
+            var rhsNormal = -rhs.CalculateCollisionNormal(this, collisionCoordinate);
+
+            var lhsCorrection = Math.Max(overlap.Value.Height - slop, 0.0f) / (1 / Mass + 1 / rhs.Mass) * percent * lhsNormal;
+            var rhsCorrection = Math.Max(overlap.Value.Height - slop, 0.0f) / (1 / rhs.Mass + 1 / Mass) * percent * rhsNormal;
+            
+            if (!IsStatic)
+            {
+                Position -= lhsCorrection / Mass;
+            }
+
+            if (!rhs.IsStatic)
+            {
+                rhs.Position += rhsCorrection / rhs.Mass;
+            }
         }
     }
 }

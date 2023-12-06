@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using MonoGame.Input;
-using MonoGame.Players;
 
 namespace MonoGame.Interfaces;
 

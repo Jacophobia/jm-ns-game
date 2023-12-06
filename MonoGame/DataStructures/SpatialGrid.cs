@@ -8,7 +8,6 @@ using System.Linq;
 using Microsoft.Xna.Framework;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 
 namespace MonoGame.DataStructures;
 

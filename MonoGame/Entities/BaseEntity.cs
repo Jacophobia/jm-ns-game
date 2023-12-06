@@ -7,7 +7,6 @@ using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-using MonoGame.Players;
 
 namespace MonoGame.Entities;
 

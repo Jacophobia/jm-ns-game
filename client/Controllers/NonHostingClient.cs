@@ -1,6 +1,5 @@
 ﻿using MonoGame.Controllers;
 using MonoGame.Input;
-using MonoGame.Output;
 using MonoGame.Players;
 
 namespace client.Controllers;

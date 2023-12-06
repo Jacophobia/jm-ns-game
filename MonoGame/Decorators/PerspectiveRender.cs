@@ -1,7 +1,6 @@
 ﻿using System;
 using MonoGame.Entities;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 
 namespace MonoGame.Decorators;
 

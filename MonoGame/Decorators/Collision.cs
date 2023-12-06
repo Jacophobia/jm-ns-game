@@ -14,22 +14,6 @@ public class Collision : EntityDecorator
         // No new behavior to add
     }
 
-    private static bool AreMovingTowardsEachOther(Vector2 position1, Vector2 velocity1, Vector2 position2,
-        Vector2 velocity2)
-    {
-        // Calculate position differences
-        var deltaPosition = Vector2.Normalize(position2 - position1);
-
-        // Calculate velocity differences
-        var deltaVelocity = Vector2.Normalize(velocity2 - velocity1);
-
-        // Calculate the dot product
-        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
-
-        // If the dot product is negative, objects are moving towards each other
-        return dotProduct < 0;
-    }
-
     protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
         if (IsStatic && rhs.IsStatic)
@@ -44,27 +28,7 @@ public class Collision : EntityDecorator
         lhsBounds.Location += (Velocity * deltaTime).ToPoint();
         rhsBounds.Location += (rhs.Velocity * deltaTime).ToPoint();
         
-        // Find the intersection rectangle
-        overlap = Rectangle.Intersect(lhsBounds, rhsBounds);
-
-        // TODO: there is an issue where if something gets completely enveloped into something else between frames, it freezes the game
-        // TODO: we also need to incorporate the Source rectangle in this so that collisions are calculated correctly when a sprite sheet is used
-        var collisionRhsDelta = overlap.Value.Center - rhsBounds.Center;
-        
-        var collisionLocation = overlap.Value.Center.ToVector2();
-        
-        if (Math.Abs(collisionRhsDelta.X) > Math.Abs(collisionRhsDelta.Y))
-        {
-            collisionLocation.Y = rhsBounds.Center.Y;
-        }
-        else
-        {
-            collisionLocation.X = rhsBounds.Center.X;
-        }
-        
-        return overlap is not { IsEmpty: true }
-                // && AreMovingTowardsEachOther(lhsBounds.Center.ToVector2(), Velocity, collisionLocation, rhs.Velocity)
-                && CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, overlap.Value);
+        return CollisionData.Collides(lhsBounds, rhs.CollisionData, rhsBounds, out overlap);
     }
 
     protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
@@ -89,8 +53,8 @@ public class Collision : EntityDecorator
 
         var overlapMass = overlap.Mass();
 
-        var lhsRestitution = Math.Min(overlapMass / Mass, RestitutionCoefficient);
-        var rhsRestitution = Math.Min(overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
+        var lhsRestitution = Math.Min(2 * overlapMass / Mass, RestitutionCoefficient);
+        var rhsRestitution = Math.Min(2 * overlapMass / rhs.Mass, rhs.RestitutionCoefficient);
 
         if (IsStatic)
         {
