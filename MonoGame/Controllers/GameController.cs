@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -117,6 +118,10 @@ public abstract class GameController : Game
         OnBeginRun();
         AfterOnBeginRun();
         base.BeginRun();
+        
+        #if DEBUG
+        _totalRuntimeStopwatch.Start();
+        #endif
     }
 
     /// <summary>
@@ -153,6 +158,10 @@ public abstract class GameController : Game
         AfterOnUpdate(deltaTime, controls);
 
         base.Update(gameTime);
+
+        #if DEBUG
+        _updateCallCount++;
+        #endif
     }
 
     /// <summary>
@@ -227,6 +236,10 @@ public abstract class GameController : Game
         OnEndRun();
         AfterOnEndRun();
         base.EndRun();
+        
+        #if DEBUG
+        _totalRuntimeStopwatch.Stop();
+        #endif
     }
 
     /// <summary>
@@ -274,6 +287,15 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnDispose(bool disposing) {}
     protected sealed override void Dispose(bool disposing)
     {
+        #if DEBUG
+        _totalRuntimeStopwatch.Stop();
+        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
+        if (!(totalSeconds > 0)) return;
+        var updatesPerSecond = _updateCallCount / totalSeconds;
+        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+        Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
+        #endif
+        
         BeforeOnDispose(disposing);
         OnDispose(disposing);
         AfterOnDispose(disposing);
@@ -324,4 +346,10 @@ public abstract class GameController : Game
         AfterOnWindowClosed(sender, args);
         base.OnDeactivated(sender, args);
     }
+
+
+    #if DEBUG
+    private readonly Stopwatch _totalRuntimeStopwatch = new();
+    private int _updateCallCount;
+    #endif
 }

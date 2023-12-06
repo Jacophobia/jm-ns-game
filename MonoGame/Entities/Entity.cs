@@ -16,7 +16,7 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract float Rotation { get; set; }
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
-    public abstract int Depth { get; set; }
+    public abstract int Layer { get; set; }
     public abstract CollisionData CollisionData { get; }
     public abstract Vector2 Position { get; set; }
     public abstract Vector2 Velocity { get; set; }
@@ -24,6 +24,7 @@ public abstract class Entity : ICollidable, IRenderable
     public abstract bool IsStatic { get; set; }
     public abstract float Mass { get; set; }
     public Rectangle Bounds => Destination;
+    public float Depth => Layer;
 
     public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle overlap);

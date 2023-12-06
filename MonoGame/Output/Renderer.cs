@@ -28,7 +28,7 @@ public class Renderer
     public void Draw(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
-        int? depth = null)
+        float? depth = null)
     {
         if (_shouldClear)
             Clear();

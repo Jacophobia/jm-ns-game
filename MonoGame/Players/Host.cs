@@ -21,7 +21,7 @@ public class Host : Player
 
     protected override void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects effect = SpriteEffects.None, int? depth = null)
+        SpriteEffects effect = SpriteEffects.None, float? depth = null)
     {
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }

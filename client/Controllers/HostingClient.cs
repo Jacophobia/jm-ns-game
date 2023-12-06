@@ -74,7 +74,7 @@ public class HostingClient : HostController
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     // .AddDecorator<Friction>(200f)
-                    .AddDecorator<BasicMovement>()
+                    // .AddDecorator<BasicMovement>()
                     // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
                     // .AddDecorator<Gravity>()
@@ -94,8 +94,8 @@ public class HostingClient : HostController
                         }
                         
                         var mainEntity = entity.Build();
-                        Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                        Players.Add(new Remote(new Camera(mainEntity, 1, new Vector3(0, 100, 5)), NetworkClient));
+                        Players.Add(new Host(new Camera(mainEntity, 1, new Vector3(0, 100, -10)), Renderer));
+                        Players.Add(new Remote(new Camera(mainEntity, 1, new Vector3(0, 100, 50)), NetworkClient));
                         _spatialPartition.Add(mainEntity);
                         break;
                     }

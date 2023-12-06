@@ -12,6 +12,6 @@ public interface IRenderable
     public float Rotation { get; }
     public Vector2 Origin { get; }
     public SpriteEffects Effect { get; }
-    public int Depth { get; }
+    public float Depth { get; }
     public void Draw(IPlayer player);
 }

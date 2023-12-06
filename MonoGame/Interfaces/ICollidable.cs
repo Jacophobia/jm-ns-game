@@ -8,6 +8,7 @@ public interface ICollidable
 {
     public CollisionData CollisionData { get; }
     public Vector2 Position { get; set; }
+    public int Layer { get; }
     public Rectangle Bounds { get; }
     public Vector2 Velocity { get; set; }
     public float RestitutionCoefficient { get; }

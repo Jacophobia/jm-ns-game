@@ -17,6 +17,8 @@ public sealed class BaseEntity : Entity
     private CollisionData _collisionData;
     private Texture2D _texture;
     private float? _mass;
+    private Vector2 _position;
+    private Vector2 _velocity;
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
@@ -77,7 +79,7 @@ public sealed class BaseEntity : Entity
     public override Vector2 Origin { get; set; }
     public override SpriteEffects Effect { get; set; } = SpriteEffects.None;
 
-    public override int Depth
+    public override int Layer
     {
         get => _depth;
         set
@@ -88,14 +90,38 @@ public sealed class BaseEntity : Entity
         }
     }
 
-    public override Vector2 Position { get; set; }
-    public override Vector2 Velocity { get; set; }
+    public override Vector2 Position
+    {
+        get => _position;
+        set
+        {
+            if (!IsStatic)
+                _position = value;
+        }
+    }
+
+    public override Vector2 Velocity
+    {
+        get => _velocity;
+        set
+        {
+            if (!IsStatic)
+                _velocity = value;
+        }
+    }
+
     public override float RestitutionCoefficient { get; set; } = 1;
     public override bool IsStatic { get; set; } = false;
 
     public override float Mass
     {
-        get => _mass ?? Destination.Mass();
+        get
+        {
+            if (IsStatic)
+                return float.PositiveInfinity;
+            
+            return _mass ?? Destination.Mass();
+        }
         set => _mass = value;
     }
 
@@ -112,7 +138,7 @@ public sealed class BaseEntity : Entity
 
         if (effect.HasValue) Effect = effect.Value;
 
-        if (depth.HasValue) Depth = depth.Value;
+        if (depth.HasValue) Layer = depth.Value;
 
         if (mass.HasValue) Mass = mass.Value;
     }

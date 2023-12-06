@@ -29,10 +29,6 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
-
-        #if DEBUG
-        _totalRuntimeStopwatch.Start();
-        #endif
     }
 
     public SpatialGrid(IEnumerable<T> elements) : this()
@@ -44,14 +40,6 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     void IDisposable.Dispose()
     {
-        #if DEBUG
-        _totalRuntimeStopwatch.Stop();
-        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
-        if (!(totalSeconds > 0)) return;
-        var updatesPerSecond = _updateCallCount / totalSeconds;
-        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-        Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-        #endif
     }
 
     int ICollection<T>.Count => Partitions.Values.Sum(partition => partition.Count);
@@ -180,10 +168,6 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             _hashSetPool.Return(previousIndices);
             _hashSetPool.Return(currentIndices);
         }
-
-        #if DEBUG
-        _updateCallCount++;
-        #endif
     }
 
     void ISpatialPartition<T>.Draw(List<IPlayer> players, float deltaTime)
@@ -292,7 +276,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
     {
-        AddIndices(item.Destination, item.Depth, indices);
+        AddIndices(item.Destination, item.Layer, indices);
     }
 
     private void UpdateAverages(T item)
@@ -392,10 +376,4 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             return !(left == right);
         }
     }
-
-
-    #if DEBUG
-    private readonly Stopwatch _totalRuntimeStopwatch = new();
-    private int _updateCallCount;
-    #endif
 }

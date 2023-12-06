@@ -11,7 +11,8 @@ public abstract class Player : IPlayer
     private readonly Camera _perspective;
 
     public Rectangle Perspective => _perspective.View;
-    public float Depth => _perspective.Position.Z;
+    public float Depth => _perspective.Depth;
+    public float FocalLength => Camera.FocalLength;
 
     protected Player(Camera perspective)
     {
@@ -25,11 +26,11 @@ public abstract class Player : IPlayer
 
     public abstract void BeginDisplay();
 
-    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, 
-        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null, 
-        SpriteEffects effect = SpriteEffects.None, int? depth = null)
+    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
+        SpriteEffects effect = SpriteEffects.None, float? depth = null)
     {
-        if (!(destination ?? renderable.Destination).Intersects(_perspective.View))
+        if (!(destination ?? renderable.Destination).Intersects(_perspective.View) || renderable.Depth < _perspective.Depth)
             return;
 
         var relativeDestination = destination ?? renderable.Destination;
@@ -40,9 +41,9 @@ public abstract class Player : IPlayer
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
     }
 
-    protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, 
-        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null, 
-        SpriteEffects effect = SpriteEffects.None, int? depth = null);
+    protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
+        SpriteEffects effect = SpriteEffects.None, float? depth = null);
     
     public abstract void EndDisplay();
 }

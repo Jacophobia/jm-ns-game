@@ -15,7 +15,7 @@ public class NonHostingClient : RemoteController
 
     protected override void OnLoadContent()
     {
-        Players.Add(new Basic(WindowSize, -10, Renderer));
+        Players.Add(new Basic(Renderer, WindowSize));
     }
 
     protected override void OnUpdate(float deltaTime, Controls controls)

@@ -100,7 +100,7 @@ public class EntityBuilder
 
     public EntityBuilder SetDepth(int depth)
     {
-        _entity.Depth = depth;
+        _entity.Layer = depth;
         return this;
     }
 

@@ -163,7 +163,7 @@ public class NetworkClient : IDisposable
     public void Enqueue(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
-        int? depth = null)
+        float? depth = null)
     {
         if (!_connected)
             return;
@@ -262,7 +262,7 @@ public class NetworkClient : IDisposable
         while (ms.Position < ms.Length)
         {
             var renderable = _renderablePool.Get();
-            
+
             try
             {
                 renderable.TextureName = reader.ReadUtf8String();
@@ -274,19 +274,28 @@ public class NetworkClient : IDisposable
                 renderable.Effect = (SpriteEffects)reader.ReadInt32();
                 renderable.Depth = reader.ReadInt32();
             }
-            catch (ContentLoadException)
+            catch (ContentLoadException e)
             {
                 _renderablePool.Return(renderable);
+                Debug.WriteLine(e.Message);
                 yield break;
             }
-            catch (FileNotFoundException)
+            catch (FileNotFoundException e)
             {
                 _renderablePool.Return(renderable);
+                Debug.WriteLine(e.Message);
                 yield break;
             }
-            catch (IOException)
+            catch (IOException e)
             {
                 _renderablePool.Return(renderable);
+                Debug.WriteLine(e.Message);
+                yield break;
+            }
+            catch (ArgumentNullException e)
+            {
+                _renderablePool.Return(renderable);
+                Debug.WriteLine(e.Message);
                 yield break;
             }
 

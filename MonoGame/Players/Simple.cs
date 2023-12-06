@@ -8,25 +8,29 @@ namespace MonoGame.Players;
 
 public class Basic : IPlayer
 {
-    private Renderer _renderer;
+    private readonly Renderer _renderer;
     
-    public Basic(Rectangle perspective, float depth, Renderer renderer)
+    public Basic(Renderer renderer, Rectangle perspective, float depth = -10)
     {
+        _renderer = renderer;
         Perspective = perspective;
         Depth = depth;
-        _renderer = renderer;
+        FocalLength = Camera.FocalLength;
     }
 
     public Rectangle Perspective { get; }
     public float Depth { get; }
+    public float FocalLength { get; }
+
     public void BeginDisplay()
     { 
         _renderer.Begin();
     }
 
-    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, Rectangle? source = null,
+    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null,
         Color? color = null, float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None,
-        int? depth = null)
+        float? depth = null)
     {
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }

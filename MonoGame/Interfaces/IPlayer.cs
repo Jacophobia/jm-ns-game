@@ -8,12 +8,13 @@ public interface IPlayer
 {
     public Rectangle Perspective { get; }
     public float Depth { get; }
+    public float FocalLength { get; }
     
     public void BeginDisplay();
 
     public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects effect = SpriteEffects.None, int? depth = null);
+        SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
     public void Update(float deltaTime, Controls controls);
 

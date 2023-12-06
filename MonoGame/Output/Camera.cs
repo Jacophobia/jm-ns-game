@@ -10,6 +10,8 @@ namespace MonoGame.Output;
 
 public class Camera
 {
+    internal const float FocalLength = 10f;
+    
     private readonly float _followSpeed;
 
     private readonly Stack<IRenderable> _objectsToFollow;
@@ -24,14 +26,14 @@ public class Camera
         var position = offset + objectToFollow.Destination.Center.ToVector3();
 
         _view = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
-        _position = new Vector3(position.X + displayMode.Width / 2f, position.Y + displayMode.Height / 2f, -10f);
+        _position = new Vector3(position.X + displayMode.Width / 2f, position.Y + displayMode.Height / 2f, 0);
         _objectsToFollow = new Stack<IRenderable>();
         _objectsToFollow.Push(objectToFollow);
         _followSpeed = followSpeed;
         _offset = offset;
     }
 
-    internal Vector3 Position => _position;
+    internal float Depth => _position.Z;
 
     internal Rectangle View
     {
@@ -54,9 +56,23 @@ public class Camera
             _objectsToFollow.Pop();
     }
 
+    // ReSharper disable once ConvertIfStatementToSwitchStatement
     public void Update(float deltaTime, Controls controls)
     {
-        _position += ((_objectsToFollow.Peek().Destination.Center - _view.Center).ToVector3() - _offset) 
-                     * (_followSpeed * deltaTime);
+        var offset = (_objectsToFollow.Peek().Destination.Center - _view.Center).ToVector3() - _offset;
+        offset.Z = 0;
+        
+        if (controls == Controls.Down)
+        {
+            offset += Vector3.Forward * 100;
+        }
+        if (controls == Controls.Up)
+        {
+            offset += Vector3.Backward * 100;
+        }
+
+        offset *= _followSpeed * deltaTime;
+
+        _position += offset;
     }
 }

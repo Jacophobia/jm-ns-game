@@ -37,7 +37,7 @@ internal class Renderable : IRenderable
     public float Rotation { get; set; }
     public Vector2 Origin { get; set; }
     public SpriteEffects Effect { get; set; }
-    public int Depth { get; set; }
+    public float Depth { get; set; }
 
     void IRenderable.Draw(IPlayer player)
     {
