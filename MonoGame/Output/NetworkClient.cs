@@ -6,6 +6,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
 using MonoGame.Extensions;
@@ -226,15 +227,31 @@ public class NetworkClient : IDisposable
 
     private void ProcessControlData(ArraySegment<byte> payload, long timestamp)
     {
-        Debug.Assert(payload.Array != null, "payload.Array != null");
-        var controlData = (Controls)payload.Array[payload.Offset];
-        _controlQueue.Put(controlData, timestamp);
+        try
+        {
+            Debug.Assert(payload.Array != null, "payload.Array != null");
+            var controlData = (Controls)payload.Array[payload.Offset];
+            _controlQueue.Put(controlData, timestamp);
+        }
+        catch (ContentLoadException e)
+        {
+            Debug.Assert(false, e.Message);
+        }
+        catch (FileNotFoundException e)
+        {
+            Debug.Assert(false, e.Message);
+        }
+        catch (Exception e)
+        {
+            Debug.Assert(false, e.Message);
+            throw;
+        }
     }
 
     private void ProcessRenderableData(ArraySegment<byte> payload, long timestamp)
     {
-        var renderableData = DeserializeRenderableData(payload);
-        _renderableQueue.Put(renderableData, timestamp);
+            var renderableData = DeserializeRenderableData(payload);
+            _renderableQueue.Put(renderableData, timestamp);
     }
 
     private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)
@@ -246,14 +263,27 @@ public class NetworkClient : IDisposable
         {
             var renderable = _renderablePool.Get();
             
-            renderable.TextureName = reader.ReadUtf8String();
-            renderable.Destination = reader.ReadRectangle();
-            renderable.Source = reader.ReadRectangle();
-            renderable.Color = reader.ReadColor();
-            renderable.Rotation = reader.ReadSingle();
-            renderable.Origin = reader.ReadVector2();
-            renderable.Effect = (SpriteEffects)reader.ReadInt32();
-            renderable.Depth = reader.ReadInt32();
+            try
+            {
+                renderable.TextureName = reader.ReadUtf8String();
+                renderable.Destination = reader.ReadRectangle();
+                renderable.Source = reader.ReadRectangle();
+                renderable.Color = reader.ReadColor();
+                renderable.Rotation = reader.ReadSingle();
+                renderable.Origin = reader.ReadVector2();
+                renderable.Effect = (SpriteEffects)reader.ReadInt32();
+                renderable.Depth = reader.ReadInt32();
+            }
+            catch (ContentLoadException)
+            {
+                _renderablePool.Return(renderable);
+                yield break;
+            }
+            catch (FileNotFoundException)
+            {
+                _renderablePool.Return(renderable);
+                yield break;
+            }
 
             yield return renderable;
             
