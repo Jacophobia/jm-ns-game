@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Players;
 
 namespace MonoGame.Interfaces;
 
@@ -14,5 +13,5 @@ public interface IRenderable
     public Vector2 Origin { get; }
     public SpriteEffects Effect { get; }
     public int Depth { get; }
-    public void Draw(Player player);
+    public void Draw(IPlayer player);
 }

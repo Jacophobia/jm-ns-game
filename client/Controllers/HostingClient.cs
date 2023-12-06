@@ -18,10 +18,10 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 1;
+    private const int NumLayers = 50;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
-    private const int BallsPerLayer = 100;
+    private const int BallsPerLayer = 10;
     
     private ISpatialPartition<Entity> _spatialPartition;
 
@@ -77,7 +77,7 @@ public class HostingClient : HostController
                     .AddDecorator<BasicMovement>()
                     // .AddDecorator<Rectangular>()
                     .AddDecorator<Circular>()
-                    .AddDecorator<Gravity>()
+                    // .AddDecorator<Gravity>()
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 

@@ -16,9 +16,10 @@ namespace MonoGame.Output;
 
 public class NetworkClient : IDisposable
 {
-    private const int ReceiveTimeout = 2000; // Timeout in milliseconds
-    private const byte Control = 0;
-    private const byte Renderable = 0;
+    private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
+    private const byte ControlDataType = 0;
+    private const byte RenderableDataType = 1;
+    private const int MaxBufferSize = 65536;
     
     private readonly UdpClient _udpClient;
     private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
@@ -35,7 +36,7 @@ public class NetworkClient : IDisposable
         _stopwatch = Stopwatch.StartNew();
         _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>>();
         _controlQueue = new PriorityQueue<Controls>();
-        _receiveBuffer = new byte[65536]; // Adjust size as needed
+        _receiveBuffer = new byte[MaxBufferSize]; // Adjust size as needed
         _renderablePool = new ObjectPool<Renderable>();
     }
 
@@ -50,8 +51,6 @@ public class NetworkClient : IDisposable
         _udpClient = new UdpClient(port);
         _remoteEndPoint = null;
     }
-
-    public long TotalMilliseconds => _stopwatch.ElapsedMilliseconds;
 
     public void Connect()
     {
@@ -69,8 +68,26 @@ public class NetworkClient : IDisposable
     {
         _listening = true;
         _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
-        _listeningThread = new Thread(ListenLoop);
+        _listeningThread = new Thread(_remoteEndPoint != null ? ListenLoop : HostListenLoop);
         _listeningThread.Start();
+    }
+
+    private void HostListenLoop()
+    {
+        while (_listening)
+        {
+            try
+            {
+                // Use the same buffer for each receive operation
+                var receivedBytes = _udpClient.Receive(ref _remoteEndPoint);
+
+                ProcessReceivedData(receivedBytes);
+            }
+            catch (SocketException)
+            {
+                // If the exception is due to the socket being closed, exit the loop
+            }
+        }
     }
     
     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
@@ -81,7 +98,7 @@ public class NetworkClient : IDisposable
             try
             {
                 // Create an endpoint for any IP. This will be populated with the sender's info.
-                EndPoint senderEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                EndPoint senderEndPoint = _remoteEndPoint;
 
                 // Use the same buffer for each receive operation
                 var receivedBytes = _udpClient.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
@@ -95,22 +112,9 @@ public class NetworkClient : IDisposable
 
                 ProcessReceivedData(new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes));
             }
-            catch (SocketException ex)
+            catch (SocketException)
             {
                 // If the exception is due to the socket being closed, exit the loop
-                switch (ex.SocketErrorCode)
-                {
-                    case SocketError.Interrupted:
-                    case SocketError.ConnectionReset:
-                    case SocketError.Shutdown:
-                        _remoteEndPoint = null;
-                        _connected = false;
-                        return;
-                    case SocketError.TimedOut:
-                        break;
-                    default:
-                        throw;
-                }
             }
         }
     }
@@ -120,7 +124,7 @@ public class NetworkClient : IDisposable
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
         
-        AddHeaders(0, writer);
+        AddHeaders(ControlDataType, writer);
         
         writer.Write((byte)controlData);
         
@@ -149,10 +153,10 @@ public class NetworkClient : IDisposable
             return;
         }
 
-        _memoryStream = new MemoryStream();
+        _memoryStream = new MemoryStream(MaxBufferSize);
         _binaryWriter = new BinaryWriter(_memoryStream);
         
-        AddHeaders(Renderable, _binaryWriter);
+        AddHeaders(RenderableDataType, _binaryWriter);
     }
 
     public void Enqueue(IRenderable renderable, Texture2D texture = null, 
@@ -176,7 +180,9 @@ public class NetworkClient : IDisposable
     public void SendRenderableBatch()
     {
         if (!_connected)
+        {
             return;
+        }
         
         _udpClient.Send(_memoryStream.GetBuffer(), (int)_memoryStream.Length, _remoteEndPoint);
         _memoryStream?.Dispose();
@@ -209,10 +215,10 @@ public class NetworkClient : IDisposable
 
         switch (dataType)
         {
-            case 0:
+            case ControlDataType:
                 ProcessControlData(payload, timestamp);
                 break;
-            case 1:
+            case RenderableDataType:
                 ProcessRenderableData(payload, timestamp);
                 break;
         }
@@ -229,21 +235,6 @@ public class NetworkClient : IDisposable
     {
         var renderableData = DeserializeRenderableData(payload);
         _renderableQueue.Put(renderableData, timestamp);
-    }
-    
-    private static void SerializeRenderableData(IEnumerable<IRenderable> renderables, BinaryWriter writer)
-    {
-        foreach (var renderable in renderables)
-        {
-            writer.WriteString(renderable.Texture.Name);
-            writer.WriteRectangle(renderable.Destination);
-            writer.WriteRectangle(renderable.Source);
-            writer.WriteColor(renderable.Color);
-            writer.Write(renderable.Rotation);
-            writer.WriteVector2(renderable.Origin);
-            writer.Write((int)renderable.Effect);
-            writer.Write(renderable.Depth);
-        }
     }
 
     private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)

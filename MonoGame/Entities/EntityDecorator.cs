@@ -3,7 +3,6 @@ using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Input;
 using MonoGame.Interfaces;
-using MonoGame.Players;
 
 namespace MonoGame.Entities;
 
@@ -121,7 +120,7 @@ public abstract class EntityDecorator : Entity
         return false;
     }
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle? overlap)
+    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle overlap)
     {
         BeforeHandleCollisionWith(collidable, deltaTime, overlap);
         OnHandleCollisionWith(collidable, deltaTime, overlap);
@@ -131,7 +130,7 @@ public abstract class EntityDecorator : Entity
 
 
     protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
+    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap) {}
     protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
 
     public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
@@ -144,7 +143,7 @@ public abstract class EntityDecorator : Entity
         return Vector2.Zero;
     }
 
-    public sealed override void Draw(Player player)
+    public sealed override void Draw(IPlayer player)
     {
         BeforeDraw(player);
         OnDraw(player);
@@ -152,7 +151,7 @@ public abstract class EntityDecorator : Entity
         _base.Draw(player);
     }
 
-    protected virtual void BeforeDraw(Player player) {}
-    protected virtual void OnDraw(Player player) {}
-    protected virtual void AfterDraw(Player player) {}
+    protected virtual void BeforeDraw(IPlayer player) {}
+    protected virtual void OnDraw(IPlayer player) {}
+    protected virtual void AfterDraw(IPlayer player) {}
 }
