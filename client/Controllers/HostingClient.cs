@@ -81,17 +81,27 @@ public class HostingClient : HostController
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
-                if (i is 0 && j is 0)
+                switch (i)
                 {
-                    entity.SetColor(Color.Red);
-                    var mainEntity = entity.Build();
-                    Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                    Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
-                    _spatialPartition.Add(mainEntity);
-                }
-                else
-                {
-                    _spatialPartition.Add(entity.Build());
+                    case 0:
+                    {
+                        entity.SetColor(Color.Red);
+
+                        if (j != 0)
+                        {
+                            _spatialPartition.Add(entity.Build());
+                            break;
+                        }
+                        
+                        var mainEntity = entity.Build();
+                        Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
+                        Players.Add(new Remote(new Camera(mainEntity, 1, Vector3.Up * 100), NetworkClient));
+                        _spatialPartition.Add(mainEntity);
+                        break;
+                    }
+                    default:
+                        _spatialPartition.Add(entity.Build());
+                        break;
                 }
             }
         }

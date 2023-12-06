@@ -35,21 +35,21 @@ public class Collision : EntityDecorator
         
         // Calculate position differences
         var deltaPosition = (collisionLocation - lhs.Bounds.Center).ToVector2();
-        deltaPosition.Normalize();
         
         Debug.Assert(!float.IsNaN(deltaPosition.X) && !float.IsNaN(deltaPosition.Y));
 
         // Calculate velocity differences
         var deltaVelocity = rhs.Velocity - lhs.Velocity;
-        deltaVelocity.Normalize();
         
         Debug.Assert(!float.IsNaN(deltaVelocity.X) && !float.IsNaN(deltaVelocity.Y));
 
         // Calculate the dot product
         var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
+        
+        Debug.Assert(!float.IsNaN(dotProduct));
 
         // If the dot product is negative, objects are moving towards each other
-        return dotProduct < 0;
+        return dotProduct <= 0;
     }
 
     protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
