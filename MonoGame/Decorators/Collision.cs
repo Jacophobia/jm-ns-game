@@ -18,13 +18,32 @@ public class Collision : EntityDecorator
     private static bool AreMovingTowardsEachOther(ICollidable lhs, ICollidable rhs)
     {
         var overlap = Rectangle.Intersect(lhs.Bounds, rhs.Bounds);
+
+        if (overlap is { IsEmpty: true })
+            return false;
+
+        var collisionLocation = overlap.Center;
+        
+        if (Math.Abs(overlap.Center.X - rhs.Bounds.Center.X) > Math.Abs(overlap.Center.Y - rhs.Bounds.Center.Y))
+        {
+            collisionLocation.Y = rhs.Bounds.Center.Y;
+        }
+        else
+        {
+            collisionLocation.X = rhs.Bounds.Center.X;
+        }
+        
         // Calculate position differences
-        var deltaPosition = (overlap.Center - lhs.Bounds.Center).ToVector2();
+        var deltaPosition = (collisionLocation - lhs.Bounds.Center).ToVector2();
         deltaPosition.Normalize();
+        
+        Debug.Assert(!float.IsNaN(deltaPosition.X) && !float.IsNaN(deltaPosition.Y));
 
         // Calculate velocity differences
         var deltaVelocity = rhs.Velocity - lhs.Velocity;
         deltaVelocity.Normalize();
+        
+        Debug.Assert(!float.IsNaN(deltaVelocity.X) && !float.IsNaN(deltaVelocity.Y));
 
         // Calculate the dot product
         var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
@@ -58,17 +77,6 @@ public class Collision : EntityDecorator
         var rhsVelocity = rhs.Velocity;
         
         var collisionLocation = overlap.Center.ToVector2();
-        
-        // var collisionRhsDelta = overlap.Center - rhs.Bounds.Center;
-        //
-        // if (Math.Abs(collisionRhsDelta.X) > Math.Abs(collisionRhsDelta.Y))
-        // {
-        //     collisionLocation.Y = rhs.Bounds.Center.Y;
-        // }
-        // else
-        // {
-        //     collisionLocation.X = rhs.Bounds.Center.X;
-        // }
 
         // Calculate the normal (n) and tangential (t) direction vectors
         var lhsNormal = CalculateCollisionNormal(rhs, collisionLocation);
