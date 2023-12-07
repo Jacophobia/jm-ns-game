@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 
 namespace MonoGame.DataStructures;
@@ -103,8 +102,8 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         // Update averages
         if (_elements.Count > 0)
         {
-            _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
-            _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
+            _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Bounds.Width) / _elements.Count;
+            _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Bounds.Height) / _elements.Count;
         }
         else
         {
@@ -212,8 +211,8 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         if (!itemList.Any()) return;
 
         // Calculate new averages with the batch of items
-        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Destination.Width);
-        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Destination.Height);
+        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Bounds.Width);
+        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Bounds.Height);
         var newCount = _elements.Count + itemList.Count;
         _averageWidth = totalWidth / newCount;
         _averageHeight = totalHeight / newCount;
@@ -302,13 +301,13 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
     {
-        AddIndices(item.Destination, item.Layer, indices);
+        AddIndices(item.Bounds, item.Layer, indices);
     }
 
     private void UpdateAverages(T item)
     {
-        _averageWidth = (_averageWidth * (_elements.Count - 1) + item.Destination.Width) / _elements.Count;
-        _averageHeight = (_averageHeight * (_elements.Count - 1) + item.Destination.Height) / _elements.Count;
+        _averageWidth = (_averageWidth * (_elements.Count - 1) + item.Bounds.Width) / _elements.Count;
+        _averageHeight = (_averageHeight * (_elements.Count - 1) + item.Bounds.Height) / _elements.Count;
     }
 
     private void CheckAndOptimize()

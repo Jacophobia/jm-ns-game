@@ -1,5 +1,4 @@
-﻿using System;
-using MonoGame.Controllers;
+﻿using MonoGame.Controllers;
 using MonoGame.Interfaces;
 using MonoGame.Players;
 

@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using MonoGame.Collision;
-using MonoGame.Input;
 
 namespace MonoGame.Interfaces;
 

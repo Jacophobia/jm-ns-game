@@ -62,8 +62,7 @@ public class HostingClient : HostController
                 var entity = new EntityBuilder(
                         "Test/ball",
                         ballPosition,
-                        new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
-                        (1f / 0.016f),
+                        new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * 60,
                         size,
                         size)
                     .SetDepth(i * LayerDepth)
