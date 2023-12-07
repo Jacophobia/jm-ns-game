@@ -15,8 +15,6 @@ public interface ICollidable
     public bool IsStatic { get; }
     public float Mass { get; }
 
-    public void Update(float deltaTime, Controls controls);
-
     public void HandleCollisionWith(ICollidable collidable, float deltaTime,
         Rectangle overlap);
 

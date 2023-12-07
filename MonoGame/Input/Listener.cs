@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Interfaces;
 
 namespace MonoGame.Input;
 
-internal class Listener
+internal class Listener : IControlListener
 {
     private readonly IDictionary<Buttons, Controls> _controllerMapping;
     private readonly IDictionary<Keys, Controls> _keyboardMapping;
@@ -53,7 +54,7 @@ internal class Listener
         (_controllerMapping[lhs], _controllerMapping[rhs]) = (_controllerMapping[rhs], _controllerMapping[lhs]);
     }
 
-    internal Controls GetInputState()
+    public Controls GetControls()
     {
         var keyboardState = Keyboard.GetState();
         var controllerState = GamePad.GetState(0);

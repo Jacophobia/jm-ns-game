@@ -15,7 +15,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Output;
 
-public class NetworkClient : IDisposable
+public class NetworkClient : IDisposable, IControlListener
 {
     private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
     private const byte ControlDataType = 0;
@@ -133,7 +133,7 @@ public class NetworkClient : IDisposable
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
-    public Controls GetControlData()
+    public Controls GetControls()
     {
         var controls = Controls.None;
         foreach (var control in _controlQueue.GetAll())
@@ -235,16 +235,11 @@ public class NetworkClient : IDisposable
         }
         catch (ContentLoadException e)
         {
-            Debug.Assert(false, e.Message);
+            Debug.WriteLine(e.Message);
         }
-        catch (FileNotFoundException e)
+        catch (SystemException e)
         {
-            Debug.Assert(false, e.Message);
-        }
-        catch (Exception e)
-        {
-            Debug.Assert(false, e.Message);
-            throw;
+            Debug.WriteLine(e.Message);
         }
     }
 
@@ -272,36 +267,24 @@ public class NetworkClient : IDisposable
                 renderable.Rotation = reader.ReadSingle();
                 renderable.Origin = reader.ReadVector2();
                 renderable.Effect = (SpriteEffects)reader.ReadInt32();
-                renderable.Depth = reader.ReadInt32();
+                renderable.Depth = reader.ReadSingle();
             }
             catch (ContentLoadException e)
             {
-                _renderablePool.Return(renderable);
                 Debug.WriteLine(e.Message);
                 yield break;
             }
-            catch (FileNotFoundException e)
+            catch (SystemException e)
             {
-                _renderablePool.Return(renderable);
                 Debug.WriteLine(e.Message);
                 yield break;
             }
-            catch (IOException e)
+            finally
             {
                 _renderablePool.Return(renderable);
-                Debug.WriteLine(e.Message);
-                yield break;
-            }
-            catch (ArgumentNullException e)
-            {
-                _renderablePool.Return(renderable);
-                Debug.WriteLine(e.Message);
-                yield break;
             }
 
             yield return renderable;
-            
-            _renderablePool.Return(renderable);
         }
     }
 

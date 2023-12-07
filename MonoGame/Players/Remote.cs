@@ -1,35 +1,79 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
 namespace MonoGame.Players;
 
-public class Remote : Player
+public class Remote : IPlayer
 {
+    private readonly Renderer _renderer;
     private readonly NetworkClient _networkClient;
-    private string _playerId;
-
-    public Remote(Camera perspective, NetworkClient networkClient) : base(perspective)
+    private readonly Listener _listener;
+    private readonly List<IUpdatable> _updatables;
+    
+    public Remote(Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
     {
+        _renderer = renderer;
+        Perspective = perspective;
+        Depth = depth;
+        FocalLength = focalLength;
         _networkClient = networkClient;
-        _playerId = "";
+        _listener = new Listener(new Dictionary<Keys, Controls>
+        {
+            { Keys.A, Controls.Left },
+            { Keys.E, Controls.Right },
+            { Keys.OemComma, Controls.Up },
+            { Keys.O, Controls.Down },
+            { Keys.X, Controls.Jump }
+        });
+        _updatables = new List<IUpdatable>();
     }
 
-    public override void BeginDisplay()
-    {
-        _networkClient.PrepareRenderableBatch();
+    public Rectangle Perspective { get; }
+    public float Depth { get; }
+    public float FocalLength { get; }
+
+    public void BeginDisplay()
+    { 
+        _renderer.Begin();
     }
 
-    protected override void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
-        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
-        SpriteEffects effect = SpriteEffects.None, float? depth = null)
+    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null,
+        Color? color = null, float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None,
+        float? depth = null)
     {
-        _networkClient.Enqueue(renderable, texture, destination, source, color, rotation, origin, effect, depth);
+        _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
-    public override void EndDisplay()
+    public void Update(float deltaTime)
     {
-        _networkClient.SendRenderableBatch();
+        var controls = _listener.GetControls();
+        
+        _networkClient.SendControlData(controls);
+
+        foreach (var updatable in _updatables)
+        {
+            updatable.Update(deltaTime, controls);
+        }
+    }
+
+    public void Add(IUpdatable updatable)
+    {
+        _updatables.Add(updatable);
+    }
+
+    public void Remove(IUpdatable updatable)
+    {
+        _updatables.Remove(updatable);
+    }
+
+    public void EndDisplay()
+    {
+        _renderer.End();
     }
 }

@@ -15,22 +15,27 @@ public class Camera
     private readonly float _followSpeed;
 
     private readonly Stack<IRenderable> _objectsToFollow;
-    private Vector3 _offset;
+    private readonly Vector3 _offset;
     private Vector3 _position;
     private Rectangle _view;
 
-    public Camera(IRenderable objectToFollow, float followSpeed, Vector3 offset)
+    public Camera(IRenderable objectToFollow = null, float followSpeed = 1f, Vector3 offset = default)
     {
         using var adapter = GraphicsAdapter.DefaultAdapter;
         var displayMode = adapter.CurrentDisplayMode;
-        var position = offset + objectToFollow.Destination.Center.ToVector3();
 
-        _view = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
-        _position = new Vector3(position.X + displayMode.Width / 2f, position.Y + displayMode.Height / 2f, 0);
-        _objectsToFollow = new Stack<IRenderable>();
-        _objectsToFollow.Push(objectToFollow);
         _followSpeed = followSpeed;
+        _objectsToFollow = new Stack<IRenderable>();
         _offset = offset;
+        _position = Vector3.Zero;
+        _view = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
+
+        if (objectToFollow == null) 
+            return;
+        
+        var position = offset + objectToFollow.Destination.Center.ToVector3();
+        _position = new Vector3(position.X, position.Y, 0);
+        _objectsToFollow.Push(objectToFollow);
     }
 
     internal float Depth => _position.Z;
@@ -59,7 +64,11 @@ public class Camera
     // ReSharper disable once ConvertIfStatementToSwitchStatement
     public void Update(float deltaTime, Controls controls)
     {
-        var offset = (_objectsToFollow.Peek().Destination.Center - _view.Center).ToVector3() - _offset;
+        if (!_objectsToFollow.TryPeek(out var target))
+            return;
+        
+        var offset = (target.Destination.Center - _view.Center).ToVector3() - _offset;
+        
         offset.Z = 0;
         
         if (controls == Controls.Down)

@@ -1,6 +1,6 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Input;
 
 namespace MonoGame.Interfaces;
 
@@ -16,7 +16,10 @@ public interface IPlayer
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
-    public void Update(float deltaTime, Controls controls);
+    public void Update(float deltaTime);
+
+    public void Add(IUpdatable updatable);
+    public void Remove(IUpdatable updatable);
 
     public void EndDisplay();
 }

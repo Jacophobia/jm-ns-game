@@ -7,7 +7,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Entities;
 
-public abstract class Entity : ICollidable, IRenderable
+public abstract class Entity : ICollidable, IRenderable, IUpdatable
 {
     public abstract Texture2D Texture { get; set; }
     public abstract Rectangle Destination { get; set; }

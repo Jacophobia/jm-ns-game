@@ -1,12 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extensions;
-using MonoGame.Input;
-using MonoGame.Interfaces;
 using MonoGame.Output;
 
 namespace MonoGame.Controllers;
@@ -16,7 +13,6 @@ public abstract class GameController : Game
 {
     protected Renderer Renderer; // TODO: Make this class more generic and have two new abstract child classes of it which implement networking features for the host and thin clients
     protected SpriteBatch SpriteBatch;
-    protected List<IPlayer> Players;
 
     protected static Rectangle WindowSize
     {
@@ -32,7 +28,6 @@ public abstract class GameController : Game
     }
 
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
-    private Listener _inputListener;
     
     protected GameController(bool fullscreen)
     {
@@ -73,15 +68,6 @@ public abstract class GameController : Game
     protected sealed override void Initialize()
     {
         SpriteBatch = new SpriteBatch(GraphicsDevice);
-        Players = new List<IPlayer>();
-        _inputListener = new Listener(new Dictionary<Keys, Controls>
-        {
-            { Keys.A, Controls.Left },
-            { Keys.E, Controls.Right },
-            { Keys.OemComma, Controls.Up },
-            { Keys.O, Controls.Down },
-            { Keys.X, Controls.Jump }
-        });
         
         BeforeOnInitialize();
         OnInitialize();
@@ -128,10 +114,9 @@ public abstract class GameController : Game
     /// Called each frame to update the game logic.
     /// </summary>
     /// <param name="deltaTime"></param>
-    /// <param name="controls"></param>
-    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
-    protected internal virtual void BeforeOnUpdate(float deltaTime, Controls controls) {}
-    protected internal virtual void AfterOnUpdate(float deltaTime, Controls controls) {}
+    protected virtual void OnUpdate(float deltaTime) {}
+    protected internal virtual void BeforeOnUpdate(float deltaTime) {}
+    protected internal virtual void AfterOnUpdate(float deltaTime) {}
     protected sealed override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||
@@ -145,18 +130,10 @@ public abstract class GameController : Game
             base.Update(gameTime);
             return;
         }
-        
-        // Receive control data from the network
-        var controls = _inputListener.GetInputState();
 
-        BeforeOnUpdate(deltaTime, controls);
-        
-        foreach (var player in Players)
-            player.Update(deltaTime, controls);
-        
-        OnUpdate(deltaTime, controls);
-        AfterOnUpdate(deltaTime, controls);
-
+        BeforeOnUpdate(deltaTime);
+        OnUpdate(deltaTime);
+        AfterOnUpdate(deltaTime);
         base.Update(gameTime);
 
         #if DEBUG
@@ -173,9 +150,6 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnBeginDraw() {}
     protected sealed override bool BeginDraw()
     {
-        foreach (var player in Players)
-            player.BeginDisplay();
-        
         BeforeOnBeginDraw();
         OnBeginDraw();
         AfterOnBeginDraw();
@@ -217,10 +191,6 @@ public abstract class GameController : Game
         BeforeOnEndDraw();
         OnEndDraw();
         AfterOnEndDraw();
-        
-        foreach (var player in Players)
-            player.EndDisplay();
-        
         base.EndDraw();
     }
 

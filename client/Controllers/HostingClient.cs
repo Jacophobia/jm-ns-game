@@ -8,7 +8,6 @@ using MonoGame.Controllers;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 using MonoGame.Players;
@@ -94,8 +93,8 @@ public class HostingClient : HostController
                         }
                         
                         var mainEntity = entity.Build();
-                        Players.Add(new Host(new Camera(mainEntity, 1, new Vector3(0, 100, -10)), Renderer));
-                        Players.Add(new Remote(new Camera(mainEntity, 1, new Vector3(0, 100, 50)), NetworkClient));
+                        _spatialPartition.Add(new Host(new Camera(mainEntity, 1f, new Vector3(0, 100, -10)), Renderer));
+                        _spatialPartition.Add(new External(new Camera(mainEntity, 1f, new Vector3(0, 100, 50)), NetworkClient));
                         _spatialPartition.Add(mainEntity);
                         break;
                     }
@@ -137,9 +136,9 @@ public class HostingClient : HostController
             _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void OnUpdate(float deltaTime)
     {
-        _spatialPartition.Update(deltaTime, controls);
+        _spatialPartition.Update(deltaTime);
     }
 
     protected override void OnDraw(float deltaTime)
@@ -148,7 +147,7 @@ public class HostingClient : HostController
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        _spatialPartition.Draw(Players, deltaTime);
+        _spatialPartition.Draw(deltaTime);
     }
 
     protected override void OnDispose(bool disposing)

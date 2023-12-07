@@ -11,10 +11,11 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable
+public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable, IUpdatable
 {
     private readonly List<T> _elements;
     private readonly List<T> _staticElements;
+    private readonly List<IPlayer> _players;
     private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
@@ -26,6 +27,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     {
         _elements = new List<T>();
         _staticElements = new List<T>();
+        _players = new List<IPlayer>();
         _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
@@ -146,38 +148,62 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(float deltaTime, Controls controls)
+    private void UpdateElement(T element, float deltaTime)
     {
+        var previousIndices = _hashSetPool.Get();
+        var currentIndices = _hashSetPool.Get();
+
+        GetPartitionIndices(element, previousIndices);
+
+        element.Update(deltaTime);
+
+        GetPartitionIndices(element, currentIndices);
+
+        CheckForCollisions(element, deltaTime, currentIndices);
+            
+        GetPartitionIndices(element, currentIndices);
+
+        HandlePartitionTransitions(element, previousIndices, currentIndices);
+
+        _hashSetPool.Return(previousIndices);
+        _hashSetPool.Return(currentIndices);
+    }
+
+    void ISpatialPartition<T>.Update(float deltaTime)
+    {
+        foreach (var player in _players)
+        {
+            player.Update(deltaTime);
+        }
+        
         foreach (var element in _elements)
         {
-            var previousIndices = _hashSetPool.Get();
-            var currentIndices = _hashSetPool.Get();
-
-            GetPartitionIndices(element, previousIndices);
-
-            element.Update(deltaTime, controls);
-
-            GetPartitionIndices(element, currentIndices);
-
-            CheckForCollisions(element, deltaTime, currentIndices);
-            
-            GetPartitionIndices(element, currentIndices);
-
-            HandlePartitionTransitions(element, previousIndices, currentIndices);
-
-            _hashSetPool.Return(previousIndices);
-            _hashSetPool.Return(currentIndices);
+            UpdateElement(element, deltaTime);
         }
     }
 
-    void ISpatialPartition<T>.Draw(List<IPlayer> players, float deltaTime)
+    public void Draw(float deltaTime)
     {
+        foreach (var player in _players)
+            player.BeginDisplay();
         foreach (var element in _elements)
-        foreach (var player in players)
+        foreach (var player in _players)
             element.Draw(player);
         foreach (var element in _staticElements)
-        foreach (var player in players)
+        foreach (var player in _players)
             element.Draw(player);
+        foreach (var player in _players)
+            player.EndDisplay();
+    }
+
+    public void Add(IPlayer player)
+    {
+        _players.Add(player);
+    }
+
+    public void Remove(IPlayer player)
+    {
+        _players.Remove(player);
     }
 
     public void Add(IEnumerable<T> items)

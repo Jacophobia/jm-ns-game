@@ -1,5 +1,8 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
+using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
@@ -9,7 +12,14 @@ public class Host : Player
 {
     private readonly Renderer _renderer;
 
-    public Host(Camera perspective, Renderer renderer) : base(perspective)
+    public Host(Camera perspective, Renderer renderer) : base(perspective, new Listener(new Dictionary<Keys, Controls>
+        {
+            { Keys.A, Controls.Left },
+            { Keys.E, Controls.Right },
+            { Keys.OemComma, Controls.Up },
+            { Keys.O, Controls.Down },
+            { Keys.X, Controls.Jump }
+        }))
     {
         _renderer = renderer;
     }
