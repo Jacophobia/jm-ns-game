@@ -12,12 +12,6 @@ public class Inertia : EntityDecorator
 
     protected override void OnUpdate(float deltaTime, Controls controls)
     {
-        if (IsStatic)
-            return;
-        var position = Position;
-        
         Position += Velocity * deltaTime;
-        
-        // Debug.Assert(Position != position || Velocity == Vector2.Zero, "Position should have changed but did not");
     }
 }

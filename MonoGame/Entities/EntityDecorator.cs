@@ -16,6 +16,7 @@ public abstract class EntityDecorator : Entity
     }
 
     public sealed override CollisionData CollisionData => _base.CollisionData;
+    public sealed override Rectangle PreviousBounds => _base.PreviousBounds;
 
     public sealed override Texture2D Texture
     {
@@ -81,6 +82,12 @@ public abstract class EntityDecorator : Entity
     {
         get => _base.Velocity;
         set => _base.Velocity = value;
+    }
+
+    public override Vector2 PreviousVelocity
+    {
+        get => _base.PreviousVelocity;
+        set => _base.PreviousVelocity = value;
     }
 
     public sealed override float RestitutionCoefficient

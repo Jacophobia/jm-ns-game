@@ -27,14 +27,13 @@ public class Camera
         _followSpeed = followSpeed;
         _objectsToFollow = new Stack<IRenderable>();
         _offset = offset;
-        _position = Vector3.Zero;
+        _position = offset;
         _view = new Rectangle(0, 0, displayMode.Width, displayMode.Height);
 
         if (objectToFollow == null) 
             return;
         
-        var position = offset + objectToFollow.Destination.Center.ToVector3();
-        _position = new Vector3(position.X, position.Y, 0);
+        _position += objectToFollow.Destination.Center.ToVector3();
         _objectsToFollow.Push(objectToFollow);
     }
 

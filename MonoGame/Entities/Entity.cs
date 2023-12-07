@@ -19,7 +19,9 @@ public abstract class Entity : ICollidable, IRenderable, IUpdatable
     public abstract int Layer { get; set; }
     public abstract CollisionData CollisionData { get; }
     public abstract Vector2 Position { get; set; }
+    public abstract Rectangle PreviousBounds { get; }
     public abstract Vector2 Velocity { get; set; }
+    public abstract Vector2 PreviousVelocity { get; set; }
     public abstract float RestitutionCoefficient { get; set; }
     public abstract bool IsStatic { get; set; }
     public abstract float Mass { get; set; }

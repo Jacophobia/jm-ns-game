@@ -23,33 +23,41 @@ public class Collision : EntityDecorator
             return false;
 
         var collisionLocation = overlap.Center;
+
+        var distance = overlap.Center - rhs.Bounds.Center;
         
-        if (Math.Abs(overlap.Center.X - rhs.Bounds.Center.X) > Math.Abs(overlap.Center.Y - rhs.Bounds.Center.Y))
+        if (Math.Abs(distance.X) > Math.Abs(distance.Y))
         {
-            collisionLocation.Y = rhs.Bounds.Center.Y;
+            collisionLocation.Y = rhs.Bounds.Center.Y + Math.Sign(distance.Y) * 5;
         }
         else
         {
-            collisionLocation.X = rhs.Bounds.Center.X;
+            collisionLocation.X = rhs.Bounds.Center.X + Math.Sign(distance.X) * 5;
         }
         
         // Calculate position differences
-        var deltaPosition = (collisionLocation - lhs.Bounds.Center).ToVector2();
+        var deltaPosition = collisionLocation != lhs.Bounds.Center 
+            ? (collisionLocation - lhs.Bounds.Center).ToVector2()
+            : (collisionLocation - lhs.PreviousBounds.Center).ToVector2();
+        deltaPosition.Normalize();
         
         Debug.Assert(!float.IsNaN(deltaPosition.X) && !float.IsNaN(deltaPosition.Y));
-
-        // Calculate velocity differences
-        var deltaVelocity = rhs.Velocity - lhs.Velocity;
         
-        Debug.Assert(!float.IsNaN(deltaVelocity.X) && !float.IsNaN(deltaVelocity.Y));
+        // Calculate velocity differences
+        var deltaVelocity = (rhs.Velocity - lhs.Velocity).Length() > 0.01f
+            ? rhs.Velocity - lhs.Velocity
+            : rhs.Velocity - lhs.PreviousVelocity;
+        deltaVelocity.Normalize();
 
+        Debug.Assert(!float.IsNaN(deltaVelocity.X) && !float.IsNaN(deltaVelocity.Y));
+        
         // Calculate the dot product
         var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
         
         Debug.Assert(!float.IsNaN(dotProduct));
 
         // If the dot product is negative, objects are moving towards each other
-        return dotProduct <= 0;
+        return dotProduct < 0f;
     }
 
     protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
@@ -137,11 +145,10 @@ public class Collision : EntityDecorator
         rhs.Velocity = rhsVelocity;
 
         var overlapMass = overlap.Mass();
-
         var lhsRestitution = overlapMass / Mass;
         var rhsRestitution = overlapMass / rhs.Mass;
-
-        Position += lhsNormal * lhsRestitution;
-        rhs.Position += -rhsNormal * rhsRestitution;
+        
+        Position -= lhsNormal * lhsRestitution;
+        rhs.Position += rhsNormal * rhsRestitution;
     }
 }

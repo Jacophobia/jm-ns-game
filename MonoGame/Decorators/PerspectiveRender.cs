@@ -4,6 +4,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class PerspectiveRender : EntityDecorator
 {
     private readonly bool _adjustScale;
@@ -16,7 +17,7 @@ public class PerspectiveRender : EntityDecorator
 
     protected override void BeforeDraw(IPlayer player)
     {
-        var cameraDistance = Layer - player.Depth;
+        var cameraDistance = Math.Abs(Layer - player.Depth);
 
         if (cameraDistance < player.FocalLength) // TODO: decide if we want to keep this. It's nice to see the character, but it might not be the right aesthetic
         {

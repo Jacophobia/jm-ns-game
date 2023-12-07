@@ -18,13 +18,16 @@ public sealed class BaseEntity : Entity
     private Texture2D _texture;
     private float? _mass;
     private Vector2 _position;
+    private Vector2 _previousPosition;
     private Vector2 _velocity;
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
         Texture = texture;
         Position = position;
+        PreviousVelocity = velocity * 10 + Vector2.One;
         Velocity = velocity;
+        _previousPosition = position * 10 + Vector2.One;
         Destination = new Rectangle((int)MathF.Round(position.X), (int)MathF.Round(position.Y), width, height);
     }
 
@@ -95,8 +98,25 @@ public sealed class BaseEntity : Entity
         get => _position;
         set
         {
-            if (!IsStatic)
-                _position = value;
+            if (IsStatic)
+                return;
+
+            if (Vector2.Round(value) != Vector2.Round(_position) && Vector2.Round(_position) != Vector2.Round(_previousPosition))
+                _previousPosition = _position;
+            
+            _position = value;
+
+            Debug.Assert(_position != _previousPosition);
+        }
+    }
+
+    public override Rectangle PreviousBounds
+    {
+        get
+        {
+            var bounds = Bounds;
+            bounds.Location = Vector2.Round(_previousPosition).ToPoint();
+            return bounds;
         }
     }
 
@@ -105,10 +125,19 @@ public sealed class BaseEntity : Entity
         get => _velocity;
         set
         {
-            if (!IsStatic)
-                _velocity = value;
+            if (IsStatic)
+                return;
+
+            if ((value - _velocity).Length() > 0.01f && (_velocity - PreviousVelocity).Length() > 0.01f)
+                PreviousVelocity = _velocity;
+            
+            _velocity = value;
+            
+            Debug.Assert(_velocity != PreviousVelocity);
         }
     }
+
+    public override Vector2 PreviousVelocity { get; set; }
 
     public override float RestitutionCoefficient { get; set; } = 1;
     public override bool IsStatic { get; set; } = false;

@@ -68,15 +68,15 @@ public class HostingClient : HostController
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
-                    .AddDecorator<Friction>(1f)
+                    .AddDecorator<Friction>(0.01f)
                     .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
-                    // .AddDecorator<Friction>(200f)
+                    // .AddDecorator<Drag>(20f)
                     // .AddDecorator<BasicMovement>()
-                    // .AddDecorator<Rectangular>()
-                    .AddDecorator<Circular>()
-                    // .AddDecorator<Gravity>()
+                    .AddDecorator<Rectangular>()
+                    // .AddDecorator<Circular>()
+                    .AddDecorator<Gravity>()
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
@@ -93,7 +93,7 @@ public class HostingClient : HostController
                         }
                         
                         var mainEntity = entity.Build();
-                        _spatialPartition.Add(new Host(new Camera(mainEntity, 1f, new Vector3(0, 100, -10)), Renderer));
+                        _spatialPartition.Add(new Host(new Camera(mainEntity, 1f, new Vector3(0, 100, -20)), Renderer));
                         _spatialPartition.Add(new External(new Camera(mainEntity, 1f, new Vector3(0, 100, 50)), NetworkClient));
                         _spatialPartition.Add(mainEntity);
                         break;
