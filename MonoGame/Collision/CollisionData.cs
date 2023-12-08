@@ -127,6 +127,7 @@ public class CollisionData
 
     private void Save(string filepath)
     {
+        
         FileWriter.SaveCollisionData(filepath, Data);
     }
 
