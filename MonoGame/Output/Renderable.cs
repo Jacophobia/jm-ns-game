@@ -7,26 +7,7 @@ namespace MonoGame.Output;
 
 internal class Renderable : IRenderable
 {
-
-    public Renderable()
-    {
-        
-    }
-
-    internal Renderable(string textureName, Rectangle destination, Rectangle source, Color color, float rotation, Vector2 origin, SpriteEffects effect, int depth)
-    {
-        TextureName = textureName;
-        Destination = destination;
-        Source = source;
-        Color = color;
-        Rotation = rotation;
-        Origin = origin;
-        Effect = effect;
-        Depth = depth;
-    }
-
     public Texture2D Texture { get; set; }
-
     public string TextureName
     {
         set => Texture = GetTextureByName(value);
