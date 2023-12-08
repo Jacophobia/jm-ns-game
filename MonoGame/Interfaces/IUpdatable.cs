@@ -1,8 +1,6 @@
-﻿using MonoGame.Input;
-
-namespace MonoGame.Interfaces;
+﻿namespace MonoGame.Interfaces;
 
 public interface IUpdatable
 {
-    public void Update(float deltaTime, Controls controls = Controls.None);
+    public void Update(float deltaTime);
 }

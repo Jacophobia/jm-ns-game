@@ -10,7 +10,7 @@ public class Inertia : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void OnUpdate(float deltaTime)
     {
         Position += Velocity * deltaTime;
     }

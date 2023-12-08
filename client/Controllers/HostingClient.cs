@@ -30,7 +30,7 @@ public class HostingClient : HostController
     }
 
     protected override void OnInitialize()
-    {
+    { 
         _spatialPartition = new SpatialGrid<Entity>();
     }
 
@@ -81,20 +81,34 @@ public class HostingClient : HostController
                 
                 switch (i)
                 {
-                    case 0:
+                    case 0 when j is 0:
                     {
                         entity.SetColor(Color.Red);
-
-                        if (j != 0)
-                        {
-                            _spatialPartition.Add(entity.Build());
-                            break;
-                        }
                         
                         var mainEntity = entity.Build();
                         _spatialPartition.Add(new Host(new Camera(mainEntity, 1f, new Vector3(0, 100, -20)), Renderer));
-                        _spatialPartition.Add(new External(new Camera(mainEntity, 1f, new Vector3(0, 100, 50)), NetworkClient));
                         _spatialPartition.Add(mainEntity);
+                        break;
+                    }
+                    case 0:
+                    {
+                        entity.SetColor(Color.Red);
+                        _spatialPartition.Add(entity.Build());
+                        break;
+                    }
+                    case 1 when j is 0:
+                    {
+                        entity.SetColor(Color.Blue);
+
+                        var secondaryEntity = entity.Build();
+                        _spatialPartition.Add(new External(new Camera(secondaryEntity, 1f, new Vector3(0, 100, 50)), NetworkClient));
+                        _spatialPartition.Add(secondaryEntity);
+                        break;
+                    }
+                    case 1:
+                    {
+                        entity.SetColor(Color.Blue);
+                        _spatialPartition.Add(entity.Build());
                         break;
                     }
                     default:

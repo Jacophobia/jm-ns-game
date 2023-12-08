@@ -14,7 +14,7 @@ public class Remote : IPlayer
     private readonly NetworkClient _networkClient;
     private readonly Listener _listener;
     private readonly List<IUpdatable> _updatables;
-    
+
     public Remote(Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
     {
         _renderer = renderer;
@@ -36,6 +36,7 @@ public class Remote : IPlayer
     public Rectangle Perspective { get; }
     public float Depth { get; }
     public float FocalLength { get; }
+    public Controls Controls { get; private set; }
 
     public void BeginDisplay()
     { 
@@ -52,13 +53,13 @@ public class Remote : IPlayer
 
     public void Update(float deltaTime)
     {
-        var controls = _listener.GetControls();
+        Controls = _listener.GetControls();
         
-        _networkClient.SendControlData(controls);
+        _networkClient.SendControlData(Controls);
 
         foreach (var updatable in _updatables)
         {
-            updatable.Update(deltaTime, controls);
+            updatable.Update(deltaTime);
         }
     }
 

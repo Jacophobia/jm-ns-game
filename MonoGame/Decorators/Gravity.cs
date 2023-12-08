@@ -15,7 +15,7 @@ public class Gravity : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void OnUpdate(float deltaTime)
     {
         Velocity += GravitationalDirection * GravitationalAcceleration * deltaTime;
     }

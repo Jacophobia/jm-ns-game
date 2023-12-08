@@ -5,7 +5,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Input;
 
-internal class Listener : IControlListener
+internal class Listener : IControlSource
 {
     private readonly IDictionary<Buttons, Controls> _controllerMapping;
     private readonly IDictionary<Keys, Controls> _keyboardMapping;

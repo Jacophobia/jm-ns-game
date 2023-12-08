@@ -34,7 +34,7 @@ public abstract class Entity : ICollidable, IRenderable, IUpdatable
     public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
     public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
 
-    public abstract void Update(float deltaTime, Controls controls);
+    public abstract void Update(float deltaTime);
     public abstract void Draw(IPlayer cameras);
 
     private T AddDecorator<T>(params object[] parameters) where T : EntityDecorator

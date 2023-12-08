@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
@@ -9,40 +10,25 @@ namespace MonoGame.Players;
 public abstract class Player : IPlayer
 {
     private readonly Camera _perspective;
-    private readonly IControlListener _listener;
-    private readonly List<IUpdatable> _updatables;
+    private readonly IControlSource _source;
 
     public Rectangle Perspective => _perspective.View;
     public float Depth => _perspective.Depth;
     public float FocalLength => Camera.FocalLength;
+    public Controls Controls { get; private set; }
 
-    protected Player(Camera perspective, IControlListener listener)
+    protected Player(Camera perspective, IControlSource source)
     {
         _perspective = perspective;
-        _listener = listener;
-        _updatables = new List<IUpdatable>();
+        _source = source;
+        Controls = Controls.None;
     }
 
     public void Update(float deltaTime)
     {
-        var controls = _listener.GetControls();
+        Controls = _source.GetControls();
         
-        _perspective.Update(deltaTime, controls);
-        
-        foreach (var updatable in _updatables)
-        {
-            updatable.Update(deltaTime, controls);
-        }
-    }
-
-    public void Add(IUpdatable updatable)
-    {
-        _updatables.Add(updatable);
-    }
-
-    public void Remove(IUpdatable updatable)
-    {
-        _updatables.Remove(updatable);
+        _perspective.Update(deltaTime, Controls);
     }
 
     public abstract void BeginDisplay();

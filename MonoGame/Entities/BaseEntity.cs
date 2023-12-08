@@ -178,7 +178,7 @@ public sealed class BaseEntity : Entity
         return false;
     }
 
-    public override void Update(float deltaTime, Controls controls)
+    public override void Update(float deltaTime)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

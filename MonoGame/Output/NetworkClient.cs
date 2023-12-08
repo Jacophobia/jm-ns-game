@@ -15,7 +15,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Output;
 
-public class NetworkClient : IDisposable, IControlListener
+public class NetworkClient : IDisposable, IControlSource
 {
     private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
     private const byte ControlDataType = 0;

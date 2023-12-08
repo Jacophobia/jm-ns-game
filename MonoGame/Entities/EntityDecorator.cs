@@ -104,17 +104,17 @@ public abstract class EntityDecorator : Entity
 
     // protected abstract void Initialize();
 
-    public sealed override void Update(float deltaTime, Controls controls)
+    public sealed override void Update(float deltaTime)
     {
-        BeforeUpdate(deltaTime, controls);
-        OnUpdate(deltaTime, controls);
-        AfterUpdate(deltaTime, controls);
-        _base.Update(deltaTime, controls);
+        BeforeUpdate(deltaTime);
+        OnUpdate(deltaTime);
+        AfterUpdate(deltaTime);
+        _base.Update(deltaTime);
     }
 
-    protected virtual void BeforeUpdate(float deltaTime, Controls controls) {}
-    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
-    protected virtual void AfterUpdate(float deltaTime, Controls controls) {}
+    protected virtual void BeforeUpdate(float deltaTime) {}
+    protected virtual void OnUpdate(float deltaTime) {}
+    protected virtual void AfterUpdate(float deltaTime) {}
 
     public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {

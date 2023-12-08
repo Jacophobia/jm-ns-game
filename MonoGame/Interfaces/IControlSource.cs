@@ -2,7 +2,7 @@
 
 namespace MonoGame.Interfaces;
 
-public interface IControlListener
+public interface IControlSource
 {
     public Controls GetControls();
 }
