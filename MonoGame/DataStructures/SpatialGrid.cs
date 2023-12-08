@@ -60,7 +60,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             UpdateAverages(item);
             CheckAndOptimize();
         }
-        
+
         var indices = _hashSetPool.Get();
         GetPartitionIndices(item, indices);
         foreach (var partitionIndex in indices)
@@ -290,10 +290,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Floor((rectangle.Center.X - rectangle.Width / 2f) / _partitionSizeX);
-        var maxX = (int)MathF.Ceiling((rectangle.Center.X + rectangle.Width / 2f) / _partitionSizeX);
-        var minY = (int)MathF.Floor((rectangle.Center.Y - rectangle.Height / 2f) / _partitionSizeY);
-        var maxY = (int)MathF.Ceiling((rectangle.Center.Y + rectangle.Height / 2f) / _partitionSizeY);
+
+        if (_partitionSizeX == 0 || _partitionSizeY == 0)
+            return;
+        
+        var minX = rectangle.Left / _partitionSizeX;
+        var maxX = (rectangle.Right + 1) / _partitionSizeX;
+        var minY = rectangle.Top / _partitionSizeY;
+        var maxY = (rectangle.Bottom + 1) / _partitionSizeY;
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
