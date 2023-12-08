@@ -39,15 +39,16 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     private Dictionary<PartitionKey, HashSet<T>> Partitions => _partitions ??= new Dictionary<PartitionKey, HashSet<T>>();
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
+        GC.SuppressFinalize(this);
     }
 
-    int ICollection<T>.Count => Partitions.Values.Sum(partition => partition.Count);
+    public int Count => Partitions.Values.Sum(partition => partition.Count);
 
-    bool ICollection<T>.IsReadOnly => false;
+    public bool IsReadOnly => false;
 
-    void ICollection<T>.Add(T item)
+    public void Add(T item)
     {
         if (item?.IsStatic ?? false)
         {
@@ -76,7 +77,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         _hashSetPool.Return(indices);
     }
 
-    bool ICollection<T>.Remove(T item)
+    public bool Remove(T item)
     {
         Debug.Assert(item != null, nameof(item) + " should not be null");
         
@@ -118,17 +119,17 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     }
 
 
-    void ICollection<T>.Clear()
+    public void Clear()
     {
         _partitions?.Clear();
     }
 
-    bool ICollection<T>.Contains(T item)
+    public bool Contains(T item)
     {
         return _elements.Contains(item);
     }
 
-    void ICollection<T>.CopyTo(T[] array, int arrayIndex)
+    public void CopyTo(T[] array, int arrayIndex)
     {
         foreach (var element in _elements)
         {
@@ -137,7 +138,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         }
     }
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    public IEnumerator<T> GetEnumerator()
     {
         return _elements.GetEnumerator();
     }
@@ -168,7 +169,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         _hashSetPool.Return(currentIndices);
     }
 
-    void ISpatialPartition<T>.Update(float deltaTime)
+    public void Update(float deltaTime)
     {
         foreach (var player in _players)
         {
