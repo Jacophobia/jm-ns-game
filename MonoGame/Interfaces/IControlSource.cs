@@ -4,5 +4,5 @@ namespace MonoGame.Interfaces;
 
 public interface IControlSource
 {
-    public Controls GetControls();
+    public Controls GetControls(IPlayer player);
 }

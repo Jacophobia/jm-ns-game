@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System.Net;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
 using MonoGame.Output;
@@ -7,13 +8,11 @@ namespace MonoGame.Players;
 
 public class External : Player
 {
-    private readonly NetworkClient _networkClient;
-    private string _playerId;
+    private readonly NetworkHost _networkClient;
 
-    public External(Camera perspective, NetworkClient networkClient) : base(perspective, networkClient)
+    public External(IPEndPoint endPoint, Camera perspective, NetworkHost networkClient) : base(endPoint, perspective, networkClient)
     {
         _networkClient = networkClient;
-        _playerId = "";
     }
 
     public override void BeginDisplay()

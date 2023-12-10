@@ -37,43 +37,44 @@ public class NetworkClient : IDisposable, IControlSource
         _stopwatch = Stopwatch.StartNew();
         _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>>();
         _controlQueue = new PriorityQueue<Controls>();
-        _receiveBuffer = new byte[MaxBufferSize]; // Adjust size as needed
+        _receiveBuffer = new byte[MaxBufferSize];
         _renderablePool = new ObjectPool<Renderable>();
     }
 
-    public NetworkClient(int port, string ipAddress) : this()
+    public NetworkClient(int port, string ipAddress) : this() // client
     {
         _udpClient = new UdpClient();
         _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
+        _listeningThread = new Thread(ListenLoop);
     }
 
-    public NetworkClient(int port) : this()
+    public NetworkClient(int port) : this() // host
     {
         _udpClient = new UdpClient(port);
         _remoteEndPoint = null;
+        _listeningThread = new Thread(HostListenLoop);
     }
 
-    public void Connect()
+    public void Connect() // client
     {
         SendInitialPacket();
     }
 
-    private void SendInitialPacket()
+    private void SendInitialPacket() // client
     {
         var initialPacket = BitConverter.GetBytes(_stopwatch.ElapsedMilliseconds);
         _udpClient.Send(initialPacket, initialPacket.Length, _remoteEndPoint);
         StartListening();
     }
 
-    public void StartListening()
+    public void StartListening() // both
     {
         _listening = true;
         _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
-        _listeningThread = new Thread(_remoteEndPoint != null ? ListenLoop : HostListenLoop);
         _listeningThread.Start();
     }
 
-    private void HostListenLoop()
+    private void HostListenLoop() // host
     {
         while (_listening)
         {
@@ -92,7 +93,7 @@ public class NetworkClient : IDisposable, IControlSource
     }
     
     // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-    private void ListenLoop()
+    private void ListenLoop() // client
     {
         while (_listening)
         {
@@ -120,7 +121,7 @@ public class NetworkClient : IDisposable, IControlSource
         }
     }
 
-    public void SendControlData(Controls controlData)
+    public void SendControlData(Controls controlData) // client
     {
         using var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms);
@@ -133,7 +134,7 @@ public class NetworkClient : IDisposable, IControlSource
     }
 
     // ReSharper disable once LoopCanBeConvertedToQuery
-    public Controls GetControls()
+    public Controls GetControls() // host
     {
         var controls = Controls.None;
         foreach (var control in _controlQueue.GetAll())
@@ -145,7 +146,7 @@ public class NetworkClient : IDisposable, IControlSource
     private BinaryWriter _binaryWriter;
     private bool _connected;
 
-    public void PrepareRenderableBatch()
+    public void PrepareRenderableBatch() // host
     {
         _connected = true;
         if (_remoteEndPoint == null)
@@ -163,7 +164,7 @@ public class NetworkClient : IDisposable, IControlSource
     public void Enqueue(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
-        float? depth = null)
+        float? depth = null) // host
     {
         if (!_connected)
             return;
@@ -178,7 +179,7 @@ public class NetworkClient : IDisposable, IControlSource
         _binaryWriter.Write(depth ?? renderable.Depth);
     }
 
-    public void SendRenderableBatch()
+    public void SendRenderableBatch() // host
     {
         if (!_connected)
         {
@@ -190,18 +191,18 @@ public class NetworkClient : IDisposable, IControlSource
         _binaryWriter?.Dispose();
     } 
 
-    public IEnumerable<IRenderable> GetRenderableData()
+    public IEnumerable<IRenderable> GetRenderableData() // client
     {  
         return _renderableQueue.Get();
     }
 
-    private void AddHeaders(byte dataType, BinaryWriter writer)
+    private void AddHeaders(byte dataType, BinaryWriter writer) // both
     {
         writer.Write(_stopwatch.ElapsedMilliseconds);
         writer.Write(dataType);
     }
 
-    private void ProcessReceivedData(ArraySegment<byte> segment)
+    private void ProcessReceivedData(ArraySegment<byte> segment) // both
     {
         var timestamp = BitConverter.ToInt64(segment.Array ?? Array.Empty<byte>(), segment.Offset);
         if (segment.Count <= 8)
@@ -225,7 +226,7 @@ public class NetworkClient : IDisposable, IControlSource
         }
     }
 
-    private void ProcessControlData(ArraySegment<byte> payload, long timestamp)
+    private void ProcessControlData(ArraySegment<byte> payload, long timestamp) // host
     {
         try
         {
@@ -243,13 +244,13 @@ public class NetworkClient : IDisposable, IControlSource
         }
     }
 
-    private void ProcessRenderableData(ArraySegment<byte> payload, long timestamp)
+    private void ProcessRenderableData(ArraySegment<byte> payload, long timestamp) // client
     {
-            var renderableData = DeserializeRenderableData(payload);
-            _renderableQueue.Put(renderableData, timestamp);
+        var renderableData = DeserializeRenderableData(payload);
+        _renderableQueue.Put(renderableData, timestamp);
     }
 
-    private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)
+    private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data) // client
     {
         using var ms = new MemoryStream(data.Array ?? Array.Empty<byte>(), data.Offset, data.Count);
         var reader = new BinaryReader(ms); // Using BinaryReader for more efficient reads
@@ -288,14 +289,14 @@ public class NetworkClient : IDisposable, IControlSource
         }
     }
 
-    public void Disconnect()
+    public void Disconnect() // both
     {
         _listening = false;
         _listeningThread?.Join();
         _udpClient.Close();
     }
 
-    public void Dispose()
+    public void Dispose() // both
     {
         Disconnect();
         _udpClient?.Dispose();

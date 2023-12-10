@@ -386,14 +386,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     
         public override int GetHashCode()
         {
-            unchecked // Overflow is fine, just wrap
-            {
-                var hash = 17;
-                hash = hash * 23 + _x.GetHashCode();
-                hash = hash * 23 + _y.GetHashCode();
-                hash = hash * 23 + _depth.GetHashCode();
-                return hash;
-            }
+            return HashCode.Combine(_x, _y, _depth);
         }
     
         public static bool operator ==(PartitionKey left, PartitionKey right)

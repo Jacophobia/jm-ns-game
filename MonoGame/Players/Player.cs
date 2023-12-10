@@ -12,13 +12,15 @@ public abstract class Player : IPlayer
     private readonly Camera _perspective;
     private readonly IControlSource _source;
 
+    public PlayerId Id { get; }
     public Rectangle Perspective => _perspective.View;
     public float Depth => _perspective.Depth;
     public float FocalLength => Camera.FocalLength;
     public Controls Controls { get; private set; }
 
-    protected Player(Camera perspective, IControlSource source)
+    protected Player(object id, Camera perspective, IControlSource source)
     {
+        Id = new PlayerId(id);
         _perspective = perspective;
         _source = source;
         Controls = Controls.None;
@@ -26,9 +28,14 @@ public abstract class Player : IPlayer
 
     public void Update(float deltaTime)
     {
-        Controls = _source.GetControls();
+        Controls = _source.GetControls(this);
         
         _perspective.Update(deltaTime, Controls);
+    }
+
+    public void Follow(IRenderable target)
+    {
+        _perspective.SetFocus(target);
     }
 
     public abstract void BeginDisplay();

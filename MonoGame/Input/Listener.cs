@@ -54,15 +54,17 @@ internal class Listener : IControlSource
         (_controllerMapping[lhs], _controllerMapping[rhs]) = (_controllerMapping[rhs], _controllerMapping[lhs]);
     }
 
-    public Controls GetControls()
+    public Controls GetControls(IPlayer player)
     {
         var keyboardState = Keyboard.GetState();
-        var controllerState = GamePad.GetState(0);
-
         var controls = _keyboardMapping.Keys
             .Where(key => keyboardState[key] == KeyState.Down)
             .Aggregate(Controls.None, (current, key) => current | _keyboardMapping[key]);
 
+        if (player.Id.Key is not int playerIndex)
+            return controls;
+        
+        var controllerState = GamePad.GetState(playerIndex);
         controls |= _controllerMapping.Keys
             .Where(button => controllerState.IsButtonDown(button))
             .Aggregate(Controls.None, (current, button) => current | _controllerMapping[button]);

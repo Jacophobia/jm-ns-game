@@ -5,11 +5,11 @@ namespace MonoGame.Controllers;
 
 public abstract class HostController : GameController
 {
-    protected readonly NetworkClient NetworkClient;
+    protected readonly NetworkHost NetworkClient;
 
     protected HostController(int serverPort, bool fullscreen = true) : base(fullscreen)
     {
-        NetworkClient = new NetworkClient(serverPort);
+        NetworkClient = new NetworkHost(serverPort);
     }
 
     protected internal override void BeforeOnInitialize()

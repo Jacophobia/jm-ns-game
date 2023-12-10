@@ -10,16 +10,18 @@ namespace MonoGame.Players;
 
 public class Host : Player
 {
+    private const int HostId = 0;
+    
     private readonly Renderer _renderer;
 
-    public Host(Camera perspective, Renderer renderer) : base(perspective, new Listener(new Dictionary<Keys, Controls>
-        {
-            { Keys.A, Controls.Left },
-            { Keys.E, Controls.Right },
-            { Keys.OemComma, Controls.Up },
-            { Keys.O, Controls.Down },
-            { Keys.X, Controls.Jump }
-        }))
+    public Host(Camera perspective, Renderer renderer) : base(HostId, perspective, new Listener(new Dictionary<Keys, Controls>
+    {
+        { Keys.A, Controls.Left },
+        { Keys.E, Controls.Right },
+        { Keys.OemComma, Controls.Up },
+        { Keys.O, Controls.Down },
+        { Keys.X, Controls.Jump }
+    }))
     {
         _renderer = renderer;
     }

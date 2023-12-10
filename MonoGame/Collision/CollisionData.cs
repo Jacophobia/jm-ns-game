@@ -6,7 +6,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Extensions;
 using MonoGame.File;
-using MonoGame.Output;
 
 namespace MonoGame.Collision;
 

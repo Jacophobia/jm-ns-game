@@ -15,13 +15,14 @@ public class Remote : IPlayer
     private readonly Listener _listener;
     private readonly List<IUpdatable> _updatables;
 
-    public Remote(Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
+    public Remote(string id, Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
     {
         _renderer = renderer;
         Perspective = perspective;
         Depth = depth;
         FocalLength = focalLength;
         _networkClient = networkClient;
+        Id = new PlayerId(id);
         _listener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
@@ -33,10 +34,16 @@ public class Remote : IPlayer
         _updatables = new List<IUpdatable>();
     }
 
+    public PlayerId Id { get; }
     public Rectangle Perspective { get; }
     public float Depth { get; }
     public float FocalLength { get; }
     public Controls Controls { get; private set; }
+
+    public void Follow(IRenderable target)
+    {
+        throw new System.NotImplementedException(); // currently we don't have a need for this since the client camera doesn't move
+    }
 
     public void BeginDisplay()
     { 
@@ -53,7 +60,7 @@ public class Remote : IPlayer
 
     public void Update(float deltaTime)
     {
-        Controls = _listener.GetControls();
+        Controls = _listener.GetControls(this);
         
         _networkClient.SendControlData(Controls);
 

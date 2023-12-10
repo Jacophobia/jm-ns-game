@@ -1,16 +1,21 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
+using MonoGame.Players;
 
 namespace MonoGame.Interfaces;
 
-public interface IPlayer
+public interface IPlayer // TODO: Create an id system used to identify each player so we can tell them apart in dictionaries
 {
+    public PlayerId Id { get; }
     public Rectangle Perspective { get; }
     public float Depth { get; }
     public float FocalLength { get; }
     public Controls Controls { get; }
-    
+
+    public void Follow(IRenderable target);
+
     public void BeginDisplay();
 
     public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,

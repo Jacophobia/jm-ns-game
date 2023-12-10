@@ -21,8 +21,9 @@ public class HostingClient : HostController
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
     private const int BallsPerLayer = 10;
-    
+
     private ISpatialPartition<Entity> _spatialPartition;
+    private Stack<EntityBuilder> _playerEntities;
 
     public HostingClient() : base(ServerPort, fullscreen: false)
     {
@@ -32,6 +33,7 @@ public class HostingClient : HostController
     protected override void OnInitialize()
     { 
         _spatialPartition = new SpatialGrid<Entity>();
+        _playerEntities = new Stack<EntityBuilder>();
     }
 
     private static int GetNonZeroRandom(int min, int max)
@@ -96,19 +98,10 @@ public class HostingClient : HostController
                         _spatialPartition.Add(entity.Build());
                         break;
                     }
-                    case 1 when j is 0:
-                    {
-                        entity.SetColor(Color.Blue);
-
-                        var secondaryEntity = entity.Build();
-                        _spatialPartition.Add(new External(new Camera(secondaryEntity, 1f, new Vector3(0, 100, 50)), NetworkClient));
-                        _spatialPartition.Add(secondaryEntity);
-                        break;
-                    }
                     case 1:
                     {
                         entity.SetColor(Color.Blue);
-                        _spatialPartition.Add(entity.Build());
+                        _playerEntities.Push(entity);
                         break;
                     }
                     default:
@@ -147,6 +140,23 @@ public class HostingClient : HostController
             }
         foreach (var entity in background)
             _spatialPartition.Add(entity);
+    }
+
+    protected override void BeforeOnUpdate(float deltaTime)
+    {
+        if (!NetworkClient.TryGetNewPlayer(out var newPlayer))
+            return;
+
+        var newCharacterBuilder = _playerEntities.Pop(); // TODO: need to handle the case where there aren't enough characters available
+
+        newCharacterBuilder.AddDecorator<BasicMovement>(newPlayer);
+
+        var newCharacter = newCharacterBuilder.Build();
+
+        newPlayer.Follow(newCharacter);
+        
+        _spatialPartition.Add(newCharacter);
+        _spatialPartition.Add(newPlayer);
     }
 
     protected override void OnUpdate(float deltaTime)
