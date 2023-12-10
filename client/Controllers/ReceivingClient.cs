@@ -3,13 +3,13 @@ using MonoGame.Interfaces;
 using MonoGame.Players;
 
 namespace client.Controllers;
-public class NonHostingClient : RemoteController
+public class ReceivingClient : RemoteController
 {
     private const string ServerIpAddress = "127.0.0.1"; // Replace with the server's IP
     private const int ServerPort = 12345; // Replace with the server's port
     private IPlayer _player;
 
-    public NonHostingClient() : base(ServerIpAddress, ServerPort, false)
+    public ReceivingClient() : base(ServerIpAddress, ServerPort, false)
     {
         
     }

@@ -18,7 +18,7 @@ public static class Program
                     break;
 
                 case "thin":
-                    using (var game = new NonHostingClient())
+                    using (var game = new ReceivingClient())
                         game.Run();
                     break;
 

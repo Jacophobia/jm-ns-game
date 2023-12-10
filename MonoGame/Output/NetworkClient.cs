@@ -5,7 +5,6 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
-using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
@@ -13,292 +12,104 @@ using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 
-namespace MonoGame.Output;
-
-public class NetworkClient : IDisposable, IControlSource
+namespace MonoGame.Output
 {
-    private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
-    private const byte ControlDataType = 0;
-    private const byte RenderableDataType = 1;
-    private const int MaxBufferSize = 65536;
-    
-    private readonly UdpClient _udpClient;
-    private IPEndPoint _remoteEndPoint; // TODO: Implement a system for more than two players and make it based on a player class
-    private readonly Stopwatch _stopwatch;
-    private readonly PriorityQueue<Controls> _controlQueue;
-    private readonly PriorityQueue<IEnumerable<IRenderable>> _renderableQueue;
-    private Thread _listeningThread;
-    private bool _listening;
-    private readonly byte[] _receiveBuffer;
-    private readonly ObjectPool<Renderable> _renderablePool;
-
-    private NetworkClient()
+    public class NetworkClient : UdpNetwork
     {
-        _stopwatch = Stopwatch.StartNew();
-        _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>>();
-        _controlQueue = new PriorityQueue<Controls>();
-        _receiveBuffer = new byte[MaxBufferSize];
-        _renderablePool = new ObjectPool<Renderable>();
-    }
+        private readonly IPEndPoint _remoteEndPoint;
+        private readonly PriorityQueue<IEnumerable<IRenderable>, long> _renderableQueue;
+        private readonly ObjectPool<Renderable> _renderablePool;
+        private readonly byte[] _receiveBuffer;
+        private readonly SemaphoreSlim _semaphore;
 
-    public NetworkClient(int port, string ipAddress) : this() // client
-    {
-        _udpClient = new UdpClient();
-        _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-        _listeningThread = new Thread(ListenLoop);
-    }
-
-    public NetworkClient(int port) : this() // host
-    {
-        _udpClient = new UdpClient(port);
-        _remoteEndPoint = null;
-        _listeningThread = new Thread(HostListenLoop);
-    }
-
-    public void Connect() // client
-    {
-        SendInitialPacket();
-    }
-
-    private void SendInitialPacket() // client
-    {
-        var initialPacket = BitConverter.GetBytes(_stopwatch.ElapsedMilliseconds);
-        _udpClient.Send(initialPacket, initialPacket.Length, _remoteEndPoint);
-        StartListening();
-    }
-
-    public void StartListening() // both
-    {
-        _listening = true;
-        _udpClient.Client.ReceiveTimeout = ReceiveTimeout;
-        _listeningThread.Start();
-    }
-
-    private void HostListenLoop() // host
-    {
-        while (_listening)
+        public NetworkClient(int port, string ipAddress) : base(new UdpClient())
         {
-            try
-            {
-                // Use the same buffer for each receive operation
-                var receivedBytes = _udpClient.Receive(ref _remoteEndPoint);
-
-                ProcessReceivedData(receivedBytes);
-            }
-            catch (SocketException)
-            {
-                // If the exception is due to the socket being closed, exit the loop
-            }
+            _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
+            _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>, long>();
+            _renderablePool = new ObjectPool<Renderable>();
+            _receiveBuffer = new byte[MaxBufferSize];
+            _semaphore = new SemaphoreSlim(0);
         }
-    }
-    
-    // ReSharper disable once SwitchStatementHandlesSomeKnownEnumValuesWithDefault
-    private void ListenLoop() // client
-    {
-        while (_listening)
-        {
-            try
-            {
-                // Create an endpoint for any IP. This will be populated with the sender's info.
-                EndPoint senderEndPoint = _remoteEndPoint;
 
-                // Use the same buffer for each receive operation
-                var receivedBytes = _udpClient.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
-                
-                // The senderEndPoint is now populated with the sender's address and port
-                if (senderEndPoint is IPEndPoint senderIp)
+        protected override void OnStart()
+        {
+            Send(InitialConnectionDataType, ArraySegment<ISerializable>.Empty, _remoteEndPoint);
+        }
+        
+        public IEnumerable<IRenderable> GetRenderableData()
+        {  
+            _semaphore.Wait();
+            return _renderableQueue.Dequeue();
+        }
+        
+        private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data)
+        {
+            using var ms = new MemoryStream(data.Array ?? Array.Empty<byte>(), data.Offset, data.Count);
+            var reader = new BinaryReader(ms); // Using BinaryReader for more efficient reads
+
+            while (ms.Position < ms.Length)
+            {
+                var renderable = _renderablePool.Get();
+
+                try
                 {
-                    // You can now use senderIP.Address and senderIP.Port
-                    _remoteEndPoint = senderIp;
+                    renderable.TextureName = reader.ReadUtf8String();
+                    renderable.Destination = reader.ReadRectangle();
+                    renderable.Source = reader.ReadRectangle();
+                    renderable.Color = reader.ReadColor();
+                    renderable.Rotation = reader.ReadSingle();
+                    renderable.Origin = reader.ReadVector2();
+                    renderable.Effect = (SpriteEffects)reader.ReadInt32();
+                    renderable.Depth = reader.ReadSingle();
+                }
+                catch (ContentLoadException e)
+                {
+                    Debug.WriteLine(e.Message);
+                    yield break;
+                }
+                catch (SystemException e)
+                {
+                    Debug.WriteLine(e.Message);
+                    yield break;
+                }
+                finally
+                {
+                    _renderablePool.Return(renderable);
                 }
 
-                ProcessReceivedData(new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes));
-            }
-            catch (SocketException)
-            {
-                // If the exception is due to the socket being closed, exit the loop
+                yield return renderable;
             }
         }
-    }
 
-    public void SendControlData(Controls controlData) // client
-    {
-        using var ms = new MemoryStream();
-        using var writer = new BinaryWriter(ms);
-        
-        AddHeaders(ControlDataType, writer);
-        
-        writer.Write((byte)controlData);
-        
-        _udpClient.Send(ms.GetBuffer(), (int)ms.Length, _remoteEndPoint);
-    }
-
-    // ReSharper disable once LoopCanBeConvertedToQuery
-    public Controls GetControls() // host
-    {
-        var controls = Controls.None;
-        foreach (var control in _controlQueue.GetAll())
-            controls |= control;
-        return controls;
-    }
-
-    private MemoryStream _memoryStream;
-    private BinaryWriter _binaryWriter;
-    private bool _connected;
-
-    public void PrepareRenderableBatch() // host
-    {
-        _connected = true;
-        if (_remoteEndPoint == null)
+        public void SendControlData(Controls controlData)
         {
-            _connected = false;
-            return;
+            Send(ControlDataType, (byte)controlData, _remoteEndPoint);
         }
 
-        _memoryStream = new MemoryStream(MaxBufferSize);
-        _binaryWriter = new BinaryWriter(_memoryStream);
-        
-        AddHeaders(RenderableDataType, _binaryWriter);
-    }
-
-    public void Enqueue(IRenderable renderable, Texture2D texture = null, 
-        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
-        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
-        float? depth = null) // host
-    {
-        if (!_connected)
-            return;
-        
-        _binaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
-        _binaryWriter.WriteRectangle(destination ?? renderable.Destination);
-        _binaryWriter.WriteRectangle(source ?? renderable.Source);
-        _binaryWriter.WriteColor(color ?? renderable.Color);
-        _binaryWriter.Write(rotation ?? renderable.Rotation);
-        _binaryWriter.WriteVector2(origin ?? renderable.Origin);
-        _binaryWriter.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
-        _binaryWriter.Write(depth ?? renderable.Depth);
-    }
-
-    public void SendRenderableBatch() // host
-    {
-        if (!_connected)
+        protected override void ProcessData(IPEndPoint endPoint, byte dataType, long timestamp, ArraySegment<byte> data)
         {
-            return;
-        }
-        
-        _udpClient.Send(_memoryStream.GetBuffer(), (int)_memoryStream.Length, _remoteEndPoint);
-        _memoryStream?.Dispose();
-        _binaryWriter?.Dispose();
-    } 
-
-    public IEnumerable<IRenderable> GetRenderableData() // client
-    {  
-        return _renderableQueue.Get();
-    }
-
-    private void AddHeaders(byte dataType, BinaryWriter writer) // both
-    {
-        writer.Write(_stopwatch.ElapsedMilliseconds);
-        writer.Write(dataType);
-    }
-
-    private void ProcessReceivedData(ArraySegment<byte> segment) // both
-    {
-        var timestamp = BitConverter.ToInt64(segment.Array ?? Array.Empty<byte>(), segment.Offset);
-        if (segment.Count <= 8)
-        {
-            _stopwatch.Restart();
-            return;
+            Debug.Assert(dataType == RenderableDataType, "The wrong data type was sent");
+            var renderableData = DeserializeRenderableData(data);
+            _renderableQueue.Enqueue(renderableData, timestamp);
+            _semaphore.Release();
         }
 
-        Debug.Assert(segment.Array != null, "segment.Array != null");
-        var dataType = segment.Array[segment.Offset + 8];
-        var payload = new ArraySegment<byte>(segment.Array, segment.Offset + 9, segment.Count - (segment.Offset + 9));
-
-        switch (dataType)
+        protected override bool Listen(out IPEndPoint endPoint, out ArraySegment<byte> data)
         {
-            case ControlDataType:
-                ProcessControlData(payload, timestamp);
-                break;
-            case RenderableDataType:
-                ProcessRenderableData(payload, timestamp);
-                break;
+            EndPoint senderEndPoint = endPoint = _remoteEndPoint;
+                        
+            // Use the same buffer for each receive operation
+            var receivedBytes = Client.Client.ReceiveFrom(_receiveBuffer, ref senderEndPoint);
+
+            data = new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes);
+                    
+            // The senderEndPoint is now populated with the sender's address and port
+            if (senderEndPoint is not IPEndPoint senderIp) 
+                return false;
+            
+            endPoint = senderIp;
+            return true;
+
         }
-    }
-
-    private void ProcessControlData(ArraySegment<byte> payload, long timestamp) // host
-    {
-        try
-        {
-            Debug.Assert(payload.Array != null, "payload.Array != null");
-            var controlData = (Controls)payload.Array[payload.Offset];
-            _controlQueue.Put(controlData, timestamp);
-        }
-        catch (ContentLoadException e)
-        {
-            Debug.WriteLine(e.Message);
-        }
-        catch (SystemException e)
-        {
-            Debug.WriteLine(e.Message);
-        }
-    }
-
-    private void ProcessRenderableData(ArraySegment<byte> payload, long timestamp) // client
-    {
-        var renderableData = DeserializeRenderableData(payload);
-        _renderableQueue.Put(renderableData, timestamp);
-    }
-
-    private IEnumerable<IRenderable> DeserializeRenderableData(ArraySegment<byte> data) // client
-    {
-        using var ms = new MemoryStream(data.Array ?? Array.Empty<byte>(), data.Offset, data.Count);
-        var reader = new BinaryReader(ms); // Using BinaryReader for more efficient reads
-
-        while (ms.Position < ms.Length)
-        {
-            var renderable = _renderablePool.Get();
-
-            try
-            {
-                renderable.TextureName = reader.ReadUtf8String();
-                renderable.Destination = reader.ReadRectangle();
-                renderable.Source = reader.ReadRectangle();
-                renderable.Color = reader.ReadColor();
-                renderable.Rotation = reader.ReadSingle();
-                renderable.Origin = reader.ReadVector2();
-                renderable.Effect = (SpriteEffects)reader.ReadInt32();
-                renderable.Depth = reader.ReadSingle();
-            }
-            catch (ContentLoadException e)
-            {
-                Debug.WriteLine(e.Message);
-                yield break;
-            }
-            catch (SystemException e)
-            {
-                Debug.WriteLine(e.Message);
-                yield break;
-            }
-            finally
-            {
-                _renderablePool.Return(renderable);
-            }
-
-            yield return renderable;
-        }
-    }
-
-    public void Disconnect() // both
-    {
-        _listening = false;
-        _listeningThread?.Join();
-        _udpClient.Close();
-    }
-
-    public void Dispose() // both
-    {
-        Disconnect();
-        _udpClient?.Dispose();
     }
 }

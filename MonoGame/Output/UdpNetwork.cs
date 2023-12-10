@@ -15,6 +15,7 @@ namespace MonoGame.Output
         protected const int MaxBufferSize = 65_536;
         protected const byte ControlDataType = 0;
         protected const byte RenderableDataType = 1;
+        protected const byte InitialConnectionDataType = 3;
         private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
         protected readonly UdpClient Client;
         private readonly Thread _listeningThread;
@@ -87,20 +88,20 @@ namespace MonoGame.Output
 
         protected void Send(MemoryStream ms, IPEndPoint endPoint)
         {
-            Client.Send(ms.GetBuffer(), (int)ms.Length, endPoint);
+            Client.Send(ms.GetBuffer(), (int)ms.Position, endPoint);
         }
 
         private void ProcessReceivedData(IPEndPoint endPoint, ArraySegment<byte> data)
         {
-            var timestamp = BitConverter.ToInt64(data.Array ?? Array.Empty<byte>(), data.Offset);
-            if (data.Count <= 8)
+            Debug.Assert(data.Array != null, "segment.Array == null");
+            
+            if (data.Count <= data.Offset + 8 || data.Array[data.Offset + 8] is InitialConnectionDataType)
             {
-                _stopwatch.Restart();
                 return;
             }
 
-            Debug.Assert(data.Array != null, "segment.Array == null");
             
+            var timestamp = BitConverter.ToInt64(data.Array ?? Array.Empty<byte>(), data.Offset);
             var dataType = data.Array[data.Offset + 8];
             var payload = new ArraySegment<byte>(data.Array, data.Offset + 9, data.Count - (data.Offset + 9));
 
@@ -109,7 +110,15 @@ namespace MonoGame.Output
 
         protected abstract void ProcessData(IPEndPoint endPoint, byte dataType, long timestamp, ArraySegment<byte> data);
 
-        public void StartListening()
+        public void Start()
+        {
+            OnStart();
+            StartListening();
+        }
+
+        protected abstract void OnStart();
+
+        private void StartListening()
         {
             _listening = true;
             Client.Client.ReceiveTimeout = ReceiveTimeout;

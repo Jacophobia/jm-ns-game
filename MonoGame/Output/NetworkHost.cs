@@ -31,12 +31,13 @@ public class NetworkHost : UdpNetwork, IControlSource
     // ReSharper disable once LoopCanBeConvertedToQuery
     public Controls GetControls(IPlayer player)
     {
-        if (player.Id.Key is IPEndPoint endPoint)
-        {
-            return _connectedPlayers[endPoint];
-        }
+        if (player.Id.Key is not IPEndPoint endPoint) 
+            return Controls.None;
+        
+        var controls = _connectedPlayers[endPoint];
+        _connectedPlayers[endPoint] = Controls.None;
+        return controls;
 
-        return Controls.None;
     }
 
     public bool TryGetNewPlayer(out External newPlayer)
@@ -56,7 +57,7 @@ public class NetworkHost : UdpNetwork, IControlSource
             _connected = false;
             return;
         }
-        _memoryStream = new MemoryStream(_sendBuffer);
+        _memoryStream = new MemoryStream(_sendBuffer, 0, _sendBuffer.Length, true, true);
         _binaryWriter = new BinaryWriter(_memoryStream);
         
         AddHeaders(RenderableDataType, _binaryWriter);
@@ -67,7 +68,7 @@ public class NetworkHost : UdpNetwork, IControlSource
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         float? depth = null)
     {
-        if (!_connected)
+        if (!_connected || _memoryStream.Length - _memoryStream.Position < 50)
             return;
         
         _binaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
@@ -119,6 +120,11 @@ public class NetworkHost : UdpNetwork, IControlSource
         {
             Debug.WriteLine(e.Message);
         }
+    }
+
+    protected override void OnStart()
+    {
+        
     }
 
     protected override bool Listen(out IPEndPoint endPoint, out ArraySegment<byte> data)

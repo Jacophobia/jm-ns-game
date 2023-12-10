@@ -15,7 +15,7 @@ public abstract class HostController : GameController
     protected internal override void BeforeOnInitialize()
     {
         Renderer = new Renderer(GraphicsDevice, SpriteBatch, Content);
-        NetworkClient.StartListening();
+        NetworkClient.Start();
 
         base.BeforeOnInitialize();
     }

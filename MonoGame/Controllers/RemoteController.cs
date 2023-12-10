@@ -22,8 +22,7 @@ public abstract class RemoteController : GameController
     protected internal override void BeforeOnBeginRun()
     {
         // Start the network client and its listening process
-        NetworkClient.Connect();
-        NetworkClient.StartListening();
+        NetworkClient.Start();
     }
 
     protected internal override void AfterOnExit(object sender, EventArgs args)

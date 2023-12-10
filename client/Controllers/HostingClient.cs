@@ -74,7 +74,6 @@ public class HostingClient : HostController
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
                     // .AddDecorator<Drag>(20f)
-                    // .AddDecorator<BasicMovement>()
                     .AddDecorator<Rectangular>()
                     // .AddDecorator<Circular>()
                     .AddDecorator<Gravity>()

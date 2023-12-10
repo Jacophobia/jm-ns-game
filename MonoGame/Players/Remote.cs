@@ -10,19 +10,21 @@ namespace MonoGame.Players;
 
 public class Remote : IPlayer
 {
+    private const int LocalPlayerId = 0;
+    
     private readonly Renderer _renderer;
     private readonly NetworkClient _networkClient;
     private readonly Listener _listener;
     private readonly List<IUpdatable> _updatables;
 
-    public Remote(string id, Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
+    public Remote(Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
     {
         _renderer = renderer;
         Perspective = perspective;
         Depth = depth;
         FocalLength = focalLength;
         _networkClient = networkClient;
-        Id = new PlayerId(id);
+        Id = new PlayerId(LocalPlayerId);
         _listener = new Listener(new Dictionary<Keys, Controls>
         {
             { Keys.A, Controls.Left },
