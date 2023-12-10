@@ -1,6 +1,4 @@
-﻿using System.Net;
-
-namespace MonoGame.Players;
+﻿namespace MonoGame.Players;
 
 public class PlayerId
 {

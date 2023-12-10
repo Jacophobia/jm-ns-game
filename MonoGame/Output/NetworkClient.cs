@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Net.Sockets;
-using System.Threading;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.DataStructures;
@@ -17,18 +16,16 @@ namespace MonoGame.Output
     public class NetworkClient : UdpNetwork
     {
         private readonly IPEndPoint _remoteEndPoint;
-        private readonly PriorityQueue<IEnumerable<IRenderable>, long> _renderableQueue;
+        private readonly ConcurrentPriorityQueue<IEnumerable<IRenderable>, long> _renderableQueue;
         private readonly ObjectPool<Renderable> _renderablePool;
         private readonly byte[] _receiveBuffer;
-        private readonly SemaphoreSlim _semaphore;
 
         public NetworkClient(int port, string ipAddress) : base(new UdpClient())
         {
             _remoteEndPoint = new IPEndPoint(IPAddress.Parse(ipAddress), port);
-            _renderableQueue = new PriorityQueue<IEnumerable<IRenderable>, long>();
+            _renderableQueue = new ConcurrentPriorityQueue<IEnumerable<IRenderable>, long>();
             _renderablePool = new ObjectPool<Renderable>();
             _receiveBuffer = new byte[MaxBufferSize];
-            _semaphore = new SemaphoreSlim(0);
         }
 
         protected override void OnStart()
@@ -38,7 +35,6 @@ namespace MonoGame.Output
         
         public IEnumerable<IRenderable> GetRenderableData()
         {  
-            _semaphore.Wait();
             return _renderableQueue.Dequeue();
         }
         
@@ -91,7 +87,6 @@ namespace MonoGame.Output
             Debug.Assert(dataType == RenderableDataType, "The wrong data type was sent");
             var renderableData = DeserializeRenderableData(data);
             _renderableQueue.Enqueue(renderableData, timestamp);
-            _semaphore.Release();
         }
 
         protected override bool Listen(out IPEndPoint endPoint, out ArraySegment<byte> data)

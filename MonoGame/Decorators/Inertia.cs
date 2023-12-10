@@ -1,5 +1,4 @@
 ﻿using MonoGame.Entities;
-using MonoGame.Input;
 
 namespace MonoGame.Decorators;
 

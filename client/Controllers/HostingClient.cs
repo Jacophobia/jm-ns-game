@@ -84,10 +84,16 @@ public class HostingClient : HostController
                 {
                     case 0 when j is 0:
                     {
+                        var player = new Host(new Camera(followSpeed: 1f, offset: new Vector3(0, 100, -10)), Renderer);
+                        
                         entity.SetColor(Color.Red);
+                        entity.AddDecorator<BasicMovement>(player);
                         
                         var mainEntity = entity.Build();
-                        _spatialPartition.Add(new Host(new Camera(mainEntity, 1f, new Vector3(0, 100, -20)), Renderer));
+                        
+                        player.Follow(mainEntity); 
+                        
+                        _spatialPartition.Add(player);
                         _spatialPartition.Add(mainEntity);
                         break;
                     }

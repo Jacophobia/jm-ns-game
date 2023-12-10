@@ -31,7 +31,7 @@ public class Remote : IPlayer
             { Keys.E, Controls.Right },
             { Keys.OemComma, Controls.Up },
             { Keys.O, Controls.Down },
-            { Keys.X, Controls.Jump }
+            { Keys.X, Controls.Jump } // TODO: find out why jumping currently is broken for the remote client
         });
         _updatables = new List<IUpdatable>();
     }
