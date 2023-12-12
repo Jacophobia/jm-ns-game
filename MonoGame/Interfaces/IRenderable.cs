@@ -13,5 +13,5 @@ public interface IRenderable
     public Vector2 Origin { get; }
     public SpriteEffects Effect { get; }
     public float Depth { get; }
-    public void Draw(IPlayer player);
+    public void Render(IPlayer player);
 }

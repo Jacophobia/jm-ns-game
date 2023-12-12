@@ -46,6 +46,102 @@ public class Renderer
 
         _graphicsAreRendered = true;
     }
+    
+    public void Draw(Texture2D texture, Rectangle destinationRectangle, Color color)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, destinationRectangle, color);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Vector2 position, Color color)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, position, color);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, destinationRectangle, sourceRectangle, color);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, position, sourceRectangle, color);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, 
+        float rotation, Vector2 origin, float scale, SpriteEffects effects, float layerDepth)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, 
+            (MaxDepth - layerDepth) / 1000f);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Rectangle destinationRectangle, Rectangle? sourceRectangle, Color color, 
+        float rotation, Vector2 origin, SpriteEffects effects, float layerDepth)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, destinationRectangle, sourceRectangle, color, rotation, origin, effects, 
+            (MaxDepth - layerDepth) / 1000f);
+
+        _graphicsAreRendered = true;
+    }
+
+    public void Draw(Texture2D texture, Vector2 position, Rectangle? sourceRectangle, Color color, 
+        float rotation, Vector2 origin, Vector2 scale, SpriteEffects effects, float layerDepth)
+    {
+        if (_shouldClear)
+            Clear();
+
+        _spriteBatch.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, 
+            (MaxDepth - layerDepth) / 1000f);
+
+        _graphicsAreRendered = true;
+    }
+    
+    public void Draw(Texture2D texture, Rectangle destination, Rectangle source, Color color, float rotation, 
+        Vector2 origin, SpriteEffects effect, float depth)
+    {
+        if (_shouldClear)
+            Clear();
+        
+        _spriteBatch.Draw(
+            texture,
+            destination,
+            source,
+            color,
+            rotation,
+            origin,
+            effect,
+            (MaxDepth - depth) / 1000f
+        );
+
+        _graphicsAreRendered = true;
+    }
 
     private void Clear()
     {

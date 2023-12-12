@@ -149,12 +149,12 @@ public abstract class EntityDecorator : Entity
         return Vector2.Zero;
     }
 
-    public sealed override void Draw(IPlayer player)
+    public sealed override void Render(IPlayer player)
     {
         BeforeDraw(player);
         OnDraw(player);
         AfterDraw(player);
-        _base.Draw(player);
+        _base.Render(player);
     }
 
     protected virtual void BeforeDraw(IPlayer player) {}

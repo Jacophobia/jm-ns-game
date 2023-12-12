@@ -15,7 +15,6 @@ public class Remote : IPlayer
     private readonly Renderer _renderer;
     private readonly NetworkClient _networkClient;
     private readonly Listener _listener;
-    private readonly List<IUpdatable> _updatables;
 
     public Remote(Renderer renderer, Rectangle perspective, NetworkClient networkClient, float depth = -10, float focalLength = Camera.FocalLength)
     {
@@ -33,7 +32,6 @@ public class Remote : IPlayer
             { Keys.O, Controls.Down },
             { Keys.X, Controls.Jump } // TODO: find out why jumping currently is broken for the remote client
         });
-        _updatables = new List<IUpdatable>();
     }
 
     public PlayerId Id { get; }
@@ -65,21 +63,6 @@ public class Remote : IPlayer
         Controls = _listener.GetControls(this);
         
         _networkClient.SendControlData(Controls);
-
-        foreach (var updatable in _updatables)
-        {
-            updatable.Update(deltaTime);
-        }
-    }
-
-    public void Add(IUpdatable updatable)
-    {
-        _updatables.Add(updatable);
-    }
-
-    public void Remove(IUpdatable updatable)
-    {
-        _updatables.Remove(updatable);
     }
 
     public void EndDisplay()

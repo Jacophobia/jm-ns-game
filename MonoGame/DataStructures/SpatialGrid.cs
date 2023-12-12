@@ -188,10 +188,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             player.BeginDisplay();
         foreach (var element in _elements)
         foreach (var player in _players)
-            element.Draw(player);
+            element.Render(player);
         foreach (var element in _staticElements)
         foreach (var player in _players)
-            element.Draw(player);
+            element.Render(player);
         foreach (var player in _players)
             player.EndDisplay();
     }

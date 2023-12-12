@@ -30,7 +30,7 @@ public class ReceivingClient : RemoteController
         _player.BeginDisplay();
         foreach (var renderable in NetworkClient.GetRenderableData())
         {
-            renderable.Draw(_player);
+            renderable.Render(_player);
         }
         _player.EndDisplay();
     }
