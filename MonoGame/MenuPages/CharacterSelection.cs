@@ -11,8 +11,8 @@ public class CharacterSelection : Page
     private readonly SpriteFont _font;
     private readonly Texture2D _buttonTexture;
 
-    public CharacterSelection(SpriteFont font, Texture2D buttonTexture, IEnumerable<string> characters) 
-        : base(new List<Component>())
+    public CharacterSelection(Rectangle bounds, SpriteFont font, Texture2D buttonTexture, IEnumerable<string> characters) 
+        : base(bounds, new List<Component>())
     {
         _font = font;
         _buttonTexture = buttonTexture;
@@ -21,8 +21,8 @@ public class CharacterSelection : Page
         const int buttonWidth = 200;
         const int buttonHeight = 50;
         const int spacing = 60;
-        var startX = /* Calculate X position */;
-        var startY = /* Calculate Y position */;
+        var startX = Bounds.Center.X;
+        var startY = Bounds.Height / 4;
 
         // Create and add a button for each character
         foreach (var character in characters)

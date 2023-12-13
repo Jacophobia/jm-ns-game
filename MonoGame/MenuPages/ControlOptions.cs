@@ -6,41 +6,44 @@ using MonoGame.MenuComponents;
 
 namespace MonoGame.MenuPages;
 
-public class ControlOptions : Page
+public class ControlOptions : Page, IWritable
 {
-    private readonly SpriteFont _font; // Assuming you have a SpriteFont for text
-    private readonly Texture2D _controllerTexture; // Texture for the controller image
-    private string _dynamicText; // The text to display in the dynamic text box
-
-    public ControlOptions(SpriteFont font, Texture2D controllerTexture) : base(new List<Component>())
+    public ControlOptions(Rectangle bounds, SpriteFont font, Texture2D controllerTexture) : base(bounds, new List<Component>())
     {
-        _font = font;
-        _controllerTexture = controllerTexture;
-        _dynamicText = "Default Controls Text"; // Initialize with default text
+        Text = "Default Controls Text"; // Initialize with default text
+        Font = font;
 
         // Define the position and size for the controller image
         const int imageWidth = 300;
         const int imageHeight = 200;
-        var imageX = /* Calculate X position */;
-        var imageY = /* Calculate Y position */;
+        var imageX = Bounds.Center.X;
+        var imageY = Bounds.Center.Y;
 
         // Create and add the controller image component
-        var controllerImage = new Image(_controllerTexture, new Rectangle(imageX, imageY, imageWidth, imageHeight));
+        var controllerImage = new Image(controllerTexture, new Rectangle(imageX, imageY, imageWidth, imageHeight));
         MenuItems.Add(controllerImage);
-
-        // Optionally, add a back button or other components as needed
+        
+        // TODO: Add a back button to every page except the landing page
     }
+
+    public SpriteFont Font { get; }
+    public string Text { get; private set; }
+
+    public Vector2 Position => new (Bounds.Center.X, Bounds.Height / 4f);
+    public Color TextColor => Color.White;
+    public float Rotation => 0f;
+    public Vector2 Origin => Vector2.Zero;
+    public Vector2 Scale => Vector2.One * 5;
+    public SpriteEffects Effects => SpriteEffects.None;
+    public float LayerDepth => -1;
 
     public void SetDynamicText(string text)
     {
-        _dynamicText = text;
+        Text = text;
     }
 
     protected override void OnDraw(IPlayer player)
     {
-        base.Draw(player);
-        // Draw the dynamic text box
-        var textPosition = new Vector2(/* Calculate X position */, /* Calculate Y position */);
-        player.Display(_font, _dynamicText, textPosition, Color.White);
+        player.Display(this);
     }
 }

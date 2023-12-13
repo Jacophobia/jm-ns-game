@@ -23,7 +23,7 @@ public class StartMenu : GameController
         var sliderThumbTexture = Content.Load<Texture2D>("path/to/slider_thumb_texture");
         var controllerTexture = Content.Load<Texture2D>("path/to/controller_texture");
 
-        var menuFactory = new MenuFactory(font, buttonTexture, checkboxTexture, sliderTexture, sliderThumbTexture, controllerTexture);
+        var menuFactory = new MenuFactory(WindowSize, font, buttonTexture, checkboxTexture, sliderTexture, sliderThumbTexture, controllerTexture);
         _pageManager = menuFactory.CreateMenu(new Host(new Camera(), Renderer), new []{ "character one", "character two" });
         _pageManager.SwitchToPage("Landing");
     }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
 using MonoGame.MenuPages;
@@ -7,6 +8,7 @@ namespace MonoGame.Orchestration;
 
 public class MenuFactory
 {
+    private readonly Rectangle _bounds;
     private readonly SpriteFont _font;
     private readonly Texture2D _buttonTexture;
     private readonly Texture2D _checkboxTexture;
@@ -14,9 +16,10 @@ public class MenuFactory
     private readonly Texture2D _sliderThumbTexture;
     private readonly Texture2D _controllerTexture;
 
-    public MenuFactory(SpriteFont font, Texture2D buttonTexture, Texture2D checkboxTexture, 
+    public MenuFactory(Rectangle menuBounds, SpriteFont font, Texture2D buttonTexture, Texture2D checkboxTexture, 
                        Texture2D sliderTexture, Texture2D sliderThumbTexture, Texture2D controllerTexture)
     {
+        _bounds = menuBounds;
         _font = font;
         _buttonTexture = buttonTexture;
         _checkboxTexture = checkboxTexture;
@@ -51,32 +54,32 @@ public class MenuFactory
 
     private Landing CreateLandingPage()
     {
-        return new Landing(_font, _buttonTexture);
+        return new Landing(_bounds, _font, _buttonTexture);
     }
 
     private Start CreateStartPage()
     {
-        return new Start(_font, _buttonTexture);
+        return new Start(_bounds, _font, _buttonTexture);
     }
 
     private ControlOptions CreateControlsPage()
     {
         // Replace with the actual controller texture
-        return new ControlOptions(_font, _controllerTexture);
+        return new ControlOptions(_bounds, _font, _controllerTexture);
     }
 
     private SettingsPage CreateSettingsPage()
     {
-        return new SettingsPage(_font, _checkboxTexture, _sliderTexture, _sliderThumbTexture);
+        return new SettingsPage(_bounds, _font, _checkboxTexture, _sliderTexture, _sliderThumbTexture);
     }
 
     private MultiplayerSelect CreateMultiplayerPage()
     {
-        return new MultiplayerSelect(_font, _buttonTexture);
+        return new MultiplayerSelect(_bounds, _font, _buttonTexture);
     }
 
     private CharacterSelection CreateCharacterSelectionPage(IEnumerable<string> characters)
     {
-        return new CharacterSelection(_font, _buttonTexture, characters);
+        return new CharacterSelection(_bounds, _font, _buttonTexture, characters);
     }
 }

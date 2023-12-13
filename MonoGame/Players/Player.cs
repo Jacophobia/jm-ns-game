@@ -54,16 +54,16 @@ public abstract class Player : IPlayer
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
     }
 
-    public void Display(SpriteFont font, string text, Vector2 position, Color color)
+    public void Display(IWritable writable)
     {
-        OnDisplay(font, text, position, color);
+        OnDisplay(writable);
     }
 
     protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
-    protected abstract void OnDisplay(SpriteFont font, string text, Vector2 position, Color color);
+    protected abstract void OnDisplay(IWritable writable);
     
     public abstract void EndDisplay();
 }

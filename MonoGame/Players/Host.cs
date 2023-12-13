@@ -38,6 +38,11 @@ public class Host : Player
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
+    protected override void OnDisplay(IWritable writable)
+    {
+        _renderer.Write(writable);
+    }
+
     public override void EndDisplay()
     {
         _renderer.End();

@@ -15,6 +15,7 @@ namespace MonoGame.Output
         protected const byte ControlDataType = 0;
         protected const byte RenderableDataType = 1;
         protected const byte InitialConnectionDataType = 3;
+        protected const byte WritableDataType = 4;
         private const int ReceiveTimeout = 2_000; // Timeout in milliseconds
         protected readonly UdpClient Client;
         private readonly Thread _listeningThread;

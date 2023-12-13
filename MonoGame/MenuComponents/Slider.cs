@@ -4,10 +4,8 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.MenuComponents;
 
-public class Slider : Component
+public class Slider : Component, IWritable
 {
-    private readonly SpriteFont _font;
-    private readonly string _label;
     private readonly int _minValue;
     private readonly int _maxValue;
     private readonly int _currentValue;
@@ -18,8 +16,6 @@ public class Slider : Component
         SpriteFont font, int minValue, int maxValue, int initialValue) 
         : base(trackTexture, destination)
     {
-        _font = font;
-        _label = label;
         _minValue = minValue;
         _maxValue = maxValue;
         _currentValue = initialValue;
@@ -27,7 +23,18 @@ public class Slider : Component
 
         // Calculate thumb position based on the initial value
         UpdateThumbPosition();
+        
+        Text = label;
+        Font = font;
     }
+
+    public SpriteFont Font { get; }
+    public string Text { get; }
+    public Vector2 Position => new (Destination.X, Destination.Y - Font.LineSpacing);
+    public Color TextColor => Color.White;
+    public Vector2 Scale => Vector2.One * 5;
+    public SpriteEffects Effects => SpriteEffects.None;
+    public float LayerDepth => Depth - 1;
 
     private void UpdateThumbPosition()
     {
@@ -50,8 +57,7 @@ public class Slider : Component
         // Draw the thumb
         player.Display(new Image(_thumbTexture, _thumbRectangle));
         
-        // Optionally, draw the label
-        var labelPosition = new Vector2(Destination.X, Destination.Y - _font.LineSpacing);
-        player.Display(_font, _label, labelPosition, Color.White);
+        // Draw the label
+        player.Display(this);
     }
 }

@@ -4,17 +4,22 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.MenuComponents;
 
-public class Label : Component
+public class Label : Component, IWritable
 {
-    private readonly string _text;
-    private readonly SpriteFont _font;
-
     public Label(Texture2D texture, Rectangle destination, string text, SpriteFont font) 
         : base(texture, destination)
     {
-        _text = text;
-        _font = font;
+        Text = text;
+        Font = font;
     }
+
+    public SpriteFont Font { get; }
+    public string Text { get; }
+    public Vector2 Position => new (Destination.X, Destination.Y);
+    public Color TextColor => Color.White;
+    public Vector2 Scale => Vector2.One * 5;
+    public SpriteEffects Effects => SpriteEffects.None;
+    public float LayerDepth => Depth - 1;
 
     protected override void OnSelect()
     {
@@ -23,7 +28,6 @@ public class Label : Component
 
     protected override void OnRender(IPlayer player)
     {
-        var textPosition = new Vector2(Destination.X, Destination.Y);
-        player.Display(_font, _text, textPosition, Color);
+        player.Display(this);
     }
 }

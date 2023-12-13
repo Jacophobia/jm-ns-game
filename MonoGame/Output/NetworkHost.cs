@@ -19,16 +19,17 @@ public class NetworkHost : UdpNetwork, IControlSource
 {
     private readonly ConcurrentDictionary<IPEndPoint, Controls> _connectedPlayers;
     private readonly ConcurrentQueue<External> _newPlayers;
-    private readonly byte[] _sendBuffer;
+    private readonly byte[] _renderableSendBuffer;
+    private readonly byte[] _writableSendBuffer;
         
     public NetworkHost(int port) : base(new UdpClient(port))
     {
         _connectedPlayers = new ConcurrentDictionary<IPEndPoint, Controls>();
         _newPlayers = new ConcurrentQueue<External>();
-        _sendBuffer = new byte[MaxBufferSize];
+        _renderableSendBuffer = new byte[MaxBufferSize];
+        _writableSendBuffer = new byte[MaxBufferSize];
     }
         
-    // ReSharper disable once LoopCanBeConvertedToQuery
     public Controls GetControls(IPlayer player)
     {
         if (player.Id.Key is not IPEndPoint endPoint) 
@@ -45,8 +46,10 @@ public class NetworkHost : UdpNetwork, IControlSource
         return _newPlayers.TryDequeue(out newPlayer);
     }
         
-    private MemoryStream _memoryStream;
-    private BinaryWriter _binaryWriter;
+    private MemoryStream _renderableMemoryStream;
+    private BinaryWriter _renderableBinaryWriter;
+    private MemoryStream _writableMemoryStream;
+    private BinaryWriter _writableBinaryWriter;
     private bool _connected;
 
     public void PrepareRenderableBatch()
@@ -57,10 +60,14 @@ public class NetworkHost : UdpNetwork, IControlSource
             _connected = false;
             return;
         }
-        _memoryStream = new MemoryStream(_sendBuffer, 0, _sendBuffer.Length, true, true);
-        _binaryWriter = new BinaryWriter(_memoryStream);
+        _renderableMemoryStream = new MemoryStream(_renderableSendBuffer, 0, _renderableSendBuffer.Length, true, true);
+        _renderableBinaryWriter = new BinaryWriter(_renderableMemoryStream);
         
-        AddHeaders(RenderableDataType, _binaryWriter);
+        _writableMemoryStream = new MemoryStream(_renderableSendBuffer, 0, _renderableSendBuffer.Length, true, true);
+        _writableBinaryWriter = new BinaryWriter(_writableMemoryStream);
+        
+        AddHeaders(RenderableDataType, _renderableBinaryWriter);
+        AddHeaders(WritableDataType, _writableBinaryWriter);
     }
 
     public void Enqueue(IRenderable renderable, Texture2D texture = null, 
@@ -68,17 +75,17 @@ public class NetworkHost : UdpNetwork, IControlSource
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
         float? depth = null)
     {
-        if (!_connected || _memoryStream.Length - _memoryStream.Position < 50)
+        if (!_connected || _renderableMemoryStream.Length - _renderableMemoryStream.Position < 50)
             return;
         
-        _binaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
-        _binaryWriter.WriteRectangle(destination ?? renderable.Destination);
-        _binaryWriter.WriteRectangle(source ?? renderable.Source);
-        _binaryWriter.WriteColor(color ?? renderable.Color);
-        _binaryWriter.Write(rotation ?? renderable.Rotation);
-        _binaryWriter.WriteVector2(origin ?? renderable.Origin);
-        _binaryWriter.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
-        _binaryWriter.Write(depth ?? renderable.Depth);
+        _renderableBinaryWriter.WriteString(texture?.Name ?? renderable.Texture.Name);
+        _renderableBinaryWriter.WriteRectangle(destination ?? renderable.Destination);
+        _renderableBinaryWriter.WriteRectangle(source ?? renderable.Source);
+        _renderableBinaryWriter.WriteColor(color ?? renderable.Color);
+        _renderableBinaryWriter.Write(rotation ?? renderable.Rotation);
+        _renderableBinaryWriter.WriteVector2(origin ?? renderable.Origin);
+        _renderableBinaryWriter.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
+        _renderableBinaryWriter.Write(depth ?? renderable.Depth);
     }
 
     public void SendRenderableBatch()
@@ -90,11 +97,11 @@ public class NetworkHost : UdpNetwork, IControlSource
 
         foreach (var player in _connectedPlayers)
         {
-            Send(_memoryStream, player.Key);
+            Send(_renderableMemoryStream, player.Key);
         }
             
-        _memoryStream?.Dispose();
-        _binaryWriter?.Dispose();
+        _renderableMemoryStream?.Dispose();
+        _renderableBinaryWriter?.Dispose();
     }
 
     protected override void ProcessData(IPEndPoint endPoint, byte dataType, long timestamp, ArraySegment<byte> data)

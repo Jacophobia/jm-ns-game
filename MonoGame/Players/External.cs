@@ -1,4 +1,5 @@
-﻿using System.Net;
+﻿using System;
+using System.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
@@ -27,6 +28,15 @@ public class External : Player
         _networkClient.Enqueue(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
+    protected override void OnDisplay(IWritable writable)
+    {
+        // If we want to support external menus (which we will for the
+        // pause menu and the inventory menu) then we will need to
+        // implement a method in NetworkHost / Server that supports
+        // displaying text
+        throw new NotImplementedException(); 
+    }
+    
     public override void EndDisplay()
     {
         _networkClient.SendRenderableBatch();

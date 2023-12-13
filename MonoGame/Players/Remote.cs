@@ -42,7 +42,8 @@ public class Remote : IPlayer
 
     public void Follow(IRenderable target)
     {
-        throw new System.NotImplementedException(); // currently we don't have a need for this since the client camera doesn't move
+        // currently we don't have a need for this since the client camera doesn't move. It should not be called
+        throw new System.NotImplementedException(); 
     }
 
     public void BeginDisplay()
@@ -56,6 +57,11 @@ public class Remote : IPlayer
         float? depth = null)
     {
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
+    }
+
+    public void Display(IWritable writable)
+    {
+        _renderer.Write(writable);
     }
 
     public void Update(float deltaTime)

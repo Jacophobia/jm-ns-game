@@ -13,8 +13,8 @@ public class SettingsPage : Page
     private readonly Texture2D _sliderTexture; // Texture for slider background
     private readonly Texture2D _sliderThumbTexture; // Texture for slider thumb
 
-    public SettingsPage(SpriteFont font, Texture2D checkboxTexture, Texture2D sliderTexture, Texture2D sliderThumbTexture) 
-        : base(new List<Component>())
+    public SettingsPage(Rectangle bounds, SpriteFont font, Texture2D checkboxTexture, Texture2D sliderTexture, Texture2D sliderThumbTexture) 
+        : base(bounds, new List<Component>())
     {
         _font = font;
         _checkboxTexture = checkboxTexture;

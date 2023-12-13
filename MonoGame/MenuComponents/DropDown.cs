@@ -5,19 +5,27 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.MenuComponents;
 
-public class DropDown : Component
+public class DropDown : Component, IWritable
 {
     private readonly List<string> _options;
     private readonly int _selectedIndex;
-    private readonly SpriteFont _font;
 
     public DropDown(Texture2D texture, Rectangle destination, List<string> options, SpriteFont font) 
         : base(texture, destination)
     {
+        Font = font;
+        
         _options = options;
-        _font = font;
         _selectedIndex = 0;
     }
+
+    public SpriteFont Font { get; }
+    public string Text => _options[_selectedIndex];
+    public Vector2 Position => new (Destination.X, Destination.Y);
+    public Color TextColor => Color.White;
+    public Vector2 Scale => Vector2.One * 5;
+    public SpriteEffects Effects => SpriteEffects.None;
+    public float LayerDepth => Depth - 1;
 
     protected override void OnSelect()
     {
@@ -26,8 +34,6 @@ public class DropDown : Component
 
     protected override void OnRender(IPlayer player)
     {
-        var selectedOption = _options[_selectedIndex];
-        var textPosition = new Vector2(Destination.X, Destination.Y);
-        player.Display(_font, selectedOption, textPosition, Color);
+        player.Display(this);
     }
 }

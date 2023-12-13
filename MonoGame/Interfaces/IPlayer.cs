@@ -21,7 +21,7 @@ public interface IPlayer
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
-    public void Display(SpriteFont font, string text, Vector2 position, Color color);
+    public void Display(IWritable writable);
     
     public void Update(float deltaTime);
 

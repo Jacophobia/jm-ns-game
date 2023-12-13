@@ -9,11 +9,13 @@ namespace MonoGame.MenuPages;
 public abstract class Page
 {
     protected readonly List<Component> MenuItems;
+    protected readonly Rectangle Bounds;
     private int _selectedMenuIndex;
 
-    protected Page(List<Component> menuItems)
+    protected Page(Rectangle bounds, List<Component> menuItems)
     {
         MenuItems = menuItems;
+        Bounds = bounds;
     }
 
     public void Update(Controls controls, Point mousePosition, bool isMouseButtonDown)

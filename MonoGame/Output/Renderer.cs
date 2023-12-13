@@ -25,6 +25,40 @@ public class Renderer
         _shouldClear = true;
     }
 
+    private static float AdjustDepth(float layerDepth)
+    {
+        return (MaxDepth - layerDepth) / 1000f;
+    }
+
+    /// <summary>
+    /// Draws a string with additional parameters like rotation, origin, scale, effects, and layer depth.
+    /// </summary>
+    /// <param name="writable">The writable object you would like to display</param>
+    /// <param name="font">The font used to draw the text.</param>
+    /// <param name="text">The text to draw.</param>
+    /// <param name="position">The top-left position to draw the text at.</param>
+    /// <param name="color">The color to apply to the text.</param>
+    /// <param name="rotation">The angle (in radians) to rotate the text around the origin.</param>
+    /// <param name="origin">The point to rotate around and to scale from.</param>
+    /// <param name="scale">The scale factor.</param>
+    /// <param name="effects">Effects to apply (like flipping).</param>
+    /// <param name="layerDepth">The depth of the layer where the text is drawn (between 0 [front] and 1 [back]).</param>
+    public void Write(IWritable writable, SpriteFont font = null, string text = null, Vector2? position = null, Color? color = null, float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects? effects = null, float? layerDepth = null)
+    {
+        _spriteBatch.DrawString(
+            font ?? writable.Font, 
+            text ?? writable.Text, 
+            position ?? writable.Position, 
+            color ?? writable.TextColor, 
+            rotation ?? writable.Rotation, 
+            origin ?? writable.Origin, 
+            scale ?? writable.Scale, 
+            effects ?? writable.Effects, 
+            AdjustDepth(layerDepth ?? writable.LayerDepth)
+        );
+    }
+
+
     public void Draw(IRenderable renderable, Texture2D texture = null, 
         Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
         float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
@@ -41,7 +75,7 @@ public class Renderer
             rotation ?? renderable.Rotation,
             origin ?? renderable.Origin,
             effect == SpriteEffects.None ? renderable.Effect : effect,
-            (MaxDepth - (depth ?? renderable.Depth)) / 1000f
+            AdjustDepth(depth ?? renderable.Depth)
         );
 
         _graphicsAreRendered = true;
@@ -94,7 +128,7 @@ public class Renderer
             Clear();
 
         _spriteBatch.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, 
-            (MaxDepth - layerDepth) / 1000f);
+            AdjustDepth(layerDepth));
 
         _graphicsAreRendered = true;
     }
@@ -106,7 +140,7 @@ public class Renderer
             Clear();
 
         _spriteBatch.Draw(texture, destinationRectangle, sourceRectangle, color, rotation, origin, effects, 
-            (MaxDepth - layerDepth) / 1000f);
+            AdjustDepth(layerDepth));
 
         _graphicsAreRendered = true;
     }
@@ -118,13 +152,13 @@ public class Renderer
             Clear();
 
         _spriteBatch.Draw(texture, position, sourceRectangle, color, rotation, origin, scale, effects, 
-            (MaxDepth - layerDepth) / 1000f);
+            AdjustDepth(layerDepth));
 
         _graphicsAreRendered = true;
     }
     
     public void Draw(Texture2D texture, Rectangle destination, Rectangle source, Color color, float rotation, 
-        Vector2 origin, SpriteEffects effect, float depth)
+        Vector2 origin, SpriteEffects effect, float layerDepth)
     {
         if (_shouldClear)
             Clear();
@@ -137,7 +171,7 @@ public class Renderer
             rotation,
             origin,
             effect,
-            (MaxDepth - depth) / 1000f
+            AdjustDepth(layerDepth)
         );
 
         _graphicsAreRendered = true;
