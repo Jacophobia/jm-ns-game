@@ -93,7 +93,7 @@ namespace MonoGame.Output
 
         private void ProcessReceivedData(IPEndPoint endPoint, ArraySegment<byte> data)
         {
-            Debug.Assert(data.Array != null, "segment.Array == null");
+            Debug.Assert(data.Array != null, "segment.Array should not be null");
             
             if (data.Count <= data.Offset + 8 || data.Array[data.Offset + 8] is InitialConnectionDataType)
             {

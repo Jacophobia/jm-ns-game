@@ -3,7 +3,7 @@
 namespace MonoGame.Input;
 
 [Flags]
-public enum Controls
+public enum Controls : byte
 {
     None = 0,
     Up = 1,

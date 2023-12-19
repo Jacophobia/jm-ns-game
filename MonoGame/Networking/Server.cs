@@ -96,6 +96,7 @@ public class Server
             while (_isRunning)
             {
                 var receivedBytes = udpClient.Receive(ref remoteEndPoint);
+                ProcessReceivedData(clientId, receivedBytes);
             }
         }
         catch (Exception e)
@@ -112,7 +113,7 @@ public class Server
         }
     }
 
-    protected void ProcessReceivedData(Guid userId, ArraySegment<byte> receivedData)
+    private void ProcessReceivedData(Guid userId, ArraySegment<byte> receivedData)
     {
         
     }

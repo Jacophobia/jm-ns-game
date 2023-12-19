@@ -21,6 +21,7 @@ public class Renderer
          _graphicsDevice = graphicsDevice;
         _spriteBatch = spriteBatch;
         TextureManager.Initialize(contentManager);
+        FontManager.Initialize(contentManager);
         _graphicsAreRendered = false;
         _shouldClear = true;
     }

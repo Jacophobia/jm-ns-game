@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "client", "client\client.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame", "MonoGame\MonoGame.csproj", "{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{E317F7EE-D3F0-4184-9131-9401A08F4233}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -24,5 +26,9 @@ Global
 		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{63C1EBF8-0DA7-4ECA-A2B1-415EF822BED6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
