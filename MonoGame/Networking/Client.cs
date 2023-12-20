@@ -172,6 +172,9 @@ public class Client : IDisposable
             {
                 // Use the same buffer for each receive operation
                 var receivedBytes = _udpClient.Client.Receive(_receiveBuffer);
+                
+                if (receivedBytes <= 9)
+                    continue;
 
                 var data = new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes);
 
@@ -184,27 +187,21 @@ public class Client : IDisposable
                 switch (dataType)
                 {
                     case RenderableDataType:
-                        lock (_incomingRenderableQueue)
+                        if (_incomingRenderableQueue.Count >= MaxQueueSize)
                         {
-                            if (_incomingRenderableQueue.Count >= MaxQueueSize)
-                            {
-                                _incomingRenderableQueue.TryDequeue(out _,
-                                    out _); // Remove oldest data if queue is full
-                            }
-
-                            _incomingRenderableQueue.Enqueue(DeserializeRenderableData(payload), timestamp);
+                            _incomingRenderableQueue.TryDequeue(out _,
+                                out _); // Remove oldest data if queue is full
                         }
+
+                        _incomingRenderableQueue.Enqueue(DeserializeRenderableData(payload), timestamp);
                         break;
                     case WritableDataType:
-                        lock (_incomingWritableQueue)
+                        if (_incomingWritableQueue.Count >= MaxQueueSize)
                         {
-                            if (_incomingWritableQueue.Count >= MaxQueueSize)
-                            {
-                                _incomingWritableQueue.TryDequeue(out _, out _); // Remove oldest data if queue is full
-                            }
-
-                            _incomingWritableQueue.Enqueue(DeserializeWritableData(payload), timestamp);
+                            _incomingWritableQueue.TryDequeue(out _, out _); // Remove oldest data if queue is full
                         }
+
+                        _incomingWritableQueue.Enqueue(DeserializeWritableData(payload), timestamp);
                         break;
                 }
             }
@@ -215,20 +212,14 @@ public class Client : IDisposable
         }
     }
 
-    public bool TryDequeueRenderable(out IEnumerable<IRenderable> data)
+    public IEnumerable<IRenderable> DequeueRenderable()
     {
-        lock (_incomingRenderableQueue)
-        {
-            return _incomingRenderableQueue.TryDequeue(out data, out _);
-        }
+        return _incomingRenderableQueue.Dequeue();
     }
     
-    public bool TryDequeueWritable(out IEnumerable<IWritable> data)
+    public IEnumerable<IWritable> DequeueWritable()
     {
-        lock (_incomingWritableQueue)
-        {
-            return _incomingWritableQueue.TryDequeue(out data, out _);
-        }
+        return _incomingWritableQueue.Dequeue();   
     }
 
     public void Disconnect()

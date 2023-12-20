@@ -40,7 +40,6 @@ public class ConcurrentPriorityQueue<T, TSort> : PriorityQueue<T, TSort>
 
     public new T Dequeue()
     {
-        
         _semaphore.Wait();
         return base.Dequeue();
     }

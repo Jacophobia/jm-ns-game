@@ -26,12 +26,8 @@ public class ReceivingClient : RemoteController
 
     protected override void OnDraw(float deltaTime)
     {
-        // Retrieve renderable data from the network and render it
-        if (!Client.TryDequeueRenderable(out var renderables))
-            return;
-        
         _player.BeginDisplay();
-        foreach (var renderable in renderables)
+        foreach (var renderable in Client.DequeueRenderable())
         {
             renderable.Render(_player);
         }

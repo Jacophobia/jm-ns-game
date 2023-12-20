@@ -185,15 +185,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     public void Draw(float deltaTime)
     {
         foreach (var player in _players)
+        {
             player.BeginDisplay();
-        foreach (var element in _elements)
-        foreach (var player in _players)
-            element.Render(player);
-        foreach (var element in _staticElements)
-        foreach (var player in _players)
-            element.Render(player);
-        foreach (var player in _players)
+            foreach (var element in _elements)
+                element.Render(player);
+            foreach (var element in _staticElements)
+                element.Render(player);
             player.EndDisplay();
+        }
     }
 
     public void Add(IPlayer player)

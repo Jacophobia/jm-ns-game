@@ -1,4 +1,9 @@
-﻿using System.Collections.Concurrent;
+﻿using System;
+using System.Collections.Generic;
+using System.Net;
+using System.Net.Sockets;
+using System.Threading;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -13,12 +18,6 @@ using MonoGame.Players;
 
 namespace MonoGame.Networking;
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Net.Sockets;
-using System.Threading;
-
 public class Server : IControlSource, IDisposable
 {
     private const int MaxBufferSize = 65_536;
@@ -31,6 +30,7 @@ public class Server : IControlSource, IDisposable
     private readonly TcpListener _tcpListener;
     private readonly ConcurrentDictionary<Guid, UdpClient> _clients;
     private readonly ConcurrentDictionary<Guid, Controls> _playerControls;
+    private readonly ConcurrentDictionary<Guid, IPEndPoint> _endPoints;
     private readonly ConcurrentQueue<External> _newPlayers;
     private readonly List<Thread> _activeThreads;
     private readonly int _tcpPort;
@@ -52,6 +52,7 @@ public class Server : IControlSource, IDisposable
         _stopwatch = Stopwatch.StartNew();
         _renderableSendBuffers = new ConcurrentDictionary<Guid, MemoryStream>();
         _writableSendBuffers = new ConcurrentDictionary<Guid, MemoryStream>();
+        _endPoints = new ConcurrentDictionary<Guid, IPEndPoint>();
     }
     
     public Controls GetControls(IPlayer player)
@@ -64,6 +65,13 @@ public class Server : IControlSource, IDisposable
         _playerControls[player.Id] = Controls.None;
         
         return controls;
+    }
+
+    private void Remove(Guid clientId)
+    {
+        _clients.TryRemove(clientId, out _);
+        _endPoints.TryRemove(clientId, out _);
+        _playerControls.TryRemove(clientId, out _);
     }
     
     public bool TryGetNewPlayer(out External newPlayer)
@@ -84,8 +92,8 @@ public class Server : IControlSource, IDisposable
             return;
         }
 
-        _renderableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize]));
-        _writableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize]));
+        _renderableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
+        _writableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
 
         _renderableSendBuffers[player.Id].Position = 0;
         _writableSendBuffers[player.Id].Position = 0;
@@ -128,7 +136,7 @@ public class Server : IControlSource, IDisposable
             return;
         }
 
-        var writer = new BinaryWriter(_writableSendBuffers[player.Id]);
+        using var writer = new BinaryWriter(_writableSendBuffers[player.Id]);
 
         if (_writableSendBuffers[player.Id].Position == 0)
         {
@@ -153,8 +161,8 @@ public class Server : IControlSource, IDisposable
             return;
         }
         
-        client.Send(_renderableSendBuffers[player.Id].GetBuffer(), (int)_renderableSendBuffers[player.Id].Position);
-        client.Send(_writableSendBuffers[player.Id].GetBuffer(), (int)_writableSendBuffers[player.Id].Position);
+        client.Send(_renderableSendBuffers[player.Id].GetBuffer(), (int)_renderableSendBuffers[player.Id].Position, _endPoints[player.Id]);
+        client.Send(_writableSendBuffers[player.Id].GetBuffer(), (int)_writableSendBuffers[player.Id].Position, _endPoints[player.Id]);
     }
 
     public void Start()
@@ -199,7 +207,7 @@ public class Server : IControlSource, IDisposable
             }
             catch (SocketException)
             {
-                // Handle the exception as needed
+                // Ignore connection related errors and just retry
             }
         }
     }
@@ -219,6 +227,8 @@ public class Server : IControlSource, IDisposable
         stream.Write(portBytes, 0, portBytes.Length);
 
         _clients[clientId] = udpClient;
+        
+        Console.WriteLine($"Client {clientId} is connected on port {udpPort}");
 
         IPEndPoint remoteEndPoint = null;
         try
@@ -226,8 +236,16 @@ public class Server : IControlSource, IDisposable
             while (_isRunning)
             {
                 var receivedBytes = udpClient.Receive(ref remoteEndPoint);
+
+                _endPoints[clientId] = remoteEndPoint;
+
                 ProcessReceivedData(clientId, receivedBytes);
             }
+        }
+        catch (SocketException)
+        {
+            // this exception occurs when the connected client closes 
+            //  the connection
         }
         catch (Exception e)
         {
@@ -236,10 +254,13 @@ public class Server : IControlSource, IDisposable
         }
         finally
         {
-            _clients.Remove(clientId, out _);
+            Remove(clientId);
             
             udpClient.Close();
             tcpClient.Close();
+            
+            Console.WriteLine($"Client {clientId} has disconnected");
+            Console.WriteLine($"Port {udpPort} has been closed");
         }
     }
 
@@ -255,7 +276,7 @@ public class Server : IControlSource, IDisposable
         var dataType = data.Array[data.Offset + 8];
         var payload = new ArraySegment<byte>(data.Array, data.Offset + 9, data.Count - (data.Offset + 9));
         
-        if (!_clients.ContainsKey(userId))
+        if (!_playerControls.ContainsKey(userId))
         {
             _playerControls[userId] = Controls.None;
             _newPlayers.Enqueue(new External(userId, new Camera(), this));
