@@ -168,41 +168,49 @@ public class Client : IDisposable
     {
         while (_isConnected)
         {
-            // Use the same buffer for each receive operation
-            var receivedBytes = _udpClient.Client.Receive(_receiveBuffer);
-            
-            var data = new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes);
-            
-            Debug.Assert(data.Array != null, "segment.Array should not be null");
-            
-            var timestamp = BitConverter.ToInt64(data.Array ?? Array.Empty<byte>(), data.Offset);
-            var dataType = data.Array[data.Offset + 8];
-            var payload = new ArraySegment<byte>(data.Array, data.Offset + 9, data.Count - (data.Offset + 9));
-
-            switch (dataType)
+            try
             {
-                case RenderableDataType:
-                    lock (_incomingRenderableQueue)
-                    {
-                        if (_incomingRenderableQueue.Count >= MaxQueueSize)
+                // Use the same buffer for each receive operation
+                var receivedBytes = _udpClient.Client.Receive(_receiveBuffer);
+
+                var data = new ArraySegment<byte>(_receiveBuffer, 0, receivedBytes);
+
+                Debug.Assert(data.Array != null, "segment.Array should not be null");
+
+                var timestamp = BitConverter.ToInt64(data.Array ?? Array.Empty<byte>(), data.Offset);
+                var dataType = data.Array[data.Offset + 8];
+                var payload = new ArraySegment<byte>(data.Array, data.Offset + 9, data.Count - (data.Offset + 9));
+
+                switch (dataType)
+                {
+                    case RenderableDataType:
+                        lock (_incomingRenderableQueue)
                         {
-                            _incomingRenderableQueue.TryDequeue(out _, out _); // Remove oldest data if queue is full
+                            if (_incomingRenderableQueue.Count >= MaxQueueSize)
+                            {
+                                _incomingRenderableQueue.TryDequeue(out _,
+                                    out _); // Remove oldest data if queue is full
+                            }
+
+                            _incomingRenderableQueue.Enqueue(DeserializeRenderableData(payload), timestamp);
                         }
-                        
-                        _incomingRenderableQueue.Enqueue(DeserializeRenderableData(payload), timestamp);
-                    }
-                    break;
-                case WritableDataType:
-                    lock (_incomingWritableQueue)
-                    {
-                        if (_incomingWritableQueue.Count >= MaxQueueSize)
+                        break;
+                    case WritableDataType:
+                        lock (_incomingWritableQueue)
                         {
-                            _incomingWritableQueue.TryDequeue(out _, out _); // Remove oldest data if queue is full
+                            if (_incomingWritableQueue.Count >= MaxQueueSize)
+                            {
+                                _incomingWritableQueue.TryDequeue(out _, out _); // Remove oldest data if queue is full
+                            }
+
+                            _incomingWritableQueue.Enqueue(DeserializeWritableData(payload), timestamp);
                         }
-                        
-                        _incomingWritableQueue.Enqueue(DeserializeWritableData(payload), timestamp);
-                    }
-                    break;
+                        break;
+                }
+            }
+            catch (SocketException)
+            {
+                // do nothing when the other client closes the connection
             }
         }
     }
