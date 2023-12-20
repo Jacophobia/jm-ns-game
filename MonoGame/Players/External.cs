@@ -1,44 +1,43 @@
 ﻿using System;
-using System.Net;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Interfaces;
+using MonoGame.Networking;
 using MonoGame.Output;
 
 namespace MonoGame.Players;
 
 public class External : Player
 {
-    private readonly NetworkHost _networkClient;
+    private readonly Server _server;
 
-    public External(IPEndPoint endPoint, Camera perspective, NetworkHost networkClient) : base(endPoint, perspective, networkClient)
+    public External(Guid userId, Camera perspective, Server server) : base(userId, perspective, server)
     {
-        _networkClient = networkClient;
+        _server = server;
     }
 
     public override void BeginDisplay()
     {
-        _networkClient.PrepareRenderableBatch();
+        _server.PrepareRenderableBatch(this);
     }
 
     protected override void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null)
     {
-        _networkClient.Enqueue(renderable, texture, destination, source, color, rotation, origin, effect, depth);
+        _server.Enqueue(this, renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
-    protected override void OnDisplay(IWritable writable)
+    protected override void OnDisplay(IWritable writable, SpriteFont font = null, 
+    string text = null, Vector2? position = null, Color? color = null, 
+    float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+    float? depth = null)
     {
-        // If we want to support external menus (which we will for the
-        // pause menu and the inventory menu) then we will need to
-        // implement a method in NetworkHost / Server that supports
-        // displaying text
-        throw new NotImplementedException(); 
+        _server.Enqueue(this, writable, font, text, position, color, rotation, origin, scale, effect, depth);
     }
     
     public override void EndDisplay()
     {
-        _networkClient.SendRenderableBatch();
+        _server.SendRenderableBatch(this);
     }
 }

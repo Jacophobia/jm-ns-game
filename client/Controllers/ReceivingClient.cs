@@ -16,7 +16,7 @@ public class ReceivingClient : RemoteController
 
     protected override void OnLoadContent()
     {
-        _player = new Remote(Renderer, WindowSize, NetworkClient);
+        _player = new Remote(Renderer, WindowSize, Client);
     }
 
     protected override void OnUpdate(float deltaTime)
@@ -28,7 +28,7 @@ public class ReceivingClient : RemoteController
     {
         // Retrieve renderable data from the network and render it
         _player.BeginDisplay();
-        foreach (var renderable in NetworkClient.GetRenderableData())
+        foreach (var renderable in Client.GetRenderableData())
         {
             renderable.Render(_player);
         }

@@ -61,9 +61,7 @@ internal class Listener : IControlSource
             .Where(key => keyboardState[key] == KeyState.Down)
             .Aggregate(Controls.None, (current, key) => current | _keyboardMapping[key]);
 
-        if (player.Id.Key is not int playerIndex)
-            return controls;
-        
+        const int playerIndex = 0;
         var controllerState = GamePad.GetState(playerIndex);
         controls |= _controllerMapping.Keys
             .Where(button => controllerState.IsButtonDown(button))

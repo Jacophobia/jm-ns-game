@@ -34,7 +34,7 @@ public class CheckBox : Component, IWritable
     {
         // Render the checkmark if checked
         Color = _isChecked ? Color.DarkGray : Color.LightGray;
-        player.Display(this);
+        player.Display(this as IWritable);
     }
 
 }

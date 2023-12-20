@@ -8,16 +8,13 @@ using MonoGame.Extensions;
 using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
-
-namespace MonoGame.Networking;
-
 using System;
-using System.Collections.Concurrent;
-using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 
-public class Client
+namespace MonoGame.Networking;
+
+public class Client : IDisposable
 {
     private const byte ControlDataType = 0;
     private const int MaxQueueSize = 15;
@@ -77,7 +74,7 @@ public class Client
         writer.Write(dataType);
     }
 
-    public void SendData(Controls data)
+    public void Send(Controls data)
     {
         if (!_isConnected) 
             return;
@@ -230,5 +227,12 @@ public class Client
     {
         _isConnected = false;
         _udpClient.Close();
+    }
+
+    public void Dispose()
+    {
+        _udpClient?.Dispose();
+
+        GC.SuppressFinalize(this);
     }
 }

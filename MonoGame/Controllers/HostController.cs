@@ -1,28 +1,29 @@
 ﻿using System;
+using MonoGame.Networking;
 using MonoGame.Output;
 
 namespace MonoGame.Controllers;
 
 public abstract class HostController : GameController
 {
-    protected readonly NetworkHost NetworkClient;
+    protected readonly Server Server;
 
     protected HostController(int serverPort, bool fullscreen = true) : base(fullscreen)
     {
-        NetworkClient = new NetworkHost(serverPort);
+        Server = new Server(serverPort);
     }
 
     protected internal override void BeforeOnInitialize()
     {
         Renderer = new Renderer(GraphicsDevice, SpriteBatch, Content);
-        NetworkClient.Start();
+        Server.Start();
 
         base.BeforeOnInitialize();
     }
 
     protected internal override void AfterOnExit(object sender, EventArgs args)
     {
-        NetworkClient.Disconnect();
+        Server.Stop();
         
         base.AfterOnExit(sender, args);
     }
@@ -31,7 +32,7 @@ public abstract class HostController : GameController
     {
         if (disposing)
         {
-            NetworkClient?.Dispose();
+            Server?.Dispose();
         }
         
         base.AfterOnDispose(disposing);

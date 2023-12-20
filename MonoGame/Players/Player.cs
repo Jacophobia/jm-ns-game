@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
 using MonoGame.Interfaces;
@@ -11,15 +12,15 @@ public abstract class Player : IPlayer
     private readonly Camera _perspective;
     private readonly IControlSource _source;
 
-    public PlayerId Id { get; }
+    public Guid Id { get; }
     public Rectangle Perspective => _perspective.View;
     public float Depth => _perspective.Depth;
     public float FocalLength => Camera.FocalLength;
     public Controls Controls { get; private set; }
 
-    protected Player(object id, Camera perspective, IControlSource source)
+    protected Player(Guid id, Camera perspective, IControlSource source)
     {
-        Id = new PlayerId(id);
+        Id = id;
         _perspective = perspective;
         _source = source;
         Controls = Controls.None;
@@ -54,16 +55,22 @@ public abstract class Player : IPlayer
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
     }
 
-    public void Display(IWritable writable)
+    public void Display(IWritable writable, SpriteFont font = null, 
+    string text = null, Vector2? position = null, Color? color = null, 
+    float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+    float? depth = null)
     {
-        OnDisplay(writable);
+        OnDisplay(writable, font, text, position, color, rotation, origin, scale, effect, depth);
     }
 
     protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
-    protected abstract void OnDisplay(IWritable writable);
+    protected abstract void OnDisplay(IWritable writable, SpriteFont font = null, 
+        string text = null, Vector2? position = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+        float? depth = null);
     
     public abstract void EndDisplay();
 }

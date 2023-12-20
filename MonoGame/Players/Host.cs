@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -10,7 +11,7 @@ namespace MonoGame.Players;
 
 public class Host : Player
 {
-    private const int HostId = 0;
+    private static readonly Guid HostId = Guid.NewGuid();
     
     private readonly Renderer _renderer;
 
@@ -38,9 +39,11 @@ public class Host : Player
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
-    protected override void OnDisplay(IWritable writable)
+    protected override void OnDisplay(IWritable writable, SpriteFont font = null, string text = null, Vector2? position = null,
+        Color? color = null, float? rotation = null, Vector2? origin = null, Vector2? scale = null,
+        SpriteEffects effect = SpriteEffects.None, float? depth = null) 
     {
-        _renderer.Write(writable);
+        _renderer.Write(writable, font, text, position, color, rotation, origin, scale, effect, depth);
     }
 
     public override void EndDisplay()

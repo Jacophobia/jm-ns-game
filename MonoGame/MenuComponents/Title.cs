@@ -28,6 +28,6 @@ public class Title : Component, IWritable
 
     protected override void OnRender(IPlayer player)
     {
-        player.Display(this);
+        player.Display(this as IWritable);
     }
 }

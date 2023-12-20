@@ -1,13 +1,13 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
-using MonoGame.Players;
 
 namespace MonoGame.Interfaces;
 
 public interface IPlayer
 {
-    public PlayerId Id { get; }
+    public Guid Id { get; }
     public Rectangle Perspective { get; }
     public float Depth { get; }
     public float FocalLength { get; }
@@ -21,7 +21,10 @@ public interface IPlayer
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
 
-    public void Display(IWritable writable);
+    public void Display(IWritable writable, SpriteFont font = null, 
+    string text = null, Vector2? position = null, Color? color = null, 
+    float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+    float? depth = null);
     
     public void Update(float deltaTime);
 

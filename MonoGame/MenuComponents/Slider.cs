@@ -58,6 +58,6 @@ public class Slider : Component, IWritable
         player.Display(new Image(_thumbTexture, _thumbRectangle));
         
         // Draw the label
-        player.Display(this);
+        player.Display(this as IWritable);
     }
 }

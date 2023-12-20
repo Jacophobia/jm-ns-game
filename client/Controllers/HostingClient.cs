@@ -149,7 +149,7 @@ public class HostingClient : HostController
 
     protected override void BeforeOnUpdate(float deltaTime)
     {
-        if (!NetworkClient.TryGetNewPlayer(out var newPlayer))
+        if (!Server.TryGetNewPlayer(out var newPlayer))
             return;
 
         var newCharacterBuilder = _playerEntities.Pop(); // TODO: need to handle the case where there aren't enough characters available
