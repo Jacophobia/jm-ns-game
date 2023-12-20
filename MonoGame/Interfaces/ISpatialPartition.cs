@@ -9,4 +9,5 @@ public interface ISpatialPartition<T> : ICollection<T>, IDisposable where T : IC
     public void Draw(float deltaTime);
     public void Add(IPlayer player);
     public void Remove(IPlayer player);
+    public void Remove(Guid playerId);
 }

@@ -202,7 +202,13 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     public void Remove(IPlayer player)
     {
-        _players.Remove(player);
+        Remove(player.Id);
+    }
+
+    public void Remove(Guid playerId)
+    {
+        _players.RemoveAll(player => player.Id == playerId);
+        // TODO: When a player disconnects, their character should not just stay in the game
     }
 
     public void Add(IEnumerable<T> items)

@@ -169,6 +169,14 @@ public class HostingClient : HostController
         _spatialPartition.Update(deltaTime);
     }
 
+    protected override void AfterOnUpdate(float deltaTime)
+    {
+        if (!Server.TryGetDisconnectedPlayerId(out var playerId))
+            return;
+
+        _spatialPartition.Remove(playerId);
+    }
+
     protected override void OnDraw(float deltaTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed ||

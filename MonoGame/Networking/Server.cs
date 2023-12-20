@@ -32,6 +32,7 @@ public class Server : IControlSource, IDisposable
     private readonly ConcurrentDictionary<Guid, Controls> _playerControls;
     private readonly ConcurrentDictionary<Guid, IPEndPoint> _endPoints;
     private readonly ConcurrentQueue<External> _newPlayers;
+    private readonly ConcurrentQueue<Guid> _disconnectedPlayers;
     private readonly List<Thread> _activeThreads;
     private readonly int _tcpPort;
     private bool _isRunning;
@@ -47,6 +48,7 @@ public class Server : IControlSource, IDisposable
         _clients = new ConcurrentDictionary<Guid, UdpClient>();
         _playerControls = new ConcurrentDictionary<Guid, Controls>();
         _newPlayers = new ConcurrentQueue<External>();
+        _disconnectedPlayers = new ConcurrentQueue<Guid>();
         _activeThreads = new List<Thread>();
         _isRunning = true;
         _stopwatch = Stopwatch.StartNew();
@@ -72,11 +74,17 @@ public class Server : IControlSource, IDisposable
         _clients.TryRemove(clientId, out _);
         _endPoints.TryRemove(clientId, out _);
         _playerControls.TryRemove(clientId, out _);
+        _disconnectedPlayers.Enqueue(clientId);
     }
     
     public bool TryGetNewPlayer(out External newPlayer)
     {
         return _newPlayers.TryDequeue(out newPlayer);
+    }
+
+    public bool TryGetDisconnectedPlayerId(out Guid playerId)
+    {
+        return _disconnectedPlayers.TryDequeue(out playerId);
     }
     
     private void AddHeaders(byte dataType, BinaryWriter writer)
