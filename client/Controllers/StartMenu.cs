@@ -1,72 +1,40 @@
-﻿using System;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework.Graphics;
+using MonoGame.Controllers;
+using MonoGame.Orchestration;
+using MonoGame.Output;
+using MonoGame.Players;
 
 namespace client.Controllers;
 
-public class StartMenu : Game
+public class StartMenu : GameController
 {
-    protected override void OnActivated(object sender, EventArgs args)
+    private PageManager _pageManager;
+    
+    public StartMenu() : base(false)
     {
-        base.OnActivated(sender, args);
     }
 
-    protected override void OnDeactivated(object sender, EventArgs args)
+    protected override void OnLoadContent()
     {
-        base.OnDeactivated(sender, args);
+        var font = Content.Load<SpriteFont>("path/to/font");
+        var buttonTexture = Content.Load<Texture2D>("path/to/button_texture");
+        var checkboxTexture = Content.Load<Texture2D>("path/to/checkbox_texture");
+        var sliderTexture = Content.Load<Texture2D>("path/to/slider_texture");
+        var sliderThumbTexture = Content.Load<Texture2D>("path/to/slider_thumb_texture");
+        var controllerTexture = Content.Load<Texture2D>("path/to/controller_texture");
+
+        var menuFactory = new MenuFactory(WindowSize, font, buttonTexture, checkboxTexture, sliderTexture, sliderThumbTexture, controllerTexture);
+        _pageManager = menuFactory.CreateMenu(new Host(new Camera(), Renderer), new []{ "character one", "character two" });
+        _pageManager.SwitchToPage("Landing");
     }
 
-    protected override void Initialize()
+    protected override void OnUpdate(float deltaTime)
     {
-        base.Initialize();
+        _pageManager.Update();
     }
 
-    protected override void LoadContent()
+    protected override void OnDraw(float deltaTime)
     {
-        base.LoadContent();
-    }
-
-    protected override void BeginRun()
-    {
-        base.BeginRun();
-    }
-
-    protected override void EndRun()
-    {
-        base.EndRun();
-    }
-
-    protected override void Update(GameTime gameTime)
-    {
-        base.Update(gameTime);
-    }
-
-    protected override bool BeginDraw()
-    {
-        return base.BeginDraw();
-    }
-
-    protected override void Draw(GameTime gameTime)
-    {
-        base.Draw(gameTime);
-    }
-
-    protected override void EndDraw()
-    {
-        base.EndDraw();
-    }
-
-    protected override void OnExiting(object sender, EventArgs args)
-    {
-        base.OnExiting(sender, args);
-    }
-
-    protected override void UnloadContent()
-    {
-        base.UnloadContent();
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
+        _pageManager.Draw();
     }
 }

@@ -1,15 +1,16 @@
 ﻿using System;
+using MonoGame.Networking;
 using MonoGame.Output;
 
 namespace MonoGame.Controllers;
 
 public abstract class RemoteController : GameController
 {
-    protected readonly NetworkClient NetworkClient;
+    protected readonly Client Client;
 
     protected RemoteController(string serverIpAddress, int serverPort, bool fullscreen = true) : base(fullscreen)
     {
-        NetworkClient = new NetworkClient(serverPort, serverIpAddress);
+        Client = new Client(serverIpAddress, serverPort);
     }
 
     protected internal override void BeforeOnInitialize()
@@ -21,14 +22,12 @@ public abstract class RemoteController : GameController
 
     protected internal override void BeforeOnBeginRun()
     {
-        // Start the network client and its listening process
-        NetworkClient.Connect();
-        NetworkClient.StartListening();
+        Client.Connect();
     }
 
     protected internal override void AfterOnExit(object sender, EventArgs args)
     {
-        NetworkClient.Disconnect();
+        Client.Disconnect();
         
         base.AfterOnExit(sender, args);
     }
@@ -37,7 +36,7 @@ public abstract class RemoteController : GameController
     {
         if (disposing)
         {
-            NetworkClient?.Dispose();
+            Client?.Dispose();
         }
         
         base.AfterOnDispose(disposing);

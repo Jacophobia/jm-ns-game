@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
+using MonoGame.Interfaces;
 
 namespace MonoGame.Input;
 
-internal class Listener
+internal class Listener : IControlSource
 {
     private readonly IDictionary<Buttons, Controls> _controllerMapping;
     private readonly IDictionary<Keys, Controls> _keyboardMapping;
@@ -53,15 +54,15 @@ internal class Listener
         (_controllerMapping[lhs], _controllerMapping[rhs]) = (_controllerMapping[rhs], _controllerMapping[lhs]);
     }
 
-    internal Controls GetInputState()
+    public Controls GetControls(IPlayer player)
     {
         var keyboardState = Keyboard.GetState();
-        var controllerState = GamePad.GetState(0);
-
         var controls = _keyboardMapping.Keys
             .Where(key => keyboardState[key] == KeyState.Down)
             .Aggregate(Controls.None, (current, key) => current | _keyboardMapping[key]);
 
+        const int playerIndex = 0;
+        var controllerState = GamePad.GetState(playerIndex);
         controls |= _controllerMapping.Keys
             .Where(button => controllerState.IsButtonDown(button))
             .Aggregate(Controls.None, (current, button) => current | _controllerMapping[button]);

@@ -1,5 +1,4 @@
 ﻿using MonoGame.Entities;
-using MonoGame.Input;
 
 namespace MonoGame.Decorators;
 
@@ -10,14 +9,8 @@ public class Inertia : EntityDecorator
         // no new behavior to add
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void OnUpdate(float deltaTime)
     {
-        if (IsStatic)
-            return;
-        var position = Position;
-        
         Position += Velocity * deltaTime;
-        
-        // Debug.Assert(Position != position || Velocity == Vector2.Zero, "Position should have changed but did not");
     }
 }

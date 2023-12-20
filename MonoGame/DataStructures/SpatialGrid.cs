@@ -6,15 +6,15 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable
+public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable, IUpdatable
 {
     private readonly List<T> _elements;
     private readonly List<T> _staticElements;
+    private readonly List<IPlayer> _players;
     private readonly ObjectPool<HashSet<PartitionKey>> _hashSetPool;
     private double _averageHeight;
     private double _averageWidth;
@@ -26,13 +26,10 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     {
         _elements = new List<T>();
         _staticElements = new List<T>();
+        _players = new List<IPlayer>();
         _hashSetPool = new ObjectPool<HashSet<PartitionKey>>();
         _partitionSizeX = 0;
         _partitionSizeY = 0;
-
-        #if DEBUG
-        _totalRuntimeStopwatch.Start();
-        #endif
     }
 
     public SpatialGrid(IEnumerable<T> elements) : this()
@@ -42,23 +39,16 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     private Dictionary<PartitionKey, HashSet<T>> Partitions => _partitions ??= new Dictionary<PartitionKey, HashSet<T>>();
 
-    void IDisposable.Dispose()
+    public void Dispose()
     {
-        #if DEBUG
-        _totalRuntimeStopwatch.Stop();
-        var totalSeconds = _totalRuntimeStopwatch.Elapsed.TotalSeconds;
-        if (!(totalSeconds > 0)) return;
-        var updatesPerSecond = _updateCallCount / totalSeconds;
-        Debug.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-        Console.WriteLine($"Average Updates per Second: {updatesPerSecond}");
-        #endif
+        GC.SuppressFinalize(this);
     }
 
-    int ICollection<T>.Count => Partitions.Values.Sum(partition => partition.Count);
+    public int Count => Partitions.Values.Sum(partition => partition.Count);
 
-    bool ICollection<T>.IsReadOnly => false;
+    public bool IsReadOnly => false;
 
-    void ICollection<T>.Add(T item)
+    public void Add(T item)
     {
         if (item?.IsStatic ?? false)
         {
@@ -70,7 +60,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             UpdateAverages(item);
             CheckAndOptimize();
         }
-        
+
         var indices = _hashSetPool.Get();
         GetPartitionIndices(item, indices);
         foreach (var partitionIndex in indices)
@@ -87,7 +77,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         _hashSetPool.Return(indices);
     }
 
-    bool ICollection<T>.Remove(T item)
+    public bool Remove(T item)
     {
         Debug.Assert(item != null, nameof(item) + " should not be null");
         
@@ -113,8 +103,8 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         // Update averages
         if (_elements.Count > 0)
         {
-            _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Destination.Width) / _elements.Count;
-            _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Destination.Height) / _elements.Count;
+            _averageWidth = (_averageWidth * (_elements.Count + 1) - item.Bounds.Width) / _elements.Count;
+            _averageHeight = (_averageHeight * (_elements.Count + 1) - item.Bounds.Height) / _elements.Count;
         }
         else
         {
@@ -129,17 +119,17 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     }
 
 
-    void ICollection<T>.Clear()
+    public void Clear()
     {
         _partitions?.Clear();
     }
 
-    bool ICollection<T>.Contains(T item)
+    public bool Contains(T item)
     {
         return _elements.Contains(item);
     }
 
-    void ICollection<T>.CopyTo(T[] array, int arrayIndex)
+    public void CopyTo(T[] array, int arrayIndex)
     {
         foreach (var element in _elements)
         {
@@ -148,7 +138,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         }
     }
 
-    IEnumerator<T> IEnumerable<T>.GetEnumerator()
+    public IEnumerator<T> GetEnumerator()
     {
         return _elements.GetEnumerator();
     }
@@ -158,42 +148,67 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         return _elements.GetEnumerator();
     }
 
-    void ISpatialPartition<T>.Update(float deltaTime, Controls controls)
+    private void UpdateElement(T element, float deltaTime)
     {
-        foreach (var element in _elements)
-        {
-            var previousIndices = _hashSetPool.Get();
-            var currentIndices = _hashSetPool.Get();
+        var previousIndices = _hashSetPool.Get();
+        var currentIndices = _hashSetPool.Get();
 
-            GetPartitionIndices(element, previousIndices);
+        GetPartitionIndices(element, previousIndices);
 
-            element.Update(deltaTime, controls);
+        element.Update(deltaTime);
 
-            GetPartitionIndices(element, currentIndices);
+        GetPartitionIndices(element, currentIndices);
 
-            CheckForCollisions(element, deltaTime, currentIndices);
+        CheckForCollisions(element, deltaTime, currentIndices);
             
-            GetPartitionIndices(element, currentIndices);
+        GetPartitionIndices(element, currentIndices);
 
-            HandlePartitionTransitions(element, previousIndices, currentIndices);
+        HandlePartitionTransitions(element, previousIndices, currentIndices);
 
-            _hashSetPool.Return(previousIndices);
-            _hashSetPool.Return(currentIndices);
-        }
-
-        #if DEBUG
-        _updateCallCount++;
-        #endif
+        _hashSetPool.Return(previousIndices);
+        _hashSetPool.Return(currentIndices);
     }
 
-    void ISpatialPartition<T>.Draw(List<IPlayer> players, float deltaTime)
+    public void Update(float deltaTime)
     {
+        foreach (var player in _players)
+        {
+            player.Update(deltaTime);
+        }
+        
         foreach (var element in _elements)
-        foreach (var player in players)
-            element.Draw(player);
-        foreach (var element in _staticElements)
-        foreach (var player in players)
-            element.Draw(player);
+        {
+            UpdateElement(element, deltaTime);
+        }
+    }
+
+    public void Draw(float deltaTime)
+    {
+        foreach (var player in _players)
+        {
+            player.BeginDisplay();
+            foreach (var element in _elements)
+                element.Render(player);
+            foreach (var element in _staticElements)
+                element.Render(player);
+            player.EndDisplay();
+        }
+    }
+
+    public void Add(IPlayer player)
+    {
+        _players.Add(player);
+    }
+
+    public void Remove(IPlayer player)
+    {
+        Remove(player.Id);
+    }
+
+    public void Remove(Guid playerId)
+    {
+        _players.RemoveAll(player => player.Id == playerId);
+        // TODO: When a player disconnects, their character should not just stay in the game
     }
 
     public void Add(IEnumerable<T> items)
@@ -202,8 +217,8 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
         if (!itemList.Any()) return;
 
         // Calculate new averages with the batch of items
-        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Destination.Width);
-        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Destination.Height);
+        var totalWidth = _averageWidth * _elements.Count + itemList.Sum(e => e.Bounds.Width);
+        var totalHeight = _averageHeight * _elements.Count + itemList.Sum(e => e.Bounds.Height);
         var newCount = _elements.Count + itemList.Count;
         _averageWidth = totalWidth / newCount;
         _averageHeight = totalHeight / newCount;
@@ -280,10 +295,14 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     private void AddIndices(Rectangle rectangle, int depth, ISet<PartitionKey> indices)
     {
         indices.Clear();
-        var minX = (int)MathF.Floor((rectangle.Center.X - rectangle.Width / 2f) / _partitionSizeX);
-        var maxX = (int)MathF.Ceiling((rectangle.Center.X + rectangle.Width / 2f) / _partitionSizeX);
-        var minY = (int)MathF.Floor((rectangle.Center.Y - rectangle.Height / 2f) / _partitionSizeY);
-        var maxY = (int)MathF.Ceiling((rectangle.Center.Y + rectangle.Height / 2f) / _partitionSizeY);
+
+        if (_partitionSizeX == 0 || _partitionSizeY == 0)
+            return;
+        
+        var minX = rectangle.Left / _partitionSizeX;
+        var maxX = (rectangle.Right + 1) / _partitionSizeX;
+        var minY = rectangle.Top / _partitionSizeY;
+        var maxY = (rectangle.Bottom + 1) / _partitionSizeY;
 
         for (var x = minX; x <= maxX; x++)
         for (var y = minY; y <= maxY; y++)
@@ -292,13 +311,13 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
 
     private void GetPartitionIndices(T item, ISet<PartitionKey> indices)
     {
-        AddIndices(item.Destination, item.Depth, indices);
+        AddIndices(item.Bounds, item.Layer, indices);
     }
 
     private void UpdateAverages(T item)
     {
-        _averageWidth = (_averageWidth * (_elements.Count - 1) + item.Destination.Width) / _elements.Count;
-        _averageHeight = (_averageHeight * (_elements.Count - 1) + item.Destination.Height) / _elements.Count;
+        _averageWidth = (_averageWidth * (_elements.Count - 1) + item.Bounds.Width) / _elements.Count;
+        _averageHeight = (_averageHeight * (_elements.Count - 1) + item.Bounds.Height) / _elements.Count;
     }
 
     private void CheckAndOptimize()
@@ -372,14 +391,7 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     
         public override int GetHashCode()
         {
-            unchecked // Overflow is fine, just wrap
-            {
-                var hash = 17;
-                hash = hash * 23 + _x.GetHashCode();
-                hash = hash * 23 + _y.GetHashCode();
-                hash = hash * 23 + _depth.GetHashCode();
-                return hash;
-            }
+            return HashCode.Combine(_x, _y, _depth);
         }
     
         public static bool operator ==(PartitionKey left, PartitionKey right)
@@ -392,10 +404,4 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
             return !(left == right);
         }
     }
-
-
-    #if DEBUG
-    private readonly Stopwatch _totalRuntimeStopwatch = new();
-    private int _updateCallCount;
-    #endif
 }

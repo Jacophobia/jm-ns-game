@@ -8,7 +8,6 @@ using MonoGame.Controllers;
 using MonoGame.DataStructures;
 using MonoGame.Decorators;
 using MonoGame.Entities;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 using MonoGame.Players;
@@ -22,8 +21,9 @@ public class HostingClient : HostController
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
     private const int BallsPerLayer = 10;
-    
+
     private ISpatialPartition<Entity> _spatialPartition;
+    private Stack<EntityBuilder> _playerEntities;
 
     public HostingClient() : base(ServerPort, fullscreen: false)
     {
@@ -31,8 +31,9 @@ public class HostingClient : HostController
     }
 
     protected override void OnInitialize()
-    {
+    { 
         _spatialPartition = new SpatialGrid<Entity>();
+        _playerEntities = new Stack<EntityBuilder>();
     }
 
     private static int GetNonZeroRandom(int min, int max)
@@ -63,40 +64,49 @@ public class HostingClient : HostController
                 var entity = new EntityBuilder(
                         "Test/ball",
                         ballPosition,
-                        new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) *
-                        (1f / 0.016f),
+                        new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * 60,
                         size,
                         size)
                     .SetDepth(i * LayerDepth)
                     .SetColor(color)
-                    .AddDecorator<Friction>(1f)
+                    .AddDecorator<Friction>(0.01f)
                     .AddDecorator<RemoveJitter>(0.125f)
                     .AddDecorator<Inertia>()
                     .AddDecorator<Collision>()
-                    // .AddDecorator<Friction>(200f)
-                    .AddDecorator<BasicMovement>()
-                    // .AddDecorator<Rectangular>()
-                    .AddDecorator<Circular>()
-                    // .AddDecorator<Gravity>()
+                    // .AddDecorator<Drag>(20f)
+                    .AddDecorator<Rectangular>()
+                    // .AddDecorator<Circular>()
+                    .AddDecorator<Gravity>()
                     // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
                     .AddDecorator<PerspectiveRender>(true);
                 
                 switch (i)
                 {
+                    case 0 when j is 0:
+                    {
+                        var player = new Host(new Camera(followSpeed: 1f, offset: new Vector3(0, 100, -10)), Renderer);
+                        
+                        entity.SetColor(Color.Red);
+                        entity.AddDecorator<BasicMovement>(player);
+                        
+                        var mainEntity = entity.Build();
+                        
+                        player.Follow(mainEntity); 
+                        
+                        _spatialPartition.Add(player);
+                        _spatialPartition.Add(mainEntity);
+                        break;
+                    }
                     case 0:
                     {
                         entity.SetColor(Color.Red);
-
-                        if (j != 0)
-                        {
-                            _spatialPartition.Add(entity.Build());
-                            break;
-                        }
-                        
-                        var mainEntity = entity.Build();
-                        Players.Add(new Host(new Camera(mainEntity, 1, Vector3.Up * 100), Renderer));
-                        Players.Add(new Remote(new Camera(mainEntity, 1, new Vector3(0, 100, 5)), NetworkClient));
-                        _spatialPartition.Add(mainEntity);
+                        _spatialPartition.Add(entity.Build());
+                        break;
+                    }
+                    case 1:
+                    {
+                        entity.SetColor(Color.Blue);
+                        _playerEntities.Push(entity);
                         break;
                     }
                     default:
@@ -137,9 +147,34 @@ public class HostingClient : HostController
             _spatialPartition.Add(entity);
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void BeforeOnUpdate(float deltaTime)
     {
-        _spatialPartition.Update(deltaTime, controls);
+        if (!Server.TryGetNewPlayer(out var newPlayer))
+            return;
+
+        var newCharacterBuilder = _playerEntities.Pop(); // TODO: need to handle the case where there aren't enough characters available
+
+        newCharacterBuilder.AddDecorator<BasicMovement>(newPlayer);
+
+        var newCharacter = newCharacterBuilder.Build();
+
+        newPlayer.Follow(newCharacter);
+        
+        _spatialPartition.Add(newCharacter);
+        _spatialPartition.Add(newPlayer);
+    }
+
+    protected override void OnUpdate(float deltaTime)
+    {
+        _spatialPartition.Update(deltaTime);
+    }
+
+    protected override void AfterOnUpdate(float deltaTime)
+    {
+        if (!Server.TryGetDisconnectedPlayerId(out var playerId))
+            return;
+
+        _spatialPartition.Remove(playerId);
     }
 
     protected override void OnDraw(float deltaTime)
@@ -148,7 +183,7 @@ public class HostingClient : HostController
             Keyboard.GetState().IsKeyDown(Keys.Escape))
             Exit();
         
-        _spatialPartition.Draw(Players, deltaTime);
+        _spatialPartition.Draw(deltaTime);
     }
 
     protected override void OnDispose(bool disposing)

@@ -4,7 +4,6 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
 using MonoGame.Extensions;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 using MonoGame.Output;
 
@@ -17,12 +16,17 @@ public sealed class BaseEntity : Entity
     private CollisionData _collisionData;
     private Texture2D _texture;
     private float? _mass;
+    private Vector2 _position;
+    private Vector2 _previousPosition;
+    private Vector2 _velocity;
 
     internal BaseEntity(Texture2D texture, Vector2 position, Vector2 velocity, int width, int height)
     {
         Texture = texture;
         Position = position;
+        PreviousVelocity = velocity * 10 + Vector2.One;
         Velocity = velocity;
+        _previousPosition = position * 10 + Vector2.One;
         Destination = new Rectangle((int)MathF.Round(position.X), (int)MathF.Round(position.Y), width, height);
     }
 
@@ -77,7 +81,7 @@ public sealed class BaseEntity : Entity
     public override Vector2 Origin { get; set; }
     public override SpriteEffects Effect { get; set; } = SpriteEffects.None;
 
-    public override int Depth
+    public override int Layer
     {
         get => _depth;
         set
@@ -88,14 +92,64 @@ public sealed class BaseEntity : Entity
         }
     }
 
-    public override Vector2 Position { get; set; }
-    public override Vector2 Velocity { get; set; }
+    public override Vector2 Position
+    {
+        get => _position;
+        set
+        {
+            if (IsStatic)
+                return;
+
+            if (Vector2.Round(value) != Vector2.Round(_position) && Vector2.Round(_position) != Vector2.Round(_previousPosition))
+                _previousPosition = _position;
+            
+            _position = value;
+
+            Debug.Assert(_position != _previousPosition);
+        }
+    }
+
+    public override Rectangle PreviousBounds
+    {
+        get
+        {
+            var bounds = Bounds;
+            bounds.Location = Vector2.Round(_previousPosition).ToPoint();
+            return bounds;
+        }
+    }
+
+    public override Vector2 Velocity
+    {
+        get => _velocity;
+        set
+        {
+            if (IsStatic)
+                return;
+
+            if ((value - _velocity).Length() > 0.01f && (_velocity - PreviousVelocity).Length() > 0.01f)
+                PreviousVelocity = _velocity;
+            
+            _velocity = value;
+            
+            Debug.Assert(_velocity != PreviousVelocity);
+        }
+    }
+
+    public override Vector2 PreviousVelocity { get; set; }
+
     public override float RestitutionCoefficient { get; set; } = 1;
     public override bool IsStatic { get; set; } = false;
 
     public override float Mass
     {
-        get => _mass ?? Destination.Mass();
+        get
+        {
+            if (IsStatic)
+                return float.PositiveInfinity;
+            
+            return _mass ?? Destination.Mass();
+        }
         set => _mass = value;
     }
 
@@ -112,7 +166,7 @@ public sealed class BaseEntity : Entity
 
         if (effect.HasValue) Effect = effect.Value;
 
-        if (depth.HasValue) Depth = depth.Value;
+        if (depth.HasValue) Layer = depth.Value;
 
         if (mass.HasValue) Mass = mass.Value;
     }
@@ -123,7 +177,7 @@ public sealed class BaseEntity : Entity
         return false;
     }
 
-    public override void Update(float deltaTime, Controls controls)
+    public override void Update(float deltaTime)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.
@@ -141,7 +195,7 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override void Draw(IPlayer cameras)
+    public override void Render(IPlayer cameras)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

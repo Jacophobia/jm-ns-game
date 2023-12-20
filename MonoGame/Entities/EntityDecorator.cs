@@ -1,7 +1,6 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Collision;
-using MonoGame.Input;
 using MonoGame.Interfaces;
 
 namespace MonoGame.Entities;
@@ -16,6 +15,7 @@ public abstract class EntityDecorator : Entity
     }
 
     public sealed override CollisionData CollisionData => _base.CollisionData;
+    public sealed override Rectangle PreviousBounds => _base.PreviousBounds;
 
     public sealed override Texture2D Texture
     {
@@ -59,10 +59,10 @@ public abstract class EntityDecorator : Entity
         set => _base.Effect = value;
     }
 
-    public sealed override int Depth
+    public sealed override int Layer
     {
-        get => _base.Depth;
-        set => _base.Depth = value;
+        get => _base.Layer;
+        set => _base.Layer = value;
     }
 
     public sealed override float Mass
@@ -83,6 +83,12 @@ public abstract class EntityDecorator : Entity
         set => _base.Velocity = value;
     }
 
+    public override Vector2 PreviousVelocity
+    {
+        get => _base.PreviousVelocity;
+        set => _base.PreviousVelocity = value;
+    }
+
     public sealed override float RestitutionCoefficient
     {
         get => _base.RestitutionCoefficient;
@@ -97,17 +103,17 @@ public abstract class EntityDecorator : Entity
 
     // protected abstract void Initialize();
 
-    public sealed override void Update(float deltaTime, Controls controls)
+    public sealed override void Update(float deltaTime)
     {
-        BeforeUpdate(deltaTime, controls);
-        OnUpdate(deltaTime, controls);
-        AfterUpdate(deltaTime, controls);
-        _base.Update(deltaTime, controls);
+        BeforeUpdate(deltaTime);
+        OnUpdate(deltaTime);
+        AfterUpdate(deltaTime);
+        _base.Update(deltaTime);
     }
 
-    protected virtual void BeforeUpdate(float deltaTime, Controls controls) {}
-    protected virtual void OnUpdate(float deltaTime, Controls controls) {}
-    protected virtual void AfterUpdate(float deltaTime, Controls controls) {}
+    protected virtual void BeforeUpdate(float deltaTime) {}
+    protected virtual void OnUpdate(float deltaTime) {}
+    protected virtual void AfterUpdate(float deltaTime) {}
 
     public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
     {
@@ -143,12 +149,12 @@ public abstract class EntityDecorator : Entity
         return Vector2.Zero;
     }
 
-    public sealed override void Draw(IPlayer player)
+    public sealed override void Render(IPlayer player)
     {
         BeforeDraw(player);
         OnDraw(player);
         AfterDraw(player);
-        _base.Draw(player);
+        _base.Render(player);
     }
 
     protected virtual void BeforeDraw(IPlayer player) {}

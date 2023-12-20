@@ -18,10 +18,13 @@ public static class Program
                     break;
 
                 case "thin":
-                    using (var game = new NonHostingClient())
+                    using (var game = new ReceivingClient())
                         game.Run();
                     break;
-
+                case "start":
+                    using (var game = new StartMenu())
+                        game.Run();
+                    break;
                 default:
                     Console.WriteLine("Invalid client type specified.");
                     break;

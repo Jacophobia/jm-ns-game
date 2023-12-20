@@ -1,5 +1,4 @@
 ﻿using MonoGame.Entities;
-using MonoGame.Input;
 
 namespace MonoGame.Decorators;
 
@@ -12,7 +11,7 @@ public class Drag : EntityDecorator
         _dragCoefficient = coefficient;
     }
 
-    protected override void OnUpdate(float deltaTime, Controls controls)
+    protected override void OnUpdate(float deltaTime)
     {
         Velocity -= Velocity * _dragCoefficient * deltaTime;
     }

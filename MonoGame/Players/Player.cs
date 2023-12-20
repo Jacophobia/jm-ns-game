@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using System;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using MonoGame.Input;
 using MonoGame.Interfaces;
@@ -9,27 +10,41 @@ namespace MonoGame.Players;
 public abstract class Player : IPlayer
 {
     private readonly Camera _perspective;
+    private readonly IControlSource _source;
 
+    public Guid Id { get; }
     public Rectangle Perspective => _perspective.View;
-    public float Depth => _perspective.Position.Z;
+    public float Depth => _perspective.Depth;
+    public float FocalLength => Camera.FocalLength;
+    public Controls Controls { get; private set; }
 
-    protected Player(Camera perspective)
+    protected Player(Guid id, Camera perspective, IControlSource source)
     {
+        Id = id;
         _perspective = perspective;
+        _source = source;
+        Controls = Controls.None;
     }
 
-    public void Update(float deltaTime, Controls controls)
+    public void Update(float deltaTime)
     {
-        _perspective.Update(deltaTime, controls);
+        Controls = _source.GetControls(this);
+        
+        _perspective.Update(deltaTime, Controls);
+    }
+
+    public void Follow(IRenderable target)
+    {
+        _perspective.SetFocus(target);
     }
 
     public abstract void BeginDisplay();
 
-    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, 
-        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null, 
-        SpriteEffects effect = SpriteEffects.None, int? depth = null)
+    public void Display(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
+        SpriteEffects effect = SpriteEffects.None, float? depth = null)
     {
-        if (!(destination ?? renderable.Destination).Intersects(_perspective.View))
+        if (!(destination ?? renderable.Destination).Intersects(_perspective.View) || renderable.Depth < _perspective.Depth)
             return;
 
         var relativeDestination = destination ?? renderable.Destination;
@@ -40,9 +55,22 @@ public abstract class Player : IPlayer
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
     }
 
-    protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null, 
-        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null, 
-        SpriteEffects effect = SpriteEffects.None, int? depth = null);
+    public void Display(IWritable writable, SpriteFont font = null, 
+    string text = null, Vector2? position = null, Color? color = null, 
+    float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+    float? depth = null)
+    {
+        OnDisplay(writable, font, text, position, color, rotation, origin, scale, effect, depth);
+    }
+
+    protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
+        Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
+        SpriteEffects effect = SpriteEffects.None, float? depth = null);
+
+    protected abstract void OnDisplay(IWritable writable, SpriteFont font = null, 
+        string text = null, Vector2? position = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, Vector2? scale = null, SpriteEffects effect = SpriteEffects.None, 
+        float? depth = null);
     
     public abstract void EndDisplay();
 }

@@ -1,5 +1,5 @@
 ﻿<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="NonHostingClient" type="DotNetProject" factoryName=".NET Project" singleton="false">
+  <configuration default="false" name="ReceivingClient" type="DotNetProject" factoryName=".NET Project" singleton="false">
     <option name="EXE_PATH" value="$PROJECT_DIR$/client/bin/Debug/net6.0/client.exe" />
     <option name="PROGRAM_PARAMETERS" value="--client thin" />
     <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/client/bin/Debug/net6.0" />

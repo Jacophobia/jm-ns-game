@@ -1,6 +1,5 @@
 ﻿using System;
 using MonoGame.Entities;
-using MonoGame.Input;
 
 namespace MonoGame.Decorators;
 
@@ -13,7 +12,7 @@ public class RemoveJitter : EntityDecorator
         _minimumVelocity = minimumVelocity;
     }
 
-    protected override void BeforeUpdate(float deltaTime, Controls controls)
+    protected override void BeforeUpdate(float deltaTime)
     {
         var velocity = Velocity;
         if (Math.Abs(Velocity.X) < _minimumVelocity) 
