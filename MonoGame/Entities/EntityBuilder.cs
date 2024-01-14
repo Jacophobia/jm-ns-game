@@ -116,7 +116,7 @@ public class EntityBuilder
         return this;
     }
 
-    public EntityBuilder AddDecorator<T>(params object[] parameters) where T : EntityDecorator
+    public EntityBuilder Add<T>(params object[] parameters) where T : EntityDecorator
     {
         // because the constructor may need info from one of the 
         //  entities fields, we need to add them after all fields have 

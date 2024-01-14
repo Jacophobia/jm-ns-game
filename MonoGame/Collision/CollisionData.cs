@@ -71,13 +71,13 @@ public class CollisionData
         if (coordinate.X >= Data.Count)
             return false;
         
-        var column = Data[(int)Math.Round(coordinate.X)];
+        var column = Data[(int)Math.Floor(coordinate.X)];
         var count = 0;
         
         foreach (var check in column)
         {
             count += check.Count;
-            if (count >= coordinate.Y) 
+            if (count >= Math.Floor(coordinate.Y)) 
                 return check.IsCollidable;
         }
 
