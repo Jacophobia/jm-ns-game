@@ -145,7 +145,9 @@ public class HostingClient : HostController
 
         var newCharacterBuilder = _playerEntities.Pop(); // TODO: need to handle the case where there aren't enough characters available
 
-        newCharacterBuilder.Add<BasicMovement>(newPlayer);
+        newCharacterBuilder.SetVelocity(Vector2.Zero);
+        newCharacterBuilder.Add<Jump>(newPlayer, 5f, 0.75f, 0.5f, 3.5f);
+        newCharacterBuilder.Add<LRMovement>(newPlayer, 0.75f);
 
         var newCharacter = newCharacterBuilder.Build();
 

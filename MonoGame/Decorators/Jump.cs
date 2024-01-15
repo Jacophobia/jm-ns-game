@@ -7,6 +7,7 @@ using MonoGame.Interfaces;
 
 namespace MonoGame.Decorators;
 
+// ReSharper disable once ClassNeverInstantiated.Global
 public class Jump : EntityDecorator
 {
     private readonly IPlayer _player;
@@ -57,6 +58,7 @@ public class Jump : EntityDecorator
         if (!_wasJumpPressed && _jumpVelocity / _jumpAcceleration < 4f)
         {
             Velocity = new Vector2(Velocity.X, -_jumpAcceleration);
+            _jumpAcceleration *= 0.9f;
         }
 
         _wasJumpPressed = true;
