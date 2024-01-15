@@ -84,7 +84,7 @@ public class Client : IDisposable
         
         AddHeaders(ControlDataType, writer);
         
-        writer.Write((byte)data);
+        writer.Write((int)data);
 
         _udpClient.Send(ms.GetBuffer(), (int)ms.Position);
     }

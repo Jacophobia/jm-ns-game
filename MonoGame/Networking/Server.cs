@@ -295,7 +295,7 @@ public class Server : IControlSource, IDisposable
         try
         {
             Debug.Assert(payload.Array != null, "data.Array != null");
-            var controlData = (Controls)payload.Array[payload.Offset];
+            var controlData = (Controls)BitConverter.ToInt32(payload.Array, payload.Offset);
             _playerControls[userId] |= controlData;
         }
         catch (ContentLoadException e)
