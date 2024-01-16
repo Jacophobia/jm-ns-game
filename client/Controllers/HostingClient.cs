@@ -21,7 +21,7 @@ public class HostingClient : HostController
     private const int NumLayers = 1;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
-    private const int BallsPerLayer = 1;
+    private const int BallsPerLayer = 10;
 
     private ISpatialPartition<Entity> _spatialPartition;
     private Stack<EntityBuilder> _playerEntities;
@@ -90,13 +90,6 @@ public class HostingClient : HostController
                     }
                     case 0:
                     {
-                        entity.SetColor(Color.Red);
-                        _spatialPartition.Add(entity.Build());
-                        break;
-                    }
-                    case 1:
-                    {
-                        entity.SetColor(Color.Blue);
                         _playerEntities.Push(entity);
                         break;
                     }
@@ -118,7 +111,6 @@ public class HostingClient : HostController
         
         foreach (var side in WindowSize.GetOutline(200).GetSides())
             for (var i = StartingLayer; i < NumLayers; i++)
-            {
                 background.Add(new EntityBuilder(
                         backgroundTexture,
                         new Vector2(side.X, side.Y),
@@ -133,7 +125,6 @@ public class HostingClient : HostController
                     .Add<Rectangular>()
                     .Add<PerspectiveRender>(true)
                     .Build());
-            }
         foreach (var entity in background)
             _spatialPartition.Add(entity);
     }
