@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using client.Entities;
 using client.Extensions;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,7 +18,7 @@ namespace client.Controllers;
 public class HostingClient : HostController
 {
     private const int ServerPort = 12345;
-    private const int NumLayers = 50;
+    private const int NumLayers = 1;
     private const int StartingLayer = 0;
     private const int LayerDepth = 1;
     private const int BallsPerLayer = 10;
@@ -54,31 +55,19 @@ public class HostingClient : HostController
 
         for (var i = StartingLayer; i < NumLayers; i++)
         {
-            var color = new Color(random.Next(150), random.Next(255), random.Next(255));
+            var color = new Color(random.Next(50), random.Next(50), random.Next(255));
             for (var j = 0; j < BallsPerLayer; j++)
             {
                 var ballPosition =
                     new Vector2(random.Next(2560 - maxBallSize), random.Next(1440 - maxBallSize));
                 var size = random.Next(minBallSize, maxBallSize);
 
-                var entity = new EntityBuilder(
-                        "Test/ball",
-                        ballPosition,
-                        new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * 60,
-                        size,
-                        size)
-                    .SetDepth(i * LayerDepth)
-                    .SetColor(color)
-                    .AddDecorator<Friction>(0.01f)
-                    .AddDecorator<RemoveJitter>(0.125f)
-                    .AddDecorator<Inertia>()
-                    .AddDecorator<Collision>()
-                    // .AddDecorator<Drag>(20f)
-                    .AddDecorator<Rectangular>()
-                    // .AddDecorator<Circular>()
-                    .AddDecorator<Gravity>()
-                    // .AddDecorator<Bound>(new Rectangle(-2560 / 2, -1440 / 2, 2560 * 2, 1440 * 2))
-                    .AddDecorator<PerspectiveRender>(true);
+                var entity = Characters.Default(
+                    position: ballPosition,
+                    velocity: new Vector2(GetNonZeroRandom(-2, 2), GetNonZeroRandom(-2, 2)) * random.Next(1, 5) * 60,
+                    scale: 2,
+                    depth: i * LayerDepth,
+                    color: color);
                 
                 switch (i)
                 {
@@ -87,8 +76,10 @@ public class HostingClient : HostController
                         var player = new Host(new Camera(followSpeed: 1f, offset: new Vector3(0, 100, -10)), Renderer);
                         
                         entity.SetColor(Color.Red);
-                        entity.AddDecorator<BasicMovement>(player);
-                        
+                        entity.SetVelocity(Vector2.Zero);
+                        entity.Add<Jump>(player, 5f, 0.75f, 0.5f, 3.5f);
+                        entity.Add<LRMovement>(player, 0.75f);
+
                         var mainEntity = entity.Build();
                         
                         player.Follow(mainEntity); 
@@ -99,13 +90,6 @@ public class HostingClient : HostController
                     }
                     case 0:
                     {
-                        entity.SetColor(Color.Red);
-                        _spatialPartition.Add(entity.Build());
-                        break;
-                    }
-                    case 1:
-                    {
-                        entity.SetColor(Color.Blue);
                         _playerEntities.Push(entity);
                         break;
                     }
@@ -127,7 +111,6 @@ public class HostingClient : HostController
         
         foreach (var side in WindowSize.GetOutline(200).GetSides())
             for (var i = StartingLayer; i < NumLayers; i++)
-            {
                 background.Add(new EntityBuilder(
                         backgroundTexture,
                         new Vector2(side.X, side.Y),
@@ -137,12 +120,11 @@ public class HostingClient : HostController
                     .SetDepth(i * LayerDepth)
                     .SetStatic(true)
                     .SetColor(Color.White)
-                    .AddDecorator<Static>()
-                    .AddDecorator<Collision>()
-                    .AddDecorator<Rectangular>()
-                    .AddDecorator<PerspectiveRender>(true)
+                    .Add<Static>()
+                    .Add<Collision>()
+                    .Add<Rectangular>()
+                    .Add<PerspectiveRender>(true)
                     .Build());
-            }
         foreach (var entity in background)
             _spatialPartition.Add(entity);
     }
@@ -154,7 +136,9 @@ public class HostingClient : HostController
 
         var newCharacterBuilder = _playerEntities.Pop(); // TODO: need to handle the case where there aren't enough characters available
 
-        newCharacterBuilder.AddDecorator<BasicMovement>(newPlayer);
+        newCharacterBuilder.SetVelocity(Vector2.Zero);
+        newCharacterBuilder.Add<Jump>(newPlayer, 5f, 0.75f, 0.5f, 3.5f);
+        newCharacterBuilder.Add<LRMovement>(newPlayer, 0.75f);
 
         var newCharacter = newCharacterBuilder.Build();
 

@@ -100,6 +100,7 @@ public class Server : IControlSource, IDisposable
             return;
         }
 
+        // TODO: The _writableSendBuffer is allocating a lot of memory here. Find out why.
         _renderableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
         _writableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
 
@@ -295,7 +296,7 @@ public class Server : IControlSource, IDisposable
         try
         {
             Debug.Assert(payload.Array != null, "data.Array != null");
-            var controlData = (Controls)payload.Array[payload.Offset];
+            var controlData = (Controls)BitConverter.ToInt32(payload.Array, payload.Offset);
             _playerControls[userId] |= controlData;
         }
         catch (ContentLoadException e)
