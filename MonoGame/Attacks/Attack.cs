@@ -1,29 +1,40 @@
-﻿using System.Collections.Generic;
-using MonoGame.Entities;
-using MonoGame.Interfaces;
+﻿using MonoGame.Entities;
 
 namespace MonoGame.Attacks;
 
-public class Attack
+public abstract class Attack
 {
-    private readonly List<IPhase> _phases;
+    private Attack _next;
+    private float _time;
 
-    public Attack()
+    protected abstract float Duration { get; }
+
+    protected Attack()
     {
-        _phases = new List<IPhase>();
+        _next = null;
+        _time = 0f;
     }
 
-    public Attack Then(IPhase next)
+    public Attack Then(Attack next)
     {
-        _phases.Add(next);
+        if (_next == null)
+            _next = next;
+        else
+            _next.Then(next);
+        
         return this;
     }
 
-    public void Execute(Entity context)
+    public bool Execute(Entity context, float deltaTime)
     {
-        foreach (var phase in _phases)
-        {
-            phase.Execute(context);
-        }
+        _time += deltaTime;
+
+        if (_time - Duration >= deltaTime) 
+            return _next?.Execute(context, _time - deltaTime * 2 > Duration ? deltaTime : _time - Duration) ?? true;
+        
+        OnExecute(context, _time < Duration ? deltaTime : deltaTime - (_time - Duration));
+        return false;
     }
+
+    protected abstract void OnExecute(Entity context, float deltaTime);
 }
