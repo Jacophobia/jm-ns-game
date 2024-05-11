@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MonoGame", "MonoGame\MonoGa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "Tests\Tests.csproj", "{E317F7EE-D3F0-4184-9131-9401A08F4233}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Menu", "Menu\Menu.csproj", "{8DBDC2F3-497A-4CE0-A79C-11B8E33F7381}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E317F7EE-D3F0-4184-9131-9401A08F4233}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8DBDC2F3-497A-4CE0-A79C-11B8E33F7381}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8DBDC2F3-497A-4CE0-A79C-11B8E33F7381}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8DBDC2F3-497A-4CE0-A79C-11B8E33F7381}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8DBDC2F3-497A-4CE0-A79C-11B8E33F7381}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
