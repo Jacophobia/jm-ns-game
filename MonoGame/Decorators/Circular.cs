@@ -11,7 +11,7 @@ public class Circular : EntityDecorator
     {
     }
 
-    protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
+    protected override Vector2 OnCalculateCollisionNormal(Entity rhs, Vector2 collisionLocation)
     {
         var location = Bounds.Center.ToVector2();
 

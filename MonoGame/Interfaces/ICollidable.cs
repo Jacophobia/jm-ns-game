@@ -1,11 +1,9 @@
 ﻿using Microsoft.Xna.Framework;
-using MonoGame.Collision;
 
 namespace MonoGame.Interfaces;
 
 public interface ICollidable
 {
-    public CollisionData CollisionData { get; }
     public Vector2 Position { get; set; }
     public Rectangle PreviousBounds { get; }
     public int Layer { get; }

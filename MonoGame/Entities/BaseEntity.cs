@@ -2,7 +2,6 @@
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Collision;
 using MonoGame.Extensions;
 using MonoGame.Interfaces;
 using MonoGame.Output;
@@ -13,7 +12,6 @@ public sealed class BaseEntity : Entity
 {
     private int _depth;
     private Rectangle _destination;
-    private CollisionData _collisionData;
     private Texture2D _texture;
     private float? _mass;
     private Vector2 _position;
@@ -56,7 +54,6 @@ public sealed class BaseEntity : Entity
         get => _texture;
         set
         {
-            _collisionData = new CollisionData(value);
             Source = value.Bounds;
             Origin = value.Bounds.Location.ToVector2();
             _texture = value;
@@ -74,7 +71,6 @@ public sealed class BaseEntity : Entity
     }
 
     // ReSharper disable once ConvertToAutoPropertyWithPrivateSetter
-    public override CollisionData CollisionData => _collisionData;
     public override Rectangle Source { get; set; }
     public override Color Color { get; set; } = Color.White;
     public override float Rotation { get; set; }
@@ -171,9 +167,8 @@ public sealed class BaseEntity : Entity
         if (mass.HasValue) Mass = mass.Value;
     }
 
-    public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
+    public override bool CollidesWith(Entity rhs, float deltaTime)
     {
-        overlap = null;
         return false;
     }
 
@@ -183,13 +178,12 @@ public sealed class BaseEntity : Entity
         //  decorators.
     }
 
-    public override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
+    public override Vector2 CalculateCollisionNormal(Entity collidable, Vector2 collisionLocation)
     {
         return Vector2.Zero;
     }
 
-    public override void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle overlap)
+    public override void HandleCollisionWith(Entity collidable, float deltaTime)
     {
         // We don't do anything. Entity behavior will be handled by the 
         //  decorators.

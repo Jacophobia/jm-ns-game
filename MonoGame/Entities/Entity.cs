@@ -1,12 +1,11 @@
 ﻿using System;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Collision;
 using MonoGame.Interfaces;
 
 namespace MonoGame.Entities;
 
-public abstract class Entity : ICollidable, IRenderable, IUpdatable
+public abstract class Entity : IRenderable, IUpdatable
 {
     public abstract Texture2D Texture { get; set; }
     public abstract Rectangle Destination { get; set; }
@@ -16,7 +15,6 @@ public abstract class Entity : ICollidable, IRenderable, IUpdatable
     public abstract Vector2 Origin { get; set; }
     public abstract SpriteEffects Effect { get; set; }
     public abstract int Layer { get; set; }
-    public abstract CollisionData CollisionData { get; }
     public abstract Vector2 Position { get; set; }
     public abstract Rectangle PreviousBounds { get; }
     public abstract Vector2 Velocity { get; set; }
@@ -27,11 +25,10 @@ public abstract class Entity : ICollidable, IRenderable, IUpdatable
     public Rectangle Bounds => Destination;
     public float Depth => Layer;
 
-    public abstract void HandleCollisionWith(ICollidable collidable, float deltaTime,
-        Rectangle overlap);
+    public abstract void HandleCollisionWith(Entity collidable, float deltaTime);
 
-    public abstract Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation);
-    public abstract bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap);
+    public abstract Vector2 CalculateCollisionNormal(Entity collidable, Vector2 collisionLocation);
+    public abstract bool CollidesWith(Entity rhs, float deltaTime);
 
     public abstract void Update(float deltaTime);
     public abstract void Render(IPlayer cameras);

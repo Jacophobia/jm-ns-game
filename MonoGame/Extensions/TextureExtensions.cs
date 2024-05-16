@@ -6,6 +6,11 @@ internal static class TextureExtensions
 {
     internal static string GetCollisionDataFilepath(this Texture2D texture)
     {
-        return "Content\\Metadata\\" + texture.Name.Replace('/', '\\') + ".csv";
+        return texture.Name.GetCollisionDataFilepath();
+    }
+    
+    internal static string GetCollisionDataFilepath(this string textureName)
+    {
+        return "Content\\Metadata\\" + textureName.Replace('/', '\\') + ".csv";
     }
 }

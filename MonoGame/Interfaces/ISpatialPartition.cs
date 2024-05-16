@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using MonoGame.Entities;
 
 namespace MonoGame.Interfaces;
 
-public interface ISpatialPartition<T> : ICollection<T>, IDisposable where T : ICollidable, IRenderable
+public interface ISpatialPartition<T> : ICollection<T>, IDisposable where T : Entity
 {
     public void Update(float deltaTime);
     public void Draw(float deltaTime);

@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.IO;
-using MonoGame.Collision;
+using MonoGame.Singletons;
 
 namespace MonoGame.File;
 
@@ -13,7 +13,7 @@ internal static class FileWriter
         writer.WriteAsync(data);
     }
 
-    internal static void SaveCollisionData(string filepath, IEnumerable<IEnumerable<CollisionData.CollisionCheckColumn>> csv)
+    internal static void SaveCollisionData(string filepath, IEnumerable<IEnumerable<CollisionManager.CollisionCheckColumn>> csv)
     {
         using var writer = new StreamWriter(filepath);
 

@@ -6,11 +6,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Microsoft.Xna.Framework;
+using MonoGame.Entities;
 using MonoGame.Interfaces;
 
 namespace MonoGame.DataStructures;
 
-public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRenderable, IUpdatable
+public class SpatialGrid<T> : ISpatialPartition<T> where T : Entity
 {
     private readonly List<T> _elements;
     private readonly List<T> _staticElements;
@@ -249,18 +250,15 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
     {
         foreach (var index in indices)
             if (Partitions.TryGetValue(index, out var partition))
-            {
                 foreach (var other in partition)
-                    if (!element.Equals(other) && element.CollidesWith(other, deltaTime, out var overlap))
+                    if (!element.Equals(other) && element.CollidesWith(other, deltaTime))
                     {
-                        Debug.Assert(overlap != null, $"{nameof(overlap)} should not be null");
-
                         var beforeIndices = _hashSetPool.Get();
                         var afterIndices = _hashSetPool.Get();
 
                         GetPartitionIndices(other, beforeIndices);
 
-                        element.HandleCollisionWith(other, deltaTime, overlap.Value);
+                        element.HandleCollisionWith(other, deltaTime);
 
                         GetPartitionIndices(other, afterIndices);
 
@@ -269,7 +267,6 @@ public class SpatialGrid<T> : ISpatialPartition<T> where T : ICollidable, IRende
                         _hashSetPool.Return(beforeIndices);
                         _hashSetPool.Return(afterIndices);
                     }
-            }
     }
 
     private void HandlePartitionTransitions(T item, HashSet<PartitionKey> previousIndices, HashSet<PartitionKey> currentIndices)

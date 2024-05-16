@@ -4,18 +4,21 @@ using Microsoft.Xna.Framework;
 using MonoGame.Entities;
 using MonoGame.Extensions;
 using MonoGame.Interfaces;
+using MonoGame.Singletons;
 
 namespace MonoGame.Decorators;
 
 // ReSharper disable once ClassNeverInstantiated.Global
 public class Collision : EntityDecorator
 {
+    private readonly CollisionManager _collisionManager;
+    
     public Collision(Entity @base) : base(@base)
     {
-        // no new behavior to add
+        _collisionManager = CollisionManager.GetInstance();
     }
 
-    private static bool AreMovingTowardsEachOther(ICollidable lhs, ICollidable rhs)
+    private static bool AreMovingTowardsEachOther(Entity lhs, Entity rhs)
     {
         var overlap = Rectangle.Intersect(lhs.Bounds, rhs.Bounds);
 
@@ -60,29 +63,30 @@ public class Collision : EntityDecorator
         return dotProduct < 0f;
     }
 
-    protected override bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
+    protected override bool IsCollidingWith(Entity rhs, float deltaTime)
     {
-        overlap = null;
-        
         if (IsStatic && rhs.IsStatic)
         {
             return false;
         }
-        
-        return AreMovingTowardsEachOther(this, rhs) 
-               && CollisionData.Collides(Bounds, rhs.CollisionData, rhs.Bounds, out overlap);
+
+        return AreMovingTowardsEachOther(this, rhs)
+               && _collisionManager.Collides(Texture, Bounds, rhs.Texture, rhs.Bounds);
     }
 
-    protected override void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap)
+    protected override void OnHandleCollisionWith(Entity rhs, float deltaTime)
     {
         Debug.Assert(!IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
-        Debug.Assert(overlap is not { IsEmpty: true });
 
         var initialMagnitude = (Velocity + rhs.Velocity).Length();
 
         var lhsVelocity = Velocity;
         var rhsVelocity = rhs.Velocity;
+
+        var overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
+        
+        Debug.Assert(overlap is not { IsEmpty: true });
         
         var collisionLocation = overlap.Center.ToVector2();
 

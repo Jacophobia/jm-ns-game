@@ -13,7 +13,7 @@ public class Rectangular : EntityDecorator
         // nothing to initialize
     }
     
-    protected override Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
+    protected override Vector2 OnCalculateCollisionNormal(Entity rhs, Vector2 collisionLocation)
     {
         var lhsBounds = Bounds;
         var rhsBounds = rhs.Bounds;

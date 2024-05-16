@@ -1,6 +1,5 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Collision;
 using MonoGame.Interfaces;
 
 namespace MonoGame.Entities;
@@ -13,8 +12,6 @@ public abstract class EntityDecorator : Entity
     {
         _base = @base;
     }
-
-    public sealed override CollisionData CollisionData => _base.CollisionData;
     public sealed override Rectangle PreviousBounds => _base.PreviousBounds;
 
     public sealed override Texture2D Texture
@@ -115,36 +112,35 @@ public abstract class EntityDecorator : Entity
     protected virtual void OnUpdate(float deltaTime) {}
     protected virtual void AfterUpdate(float deltaTime) {}
 
-    public override bool CollidesWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
+    public override bool CollidesWith(Entity rhs, float deltaTime)
     {
-        return _base.CollidesWith(rhs, deltaTime, out overlap) || IsCollidingWith(rhs, deltaTime, out overlap);
+        return _base.CollidesWith(rhs, deltaTime) || IsCollidingWith(rhs, deltaTime);
     }
 
-    protected virtual bool IsCollidingWith(ICollidable rhs, float deltaTime, out Rectangle? overlap)
+    protected virtual bool IsCollidingWith(Entity rhs, float deltaTime)
     {
-        overlap = null;
         return false;
     }
 
-    public sealed override void HandleCollisionWith(ICollidable collidable, float deltaTime, Rectangle overlap)
+    public sealed override void HandleCollisionWith(Entity collidable, float deltaTime)
     {
-        BeforeHandleCollisionWith(collidable, deltaTime, overlap);
-        OnHandleCollisionWith(collidable, deltaTime, overlap);
-        AfterHandleCollisionWith(collidable, deltaTime, overlap);
-        _base.HandleCollisionWith(collidable, deltaTime, overlap);
+        BeforeHandleCollisionWith(collidable, deltaTime);
+        OnHandleCollisionWith(collidable, deltaTime);
+        AfterHandleCollisionWith(collidable, deltaTime);
+        _base.HandleCollisionWith(collidable, deltaTime);
     }
 
 
-    protected virtual void BeforeHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
-    protected virtual void OnHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle overlap) {}
-    protected virtual void AfterHandleCollisionWith(ICollidable rhs, float deltaTime, Rectangle? overlap) {}
+    protected virtual void BeforeHandleCollisionWith(Entity rhs, float deltaTime) {}
+    protected virtual void OnHandleCollisionWith(Entity rhs, float deltaTime) {}
+    protected virtual void AfterHandleCollisionWith(Entity rhs, float deltaTime) {}
 
-    public sealed override Vector2 CalculateCollisionNormal(ICollidable collidable, Vector2 collisionLocation)
+    public sealed override Vector2 CalculateCollisionNormal(Entity collidable, Vector2 collisionLocation)
     {
         return OnCalculateCollisionNormal(collidable, collisionLocation) + _base.CalculateCollisionNormal(collidable, collisionLocation);
     }
 
-    protected virtual Vector2 OnCalculateCollisionNormal(ICollidable rhs, Vector2 collisionLocation)
+    protected virtual Vector2 OnCalculateCollisionNormal(Entity rhs, Vector2 collisionLocation)
     {
         return Vector2.Zero;
     }

@@ -1,7 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using MonoGame.Collision;
+using MonoGame.Singletons;
 
 namespace MonoGame.File;
 
@@ -26,14 +26,14 @@ internal static class FileReader
         while (!reader.EndOfStream) yield return reader.ReadLine();
     }
 
-    internal static List<List<CollisionData.CollisionCheckColumn>> ReadCollisionDataCsv(string filepath)
+    internal static List<List<CollisionManager.CollisionCheckColumn>> ReadCollisionDataCsv(string filepath)
     {
         return ReadFile(filepath)
             .Select(line => line.Split(','))
             .Select(collisionColumns => collisionColumns
                 .Where(collisionColumn => !string.IsNullOrEmpty(collisionColumn))
                 .Select(collisionColumn => collisionColumn.Split(':'))
-                .Select(collisionColumn => new CollisionData.CollisionCheckColumn(bool.Parse(collisionColumn[0]), int.Parse(collisionColumn[1])))
+                .Select(collisionColumn => new CollisionManager.CollisionCheckColumn(bool.Parse(collisionColumn[0]), int.Parse(collisionColumn[1])))
                 .ToList())
             .ToList();
     }
