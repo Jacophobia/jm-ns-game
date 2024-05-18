@@ -44,7 +44,7 @@ public abstract class Player : IPlayer
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null)
     {
-        if (!(destination ?? renderable.Destination).Intersects(_perspective.View) || renderable.Depth < _perspective.Depth)
+        if (!(destination ?? renderable.Destination).Intersects(_perspective.View) || (depth ?? renderable.Depth) < _perspective.Depth)
             return;
 
         var relativeDestination = destination ?? renderable.Destination;
@@ -53,6 +53,19 @@ public abstract class Player : IPlayer
         relativeDestination.Y -= _perspective.View.Y;
 
         OnDisplay(renderable, texture, relativeDestination, source, color, rotation, origin, effect, depth);
+    }
+
+    public void Display(Texture2D texture, Rectangle destination, float depth,
+        Rectangle source, Color color, float rotation, Vector2 origin,
+        SpriteEffects effect)
+    {
+        if (!(destination.Intersects(_perspective.View) || depth < _perspective.Depth))
+            return;
+
+        destination.X -= _perspective.View.X;
+        destination.Y -= _perspective.View.Y;
+
+        OnDisplay(texture, destination, source, color, rotation, origin, effect, depth);
     }
 
     public void Display(IWritable writable, SpriteFont font = null, 
@@ -66,6 +79,10 @@ public abstract class Player : IPlayer
     protected abstract void OnDisplay(IRenderable renderable, Texture2D texture = null, Rectangle? destination = null,
         Rectangle? source = null, Color? color = null, float? rotation = null, Vector2? origin = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null);
+    
+    protected abstract void OnDisplay(Texture2D texture, Rectangle destination,
+        Rectangle source, Color color, float rotation, Vector2 origin,
+        SpriteEffects effect, float depth);
 
     protected abstract void OnDisplay(IWritable writable, SpriteFont font = null, 
         string text = null, Vector2? position = null, Color? color = null, 

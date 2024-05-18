@@ -108,10 +108,9 @@ public class Server : IControlSource, IDisposable
         _writableSendBuffers[player.Id].Position = 0;
     }
 
-    public void Enqueue(IPlayer player, IRenderable renderable, Texture2D texture = null, 
-        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
-        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
-        float? depth = null)
+    public void Enqueue(IPlayer player, Texture2D texture, Rectangle destination, 
+        Rectangle source, Color color, float rotation, Vector2 origin, 
+        SpriteEffects effect, float depth)
     {
         if (!_clients.ContainsKey(player.Id)|| _renderableSendBuffers[player.Id].Length - _renderableSendBuffers[player.Id].Position < 50) // TODO: Find out how big a renderable actually is
         {
@@ -125,14 +124,32 @@ public class Server : IControlSource, IDisposable
             AddHeaders(RenderableDataType, writer);
         }
         
-        writer.WriteString(texture?.Name ?? renderable.Texture.Name);
-        writer.WriteRectangle(destination ?? renderable.Destination);
-        writer.WriteRectangle(source ?? renderable.Source);
-        writer.WriteColor(color ?? renderable.Color);
-        writer.Write(rotation ?? renderable.Rotation);
-        writer.WriteVector2(origin ?? renderable.Origin);
-        writer.Write((int)(effect == SpriteEffects.None ? renderable.Effect : effect));
-        writer.Write(depth ?? renderable.Depth);
+        writer.WriteString(texture?.Name);
+        writer.WriteRectangle(destination);
+        writer.WriteRectangle(source);
+        writer.WriteColor(color);
+        writer.Write(rotation);
+        writer.WriteVector2(origin);
+        writer.Write((int)effect);
+        writer.Write(depth);
+    }
+
+    public void Enqueue(IPlayer player, IRenderable renderable, Texture2D texture = null, 
+        Rectangle? destination = null, Rectangle? source = null, Color? color = null, 
+        float? rotation = null, Vector2? origin = null, SpriteEffects effect = SpriteEffects.None, 
+        float? depth = null)
+    {
+        Enqueue(
+            player, 
+            texture ?? renderable.Texture,
+            destination ?? renderable.Destination,
+            source ?? renderable.Source,
+            color ?? renderable.Color,
+            rotation ?? renderable.Rotation,
+            origin ?? renderable.Origin,
+            effect == SpriteEffects.None ? renderable.Effect : effect,
+            depth ?? renderable.Depth
+        );
     }
 
     public void Enqueue(IPlayer player, IWritable writable, SpriteFont font = null, 

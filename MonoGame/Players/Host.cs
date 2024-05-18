@@ -39,6 +39,12 @@ public class Host : Player
         _renderer.Draw(renderable, texture, destination, source, color, rotation, origin, effect, depth);
     }
 
+    protected override void OnDisplay(Texture2D texture, Rectangle destination, Rectangle source, Color color, float rotation, Vector2 origin,
+        SpriteEffects effect, float depth)
+    {
+        _renderer.Draw(texture, destination, source, color, rotation, origin, effect, depth);
+    }
+
     protected override void OnDisplay(IWritable writable, SpriteFont font = null, string text = null, Vector2? position = null,
         Color? color = null, float? rotation = null, Vector2? origin = null, Vector2? scale = null,
         SpriteEffects effect = SpriteEffects.None, float? depth = null) 

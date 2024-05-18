@@ -5,6 +5,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using MonoGame.Extensions;
 using MonoGame.Output;
+using MonoGame.Singletons;
 
 namespace MonoGame.Controllers;
 
@@ -237,6 +238,8 @@ public abstract class GameController : Game
     protected internal virtual void AfterOnExit(object sender, EventArgs args) {}
     protected sealed override void OnExiting(object sender, EventArgs args)
     {
+        CollisionManager.GetInstance().Save();
+        
         BeforeOnExit(sender, args);
         OnExit(sender, args);
         AfterOnExit(sender, args);

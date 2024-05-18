@@ -9,7 +9,7 @@ using MonoGame.File;
 
 namespace MonoGame.Singletons;
 
-internal class CollisionManager
+public class CollisionManager
 {
     private static CollisionManager _instance = null;
     
@@ -20,12 +20,12 @@ internal class CollisionManager
         _collisionData = new Dictionary<string, List<List<CollisionCheckColumn>>>();
     }
 
-    internal static CollisionManager GetInstance()
+    public static CollisionManager GetInstance()
     {
         return _instance ??= new CollisionManager();
     }
 
-    internal void Load(Texture2D texture)
+    public void Load(Texture2D texture)
     {
         if (_collisionData.ContainsKey(texture.Name))
         {
@@ -83,7 +83,7 @@ internal class CollisionManager
         return false;
     }
 
-    internal bool Collides(Texture2D lhs, Rectangle lhsBounds, Texture2D rhs, Rectangle rhsBounds)
+    public bool Collides(Texture2D lhs, Rectangle lhsBounds, Texture2D rhs, Rectangle rhsBounds)
     {
         var overlap = Rectangle.Intersect(lhsBounds, rhsBounds);
         
@@ -115,7 +115,7 @@ internal class CollisionManager
         return false;
     }
 
-    private void Save()
+    public void Save()
     {
         foreach (var (textureName, collisionData) in _collisionData)
         {
@@ -125,7 +125,7 @@ internal class CollisionManager
         }
     }
 
-    internal class CollisionCheckColumn
+    public class CollisionCheckColumn
     {
         public readonly bool IsCollidable;
         public int Count;

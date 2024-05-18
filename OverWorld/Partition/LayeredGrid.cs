@@ -25,7 +25,7 @@ public class LayeredGrid
         Remove(gameObject.Layer, _layers[gameObject.Layer].IndexOf(gameObject));
     }
 
-    public void Apply(ICollection<GeneralAction> actions, ICollection<Interaction> interactions)
+    public void Apply(ICollection<GeneralAction> actions, ICollection<Interaction> interactions, float deltaTime)
     {
         for (var layer = 0; layer < _layers.Count; layer++)
         {
@@ -33,7 +33,7 @@ public class LayeredGrid
             {
                 foreach (var action in actions)
                 {
-                    action.Apply(_layers[layer][i]);
+                    action.Apply(_layers[layer][i], deltaTime);
                 }
                 for (var j = i + 1; j < _layers[layer].Count; j++)
                 {
@@ -56,19 +56,19 @@ public class LayeredGrid
         }
     }
 
-    public void Apply(ICollection<GeneralAction> actions, Interaction interaction)
+    public void Apply(ICollection<GeneralAction> actions, Interaction interaction, float deltaTime)
     {
-        Apply(actions, new[] { interaction });
+        Apply(actions, new[] { interaction }, deltaTime);
     }
 
-    public void Apply(GeneralAction action, ICollection<Interaction> interactions)
+    public void Apply(GeneralAction action, ICollection<Interaction> interactions, float deltaTime)
     {
-        Apply(new[] { action }, interactions);
+        Apply(new[] { action }, interactions, deltaTime);
     }
 
-    public void Apply(GeneralAction action, Interaction interaction)
+    public void Apply(GeneralAction action, Interaction interaction, float deltaTime)
     {
-        Apply(new[] { action }, new[] { interaction });
+        Apply(new[] { action }, new[] { interaction }, deltaTime);
     }
 
     public Task SaveAsync(string filepath)

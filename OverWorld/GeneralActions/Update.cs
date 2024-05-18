@@ -4,8 +4,8 @@ namespace OverWorld.GeneralActions;
 
 public class Update : GeneralAction
 {
-    public override void Apply(IGameObject gameObject)
+    public override void Apply(IGameObject gameObject, float deltaTime)
     {
-        throw new System.NotImplementedException();
+        gameObject.Update(deltaTime);
     }
 }
