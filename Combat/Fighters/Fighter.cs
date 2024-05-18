@@ -1,26 +1,67 @@
-﻿using Shared.Controllers;
+﻿using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
+using Shared.Collision;
+using Shared.Controllers;
+using Shared.Extensions;
+using Shared.Players;
 
 namespace Combat.Fighters;
 
-public class Fighter
+public class Fighter : ICollidable
 {
+    private const int CombatLayer = 0;
     private readonly IController _controller;
-    
-    // TODO: The fighter needs to take in a ControlSource as a parameter
-    // The control source could be either a player control source or the
-    //  ai that we use to control the other fighter
-    public Fighter(IController controller)
+    private readonly uint _totalHealth;
+    private uint _currentHealth;
+    private Vector2 _velocity;
+    private Vector2 _position;
+
+    public uint Health => _currentHealth;
+
+    public Vector2 Position
     {
+        get => _position;
+        set
+        {
+            PreviousPosition = _position;
+            _position = value;
+        }
+    }
+    public Vector2 PreviousPosition { get; private set; }
+    public Vector2 Velocity
+    {
+        get => _velocity;
+        set
+        {
+            PreviousVelocity = _velocity;
+            _velocity = value;
+        }
+    }
+    public Vector2 PreviousVelocity { get; private set; }
+    public Texture2D CurrentTexture => throw new System.NotImplementedException();
+    public Rectangle Bounds => throw new System.NotImplementedException();
+    public float RestitutionCoefficient => throw new System.NotImplementedException();
+    
+    public float Mass => Bounds.Mass();
+    public CollisionType CollisionType => CollisionType.Rectangular;
+    public bool IsStatic => false;
+    public int Layer => CombatLayer;
+    
+    public Fighter(IController controller, uint totalHealth, uint currentHealth)
+    {
+        _controller = controller;
+        _totalHealth = totalHealth;
+        _currentHealth = currentHealth;
         throw new System.NotImplementedException();
     }
-
+    
     public void Update(float deltaTime)
     {
         var controls = _controller.Controls;
         throw new System.NotImplementedException();
     }
 
-    public void Draw()
+    public void Render(IPlayer player)
     {
         throw new System.NotImplementedException();
     }

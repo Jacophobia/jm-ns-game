@@ -19,7 +19,6 @@ public class Client : IDisposable
     private const int MaxQueueSize = 15;
     private const int MaxBufferSize = 65_536;
     private const byte RenderableDataType = 1;
-    private const byte WritableDataType = 4;
     
     private readonly string _serverIp;
     private readonly int _serverTcpPort;

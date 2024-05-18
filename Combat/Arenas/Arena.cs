@@ -2,6 +2,7 @@
 using Combat.Decorations;
 using Combat.Fighters;
 using Combat.Training;
+using Shared.Collision;
 using Shared.Players;
 
 namespace Combat.Arenas;
@@ -34,6 +35,33 @@ public abstract class Arena
         throw new System.NotImplementedException();
     }
 
+    private static void HandleCollision(ICollidable lhs, ICollidable rhs)
+    {
+        if (CollisionFunctions.IsThereACollision(lhs, rhs))
+            CollisionFunctions.HandleCollision(lhs, rhs);
+    }
+
+    private void HandleCollisions(ICollidable fighter)
+    {
+        if (_leftWall != null && _rightWall != null)
+        {
+            HandleCollision(fighter, _leftWall);
+            HandleCollision(fighter, _rightWall);
+        }
+        
+        foreach (var panel in _floorPanels)
+        {
+            HandleCollision(fighter, panel);
+        }
+    }
+
+    private void HandleCollisions()
+    {
+        HandleCollision(_fighterOne, _fighterTwo);
+        HandleCollisions(_fighterOne);
+        HandleCollisions(_fighterTwo);
+    }
+
     public void Update(float deltaTime)
     {
         // floor only needs to be updated if it is ArenaType.Infinite
@@ -42,6 +70,7 @@ public abstract class Arena
 
     public void Render(IPlayer player)
     {
+        // draw the fighters, floor, walls (if applicable), and decorations
         throw new System.NotImplementedException();
     }
 
