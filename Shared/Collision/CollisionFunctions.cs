@@ -1,31 +1,16 @@
 ﻿using System;
 using System.Diagnostics;
 using Microsoft.Xna.Framework;
-using OverWorld.GameObjects;
-using Shared.Collision;
 using Shared.Extensions;
 using Shared.Singletons;
 
-namespace OverWorld.Interactions;
+namespace Shared.Collision;
 
-public class HandleCollision : Interaction
+public static class CollisionFunctions
 {
-    private readonly CollisionManager _collisionManager;
+    private static CollisionManager _collisionManager;
     
-    public HandleCollision()
-    {
-        _collisionManager = CollisionManager.GetInstance();
-    }
-    
-    public override void Apply(GameObject lhs, GameObject rhs)
-    {
-        if (IsThereACollision(lhs, rhs))
-        {
-            PerformCollision(lhs, rhs);
-        }
-    }
-
-    private bool IsThereACollision(ICollidable lhs, ICollidable rhs)
+    public static bool IsThereACollision(ICollidable lhs, ICollidable rhs)
     {
         if (lhs.IsStatic && rhs.IsStatic)
         {
@@ -38,13 +23,15 @@ public class HandleCollision : Interaction
             return false;
         
         var collisionLocation = overlap.Center.ToVector2();
+        
+        _collisionManager ??= CollisionManager.GetInstance();
 
-        return (AreMovingTowardsEachOther(lhs.Velocity, lhs.Bounds.Center.ToVector2(), Vector2.Zero, collisionLocation)
+        return (AreMovingTowardsEachOther(lhs.Velocity, lhs.Bounds.Center.ToVector2(), Vector2.Zero, collisionLocation) 
                 || AreMovingTowardsEachOther(rhs.Velocity, rhs.Bounds.Center.ToVector2(), Vector2.Zero, collisionLocation))
                && _collisionManager.Collides(lhs.CurrentTexture, lhs.Bounds, rhs.CurrentTexture, rhs.Bounds);
     }
 
-    private static void PerformCollision(ICollidable lhs, ICollidable rhs)
+    public static void HandleCollision(ICollidable lhs, ICollidable rhs)
     {
         Debug.Assert(!lhs.IsStatic || !rhs.IsStatic);
         Debug.Assert(rhs != null);
@@ -150,7 +137,11 @@ public class HandleCollision : Interaction
                 var location = lhs.Position;
 
                 if (location == collisionLocation)
+                {
                     location = lhs.PreviousPosition;
+                }
+                
+                Debug.Assert(location != collisionLocation, "location cannot be equal to collisionLocation or it will wig out");
 
                 normal = Vector2.Normalize(collisionLocation - location);
                 
@@ -167,11 +158,11 @@ public class HandleCollision : Interaction
                 var rhsHalfHeight = rhs.Bounds.Height / 2f;
 
                 // Calculate overlap on each axis
-                var overlapX = lhsHalfWidth + rhsHalfWidth - Math.Abs(distance.X);
-                var overlapY = lhsHalfHeight + rhsHalfHeight - Math.Abs(distance.Y);
+                var overlapX = lhsHalfWidth + rhsHalfWidth - MathF.Abs(distance.X);
+                var overlapY = lhsHalfHeight + rhsHalfHeight - MathF.Abs(distance.Y);
 
                 // The axis with the smallest overlap determines the normal
-                normal = overlapX < overlapY ? new Vector2(Math.Sign(distance.X), 0) : new Vector2(0, Math.Sign(distance.Y));
+                normal = overlapX < overlapY ? new Vector2(MathF.Sign(distance.X), 0) : new Vector2(0, MathF.Sign(distance.Y));
         
                 Debug.Assert(!float.IsNaN(normal.X) && !float.IsNaN(normal.Y));
                 break;

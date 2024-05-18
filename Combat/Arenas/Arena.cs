@@ -2,23 +2,23 @@
 using Combat.Decorations;
 using Combat.Fighters;
 using Combat.Training;
-using MonoGame.Interfaces;
+using Shared.Players;
 
 namespace Combat.Arenas;
 
 public abstract class Arena
 {
-    private readonly ArenaType _type;
     private CombatLog _log;
 
+    // fighters
     private Fighter _fighterOne;
     private Fighter _fighterTwo;
-
-    private List<Floor> _floorPanels;
     
+    // battle area
+    private readonly ArenaType _type;
+    private readonly List<Floor> _floorPanels;
     private Wall _leftWall;
     private Wall _rightWall;
-
     private List<Decoration> _decorations;
 
     protected Arena(ArenaType type, List<Decoration> decorations)

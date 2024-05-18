@@ -1,20 +1,25 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using MonoGame.Players;
 using OverWorld.GameObjects;
+using Shared.Players;
 
 namespace OverWorld.GeneralActions;
 
 public class Render : GeneralAction
 {
-    private readonly Player _player;
+    private readonly IPlayer _player;
     
-    public Render(Player player)
+    public Render(IPlayer player)
     {
         _player = player;
     }
-    
-    public override void Apply(IGameObject gameObject, float deltaTime)
+
+    public override void Begin()
+    {
+        _player.BeginDisplay();
+    }
+
+    public override void Apply(GameObject gameObject, float deltaTime)
     {
         _player.Display(
             gameObject.CurrentTexture,
@@ -26,5 +31,10 @@ public class Render : GeneralAction
             Vector2.Zero, 
             SpriteEffects.None
         );
+    }
+
+    public override void End()
+    {
+        _player.EndDisplay();
     }
 }

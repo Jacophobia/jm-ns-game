@@ -8,19 +8,19 @@ namespace OverWorld.Partition;
 
 public class LayeredGrid
 {
-    private readonly List<List<IGameObject>> _layers;
+    private readonly List<List<GameObject>> _layers;
 
     public LayeredGrid()
     {
-        _layers = new List<List<IGameObject>>();
+        _layers = new List<List<GameObject>>();
     }
 
-    public void Add(IGameObject gameObject)
+    public void Add(GameObject gameObject)
     {
         _layers[gameObject.Layer].Add(gameObject);
     }
 
-    public void Remove(IGameObject gameObject)
+    public void Remove(GameObject gameObject)
     {
         Remove(gameObject.Layer, _layers[gameObject.Layer].IndexOf(gameObject));
     }

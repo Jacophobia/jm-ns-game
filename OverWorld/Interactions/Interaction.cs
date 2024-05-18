@@ -4,5 +4,5 @@ namespace OverWorld.Interactions;
 
 public abstract class Interaction
 {
-    public abstract void Apply(IGameObject lhs, IGameObject rhs);
+    public abstract void Apply(GameObject lhs, GameObject rhs);
 }
