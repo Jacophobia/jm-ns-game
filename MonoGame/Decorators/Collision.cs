@@ -17,50 +17,20 @@ public class Collision : EntityDecorator
     {
         _collisionManager = CollisionManager.GetInstance();
     }
-
-    private static bool AreMovingTowardsEachOther(Entity lhs, Entity rhs)
+    
+    public static bool AreMovingTowardsEachOther(Vector2 lhsVelocity, Vector2 lhsPosition, Vector2 rhsVelocity, Vector2 rhsPosition)
     {
-        var overlap = Rectangle.Intersect(lhs.Bounds, rhs.Bounds);
+        // Calculate the relative position vector between the two objects
+        var relativePosition = rhsPosition - lhsPosition;
 
-        if (overlap is { IsEmpty: true })
-            return false;
+        // Calculate the relative velocity vector between the two objects
+        var relativeVelocity = rhsVelocity - lhsVelocity;
 
-        var collisionLocation = overlap.Center;
+        // Calculate the dot product of the relative position and relative velocity vectors
+        var dotProduct = Vector2.Dot(relativePosition, relativeVelocity);
 
-        var distance = overlap.Center - rhs.Bounds.Center;
-        
-        if (Math.Abs(distance.X) > Math.Abs(distance.Y))
-        {
-            collisionLocation.Y = rhs.Bounds.Center.Y + Math.Sign(distance.Y) * 5;
-        }
-        else
-        {
-            collisionLocation.X = rhs.Bounds.Center.X + Math.Sign(distance.X) * 5;
-        }
-        
-        // Calculate position differences
-        var deltaPosition = collisionLocation != lhs.Bounds.Center 
-            ? (collisionLocation - lhs.Bounds.Center).ToVector2()
-            : (collisionLocation - lhs.PreviousBounds.Center).ToVector2();
-        deltaPosition.Normalize();
-        
-        Debug.Assert(!float.IsNaN(deltaPosition.X) && !float.IsNaN(deltaPosition.Y));
-        
-        // Calculate velocity differences
-        var deltaVelocity = (rhs.Velocity - lhs.Velocity).Length() > 0.01f
-            ? rhs.Velocity - lhs.Velocity
-            : rhs.Velocity - lhs.PreviousVelocity;
-        deltaVelocity.Normalize();
-
-        Debug.Assert(!float.IsNaN(deltaVelocity.X) && !float.IsNaN(deltaVelocity.Y));
-        
-        // Calculate the dot product
-        var dotProduct = Vector2.Dot(deltaPosition, deltaVelocity);
-        
-        Debug.Assert(!float.IsNaN(dotProduct));
-
-        // If the dot product is negative, objects are moving towards each other
-        return dotProduct < 0f;
+        // If the dot product is negative, the objects are moving towards each other
+        return dotProduct < 0;
     }
 
     protected override bool IsCollidingWith(Entity rhs, float deltaTime)
@@ -69,8 +39,16 @@ public class Collision : EntityDecorator
         {
             return false;
         }
+        
+        var overlap = Rectangle.Intersect(Bounds, rhs.Bounds);
+        
+        if (overlap is { IsEmpty: true })
+            return false;
+        
+        var collisionLocation = overlap.Center.ToVector2();
 
-        return AreMovingTowardsEachOther(this, rhs)
+        return (AreMovingTowardsEachOther(Velocity, Bounds.Center.ToVector2(), Vector2.Zero, collisionLocation)
+               || AreMovingTowardsEachOther(rhs.Velocity, rhs.Bounds.Center.ToVector2(), Vector2.Zero, collisionLocation))
                && _collisionManager.Collides(Texture, Bounds, rhs.Texture, rhs.Bounds);
     }
 
