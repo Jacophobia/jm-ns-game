@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Combat", "Combat\Combat.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{DE2F03EB-1456-4A8A-9DA4-4BDE85E39DE4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DesktopGame", "DesktopGame\DesktopGame.csproj", "{0F14C41C-6EC3-475A-8023-3295231A6801}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -36,5 +38,9 @@ Global
 		{DE2F03EB-1456-4A8A-9DA4-4BDE85E39DE4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DE2F03EB-1456-4A8A-9DA4-4BDE85E39DE4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DE2F03EB-1456-4A8A-9DA4-4BDE85E39DE4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{0F14C41C-6EC3-475A-8023-3295231A6801}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F14C41C-6EC3-475A-8023-3295231A6801}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F14C41C-6EC3-475A-8023-3295231A6801}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F14C41C-6EC3-475A-8023-3295231A6801}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

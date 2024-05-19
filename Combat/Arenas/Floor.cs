@@ -2,6 +2,7 @@
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
 using Shared.Players;
+using Shared.Singletons;
 
 namespace Combat.Arenas;
 
@@ -35,7 +36,8 @@ public class Floor : ICollidable
         get => throw new System.NotImplementedException();
         set => throw new System.NotImplementedException();
     }
-    public Texture2D CurrentTexture => throw new System.NotImplementedException();
+    public Texture2D CurrentTexture { get; }
+
     public Rectangle Bounds => throw new System.NotImplementedException();
     public float RestitutionCoefficient => throw new System.NotImplementedException();
     public float Mass => throw new System.NotImplementedException();
@@ -43,6 +45,9 @@ public class Floor : ICollidable
     public bool IsStatic => throw new System.NotImplementedException();
     public Floor()
     {
+        CurrentTexture = TextureManager.GetInstance()["Arena/Floor/Test"];
+        _velocity = Vector2.Zero;
+        PreviousVelocity = Vector2.Zero;
         throw new System.NotImplementedException();
     }
     

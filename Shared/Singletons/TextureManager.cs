@@ -6,14 +6,14 @@ using Microsoft.Xna.Framework.Graphics;
 namespace Shared.Singletons;
 
 // ReSharper disable once InvertIf
-internal class TextureManager
+public class TextureManager
 {
     private static TextureManager _instance = null;
 
     private readonly IDictionary<string, Texture2D> _textures;
     private readonly ContentManager _contentManager;
 
-    internal Texture2D this[string key]
+    public Texture2D this[string key]
     {
         get
         {
@@ -33,12 +33,12 @@ internal class TextureManager
         _textures = new Dictionary<string, Texture2D>();
     }
 
-    internal static void Initialize(ContentManager contentManager)
+    public static void Initialize(ContentManager contentManager)
     {
         _instance ??= new TextureManager(contentManager);
     }
 
-    internal static TextureManager GetInstance()
+    public static TextureManager GetInstance()
     {
         return _instance ?? throw new Exception("The texture manager has not yet been initialized. Please initialize it by calling TextureManager.Initialize(ContentManager).");
     }
