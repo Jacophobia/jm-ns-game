@@ -2,12 +2,13 @@
 using Combat.Decorations;
 using Combat.Fighters;
 using Combat.Training;
+using Microsoft.Xna.Framework;
 using Shared.Collision;
 using Shared.Players;
 
 namespace Combat.Arenas;
 
-public abstract class Arena
+public class Arena
 {
     private CombatLog _log;
 
@@ -22,7 +23,7 @@ public abstract class Arena
     private Wall _rightWall;
     private List<Decoration> _decorations;
 
-    protected Arena(ArenaType type, List<Decoration> decorations)
+    public Arena(ArenaType type, List<Decoration> decorations)
     {
         _type = type;
         _decorations = decorations;
@@ -62,8 +63,9 @@ public abstract class Arena
         HandleCollisions(_fighterTwo);
     }
 
-    public void Update(float deltaTime)
+    public void Update(GameTime gameTime)
     {
+        
         // floor only needs to be updated if it is ArenaType.Infinite
         throw new System.NotImplementedException();
     }

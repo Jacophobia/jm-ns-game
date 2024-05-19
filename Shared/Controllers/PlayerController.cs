@@ -6,35 +6,35 @@ using Shared.Input;
 namespace Shared.Controllers;
 
 // ReSharper disable once InvertIf
-internal class PlayerController : IController
+public class PlayerController : IController
 {
     private readonly IDictionary<Buttons, Controls> _controllerMapping;
     private readonly IDictionary<Keys, Controls> _keyboardMapping;
 
-    internal PlayerController(IDictionary<Keys, Controls> mapping)
+    public PlayerController(IDictionary<Keys, Controls> mapping)
     {
         _keyboardMapping = mapping;
         _controllerMapping = null;
     }
 
-    internal PlayerController(IDictionary<Buttons, Controls> mapping)
+    public PlayerController(IDictionary<Buttons, Controls> mapping)
     {
         _controllerMapping = mapping;
         _keyboardMapping = null;
     }
 
-    internal PlayerController(IDictionary<Buttons, Controls> controllerMapping, IDictionary<Keys, Controls> keyboardMapping)
+    public PlayerController(IDictionary<Buttons, Controls> controllerMapping, IDictionary<Keys, Controls> keyboardMapping)
     {
         _keyboardMapping = keyboardMapping;
         _controllerMapping = controllerMapping;
     }
 
-    internal void Swap(Keys lhs, Keys rhs)
+    public void Swap(Keys lhs, Keys rhs)
     {
         (_keyboardMapping[lhs], _keyboardMapping[rhs]) = (_keyboardMapping[rhs], _keyboardMapping[lhs]);
     }
 
-    internal void Swap(Buttons lhs, Buttons rhs)
+    public void Swap(Buttons lhs, Buttons rhs)
     {
         (_controllerMapping[lhs], _controllerMapping[rhs]) = (_controllerMapping[rhs], _controllerMapping[lhs]);
     }

@@ -15,7 +15,7 @@ public class Renderer
     private bool _graphicsAreRendered;
     private bool _shouldClear;
 
-    internal Renderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager contentManager)
+    public Renderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager contentManager)
     {
          _graphicsDevice = graphicsDevice;
         _spriteBatch = spriteBatch;

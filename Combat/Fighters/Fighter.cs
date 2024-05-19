@@ -65,4 +65,14 @@ public class Fighter : ICollidable
     {
         throw new System.NotImplementedException();
     }
+
+    public Vector3 GetCurrentPosition()
+    {
+        return new Vector3
+        {
+            X = _position.X,
+            Y = _position.Y,
+            Z = Layer
+        };
+    }
 }
