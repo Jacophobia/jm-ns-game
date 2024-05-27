@@ -1,6 +1,4 @@
-﻿using Shared.Input;
-
-namespace Shared.Controllers;
+﻿namespace Shared.Controllables;
 
 /// <summary>
 /// This class is the basic control center for enemy players. It will

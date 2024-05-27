@@ -3,12 +3,15 @@ using Combat.Decorations;
 using Combat.Fighters;
 using Combat.Training;
 using Microsoft.Xna.Framework;
+using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
-using Shared.Players;
+using Shared.Rendering;
+using Shared.Updates;
+using Shared.View;
 
 namespace Combat.Arenas;
 
-public class Arena
+public class Arena : IRenderable, IUpdatable
 {
     private CombatLog _log;
 
@@ -70,10 +73,43 @@ public class Arena
         throw new System.NotImplementedException();
     }
 
-    public void Render(IPlayer player)
+    private static void Render(IRenderer renderer, Camera camera, ICollidable fighter)
     {
-        // draw the fighters, floor, walls (if applicable), and decorations
+        renderer.Render(
+            camera,
+            fighter.CurrentTexture,
+            fighter.Bounds,
+            fighter.CurrentTexture.Bounds,
+            Color.White,
+            0f,
+            Vector2.Zero, 
+            SpriteEffects.None,
+            fighter.Layer
+        );
+    }
+
+    private static void Render(IRenderer renderer, Camera camera, Decoration fighter)
+    {
         throw new System.NotImplementedException();
+    }
+
+    public void Render(IRenderer renderer, Camera camera)
+    {
+        Render(renderer, camera, _fighterOne);
+        Render(renderer, camera, _fighterTwo);
+        Render(renderer, camera, _leftWall);
+        Render(renderer, camera, _rightWall);
+
+        foreach (var floorPanel in _floorPanels)
+        {
+            Render(renderer, camera, floorPanel);
+        }
+
+        foreach (var decoration in _decorations)
+        {
+            Render(renderer, camera, decoration);
+        }
+        
     }
 
     /// <summary>

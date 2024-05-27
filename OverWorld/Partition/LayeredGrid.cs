@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
+using Microsoft.Xna.Framework;
 using OverWorld.GameObjects;
 using OverWorld.GeneralActions;
 using OverWorld.Interactions;
@@ -25,7 +26,7 @@ public class LayeredGrid
         Remove(gameObject.Layer, _layers[gameObject.Layer].IndexOf(gameObject));
     }
 
-    public void Apply(ICollection<GeneralAction> actions, ICollection<Interaction> interactions, float deltaTime)
+    public void Apply(ICollection<GeneralAction> actions, ICollection<Interaction> interactions, GameTime gameTime)
     {
         for (var layer = 0; layer < _layers.Count; layer++)
         {
@@ -33,7 +34,7 @@ public class LayeredGrid
             {
                 foreach (var action in actions)
                 {
-                    action.Apply(_layers[layer][i], deltaTime);
+                    action.Apply(_layers[layer][i], gameTime);
                 }
                 for (var j = i + 1; j < _layers[layer].Count; j++)
                 {
@@ -56,19 +57,19 @@ public class LayeredGrid
         }
     }
 
-    public void Apply(ICollection<GeneralAction> actions, Interaction interaction, float deltaTime)
+    public void Apply(ICollection<GeneralAction> actions, Interaction interaction, GameTime gameTime)
     {
-        Apply(actions, new[] { interaction }, deltaTime);
+        Apply(actions, new[] { interaction }, gameTime);
     }
 
-    public void Apply(GeneralAction action, ICollection<Interaction> interactions, float deltaTime)
+    public void Apply(GeneralAction action, ICollection<Interaction> interactions, GameTime gameTime)
     {
-        Apply(new[] { action }, interactions, deltaTime);
+        Apply(new[] { action }, interactions, gameTime);
     }
 
-    public void Apply(GeneralAction action, Interaction interaction, float deltaTime)
+    public void Apply(GeneralAction action, Interaction interaction, GameTime gameTime)
     {
-        Apply(new[] { action }, new[] { interaction }, deltaTime);
+        Apply(new[] { action }, new[] { interaction }, gameTime);
     }
 
     public Task SaveAsync(string filepath)

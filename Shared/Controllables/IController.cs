@@ -1,6 +1,4 @@
-﻿using Shared.Input;
-
-namespace Shared.Controllers;
+﻿namespace Shared.Controllables;
 
 public interface IController
 {

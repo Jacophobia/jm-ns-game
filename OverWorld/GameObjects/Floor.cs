@@ -1,7 +1,8 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
-using Shared.Players;
+using Shared.Rendering;
+using Shared.View;
 
 namespace OverWorld.GameObjects;
 
@@ -18,12 +19,13 @@ public class Floor : GameObject
     public override float Mass => throw new System.NotImplementedException();
     public override CollisionType CollisionType => throw new System.NotImplementedException();
     public override bool IsStatic => throw new System.NotImplementedException();
-    public override void Update(float deltaTime)
+
+    public override void Update(GameTime gameTime)
     {
         throw new System.NotImplementedException();
     }
 
-    public override void Render(IPlayer player)
+    public override void Render(IRenderer renderer, Camera camera)
     {
         throw new System.NotImplementedException();
     }

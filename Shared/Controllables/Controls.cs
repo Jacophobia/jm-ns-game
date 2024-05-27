@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Shared.Input;
+namespace Shared.Controllables;
 
 [Flags]
 public enum Controls

@@ -1,11 +1,13 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
-using Shared.Players;
+using Shared.Rendering;
+using Shared.Updates;
+using Shared.View;
 
 namespace OverWorld.GameObjects;
 
-public abstract class GameObject : ICollidable
+public abstract class GameObject : ICollidable, IRenderable, IUpdatable
 {
     private Vector2 _velocity;
     private Vector2 _position;
@@ -39,8 +41,7 @@ public abstract class GameObject : ICollidable
     public abstract float Mass { get; }
     public abstract CollisionType CollisionType { get; }
     public abstract bool IsStatic { get; }
-    
-    // methods
-    public abstract void Update(float deltaTime);
-    public abstract void Render(IPlayer player);
+
+    public abstract void Update(GameTime gameTime);
+    public abstract void Render(IRenderer renderer, Camera camera);
 }

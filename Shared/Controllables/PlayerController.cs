@@ -1,9 +1,8 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using Microsoft.Xna.Framework.Input;
-using Shared.Input;
 
-namespace Shared.Controllers;
+namespace Shared.Controllables;
 
 // ReSharper disable once InvertIf
 public class PlayerController : IController

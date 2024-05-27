@@ -6,10 +6,10 @@ using System.Net.Sockets;
 using System.Threading;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Shared.Controllables;
 using Shared.DataStructures;
 using Shared.Extensions;
-using Shared.Input;
-using Shared.Output;
+using Shared.Rendering;
 
 namespace Shared.Networking;
 
@@ -159,7 +159,7 @@ public class Client : IDisposable
         }
     }
 
-    public IEnumerable<Renderable> DequeueRenderable()
+    public IEnumerable<Renderable> GetRenderables()
     {
         return _incomingRenderableQueue.Dequeue();
     }

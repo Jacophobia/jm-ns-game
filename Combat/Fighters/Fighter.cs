@@ -1,16 +1,16 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
-using Shared.Controllers;
+using Shared.Controllables;
 using Shared.Extensions;
-using Shared.Players;
+using Shared.Rendering;
+using Shared.View;
 
 namespace Combat.Fighters;
 
-public class Fighter : ICollidable
+public class Fighter : Controllable, ICollidable, IViewable
 {
     private const int CombatLayer = 0;
-    private readonly IController _controller;
     private readonly uint _totalHealth;
     private uint _currentHealth;
     private Vector2 _velocity;
@@ -46,33 +46,40 @@ public class Fighter : ICollidable
     public CollisionType CollisionType => CollisionType.Rectangular;
     public bool IsStatic => false;
     public int Layer => CombatLayer;
+    public Vector3 CurrentPosition => new()
+    {
+        X = _position.X,
+        Y = _position.Y,
+        Z = Layer
+    };
     
     public Fighter(IController controller, uint totalHealth, uint currentHealth)
+        : base(controller)
     {
-        _controller = controller;
         _totalHealth = totalHealth;
         _currentHealth = currentHealth;
         throw new System.NotImplementedException();
     }
-    
-    public void Update(float deltaTime)
-    {
-        var controls = _controller.Controls;
-        throw new System.NotImplementedException();
-    }
 
-    public void Render(IPlayer player)
+    protected override void OnUpdate(GameTime gameTime, Controls controls)
     {
         throw new System.NotImplementedException();
     }
 
-    public Vector3 GetCurrentPosition()
+    public void Render(params IRenderer[] renderer)
     {
-        return new Vector3
+        throw new System.NotImplementedException();
+    }
+
+    public void Damage(uint amount)
+    {
+        if (amount > _currentHealth)
         {
-            X = _position.X,
-            Y = _position.Y,
-            Z = Layer
-        };
+            _currentHealth = 0;
+        }
+        else
+        {
+            _currentHealth -= amount;
+        }
     }
 }

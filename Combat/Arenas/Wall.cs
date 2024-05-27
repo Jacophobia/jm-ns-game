@@ -1,11 +1,12 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
-using Shared.Players;
+using Shared.Rendering;
+using Shared.Updates;
 
 namespace Combat.Arenas;
 
-public class Wall : ICollidable
+public class Wall : ICollidable, IUpdatable
 {
     private Vector2 _velocity;
     private Vector2 _position;
@@ -45,13 +46,13 @@ public class Wall : ICollidable
     {
         throw new System.NotImplementedException();
     }
-    
-    public void Update(float deltaTime)
+
+    public void Render(params IRenderer[] renderer)
     {
         throw new System.NotImplementedException();
     }
 
-    public void Render(IPlayer player)
+    public void Update(GameTime gameTime)
     {
         throw new System.NotImplementedException();
     }

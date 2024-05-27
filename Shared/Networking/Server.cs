@@ -10,14 +10,12 @@ using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Content;
 using Microsoft.Xna.Framework.Graphics;
+using Shared.Controllables;
 using Shared.Extensions;
-using Shared.Input;
-using Shared.Output;
-using Shared.Players;
 
 namespace Shared.Networking;
 
-public class Server : IControlSource, IDisposable
+public class Server : IDisposable
 {
     private const int MaxBufferSize = 65_536;
     private const byte ControlDataType = 0;
@@ -30,7 +28,7 @@ public class Server : IControlSource, IDisposable
     private readonly ConcurrentDictionary<Guid, UdpClient> _clients;
     private readonly ConcurrentDictionary<Guid, Controls> _playerControls;
     private readonly ConcurrentDictionary<Guid, IPEndPoint> _endPoints;
-    private readonly ConcurrentQueue<External> _newPlayers;
+    private readonly ConcurrentQueue<Guid> _newPlayers;
     private readonly ConcurrentQueue<Guid> _disconnectedPlayers;
     private readonly List<Thread> _activeThreads;
     private readonly int _tcpPort;
@@ -46,7 +44,7 @@ public class Server : IControlSource, IDisposable
         _tcpListener = new TcpListener(IPAddress.Any, tcpPort);
         _clients = new ConcurrentDictionary<Guid, UdpClient>();
         _playerControls = new ConcurrentDictionary<Guid, Controls>();
-        _newPlayers = new ConcurrentQueue<External>();
+        _newPlayers = new ConcurrentQueue<Guid>();
         _disconnectedPlayers = new ConcurrentQueue<Guid>();
         _activeThreads = new List<Thread>();
         _isRunning = true;
@@ -56,14 +54,14 @@ public class Server : IControlSource, IDisposable
         _endPoints = new ConcurrentDictionary<Guid, IPEndPoint>();
     }
     
-    public Controls GetControls(IPlayer player)
+    public Controls GetControls(Guid playerId)
     {
-        if (!_playerControls.TryGetValue(player.Id, out var controls))
+        if (!_playerControls.TryGetValue(playerId, out var controls))
         {
             controls = Controls.None;
         }
 
-        _playerControls[player.Id] = Controls.None;
+        _playerControls[playerId] = Controls.None;
         
         return controls;
     }
@@ -76,7 +74,7 @@ public class Server : IControlSource, IDisposable
         _disconnectedPlayers.Enqueue(clientId);
     }
     
-    public bool TryGetNewPlayer(out External newPlayer)
+    public bool TryGetNewPlayer(out Guid newPlayer)
     {
         return _newPlayers.TryDequeue(out newPlayer);
     }
@@ -92,33 +90,33 @@ public class Server : IControlSource, IDisposable
         writer.Write(dataType);
     }
     
-    public void PrepareRenderableBatch(IPlayer player)
+    public void PrepareRenderableBatch(Guid playerId)
     {
-        if (!_clients.ContainsKey(player.Id))
+        if (!_clients.ContainsKey(playerId))
         {
             return;
         }
 
         // TODO: The _writableSendBuffer is allocating a lot of memory here. Find out why.
-        _renderableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
-        _writableSendBuffers.TryAdd(player.Id, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
+        _renderableSendBuffers.TryAdd(playerId, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
+        _writableSendBuffers.TryAdd(playerId, new MemoryStream(new byte[MaxBufferSize], 0, MaxBufferSize, true, true));
 
-        _renderableSendBuffers[player.Id].Position = 0;
-        _writableSendBuffers[player.Id].Position = 0;
+        _renderableSendBuffers[playerId].Position = 0;
+        _writableSendBuffers[playerId].Position = 0;
     }
 
-    public void Enqueue(IPlayer player, Texture2D texture, Rectangle destination, 
+    public void Enqueue(Guid playerId, Texture2D texture, Rectangle destination, 
         Rectangle source, Color color, float rotation, Vector2 origin, 
         SpriteEffects effect, float depth)
     {
-        if (!_clients.ContainsKey(player.Id)|| _renderableSendBuffers[player.Id].Length - _renderableSendBuffers[player.Id].Position < 50) // TODO: Find out how big a renderable actually is
+        if (!_clients.ContainsKey(playerId)|| _renderableSendBuffers[playerId].Length - _renderableSendBuffers[playerId].Position < 50) // TODO: Find out how big a renderable actually is
         {
             return;
         }
 
-        var writer = new BinaryWriter(_renderableSendBuffers[player.Id]);
+        var writer = new BinaryWriter(_renderableSendBuffers[playerId]);
 
-        if (_renderableSendBuffers[player.Id].Position == 0)
+        if (_renderableSendBuffers[playerId].Position == 0)
         {
             AddHeaders(RenderableDataType, writer);
         }
@@ -133,15 +131,15 @@ public class Server : IControlSource, IDisposable
         writer.Write(depth);
     }
 
-    public void SendRenderableBatch(IPlayer player)
+    public void SendRenderableBatch(Guid playerId)
     {
-        if (!_clients.TryGetValue(player.Id, out var client))
+        if (!_clients.TryGetValue(playerId, out var client))
         {
             return;
         }
         
-        client.Send(_renderableSendBuffers[player.Id].GetBuffer(), (int)_renderableSendBuffers[player.Id].Position, _endPoints[player.Id]);
-        client.Send(_writableSendBuffers[player.Id].GetBuffer(), (int)_writableSendBuffers[player.Id].Position, _endPoints[player.Id]);
+        client.Send(_renderableSendBuffers[playerId].GetBuffer(), (int)_renderableSendBuffers[playerId].Position, _endPoints[playerId]);
+        client.Send(_writableSendBuffers[playerId].GetBuffer(), (int)_writableSendBuffers[playerId].Position, _endPoints[playerId]);
     }
 
     public void Start()
@@ -258,7 +256,7 @@ public class Server : IControlSource, IDisposable
         if (!_playerControls.ContainsKey(userId))
         {
             _playerControls[userId] = Controls.None;
-            _newPlayers.Enqueue(new External(userId, new Camera(), this));
+            _newPlayers.Enqueue(userId);
         }
             
         Debug.Assert(dataType == ControlDataType, "The wrong data type was sent");
