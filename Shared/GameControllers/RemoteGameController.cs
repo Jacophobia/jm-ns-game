@@ -19,7 +19,7 @@ public sealed class RemoteGameController : Game
     public RemoteGameController(GameSettings settings)
     {
         _client = new Client(settings.HostIp, settings.HostPort);
-        _controller = new PlayerController(settings.Controls);
+        _controller = new PlayerController(settings);
     }
 
     protected override void LoadContent()

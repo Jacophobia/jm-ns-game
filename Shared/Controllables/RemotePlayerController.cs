@@ -1,4 +1,5 @@
 ﻿using System;
+using Microsoft.Xna.Framework;
 using Shared.Networking;
 
 namespace Shared.Controllables;
@@ -15,4 +16,6 @@ public class RemotePlayerController : IController
     }
 
     public Controls Controls => _server.GetControls(_playerId);
+    public Vector2 LeftJoystick => throw new System.NotImplementedException();
+    public Vector2 RightJoystick => throw new System.NotImplementedException();
 }

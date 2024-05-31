@@ -18,14 +18,13 @@ public class ArenaGameController : GameController
     private readonly Queue<Fighter> _fighters;
     private readonly Arena _arena;
 
-    public ArenaGameController(MonogameRenderPipeline renderPipeline, GameSettings settings)
-        : base(renderPipeline, settings)
+    public ArenaGameController(GameSettings settings) : base(settings)
     {
         _cameras = new Dictionary<Guid, Camera>();
         _fighters = new Queue<Fighter>();
         _arena = new Arena(ArenaType.Infinte, new List<Decoration>());
         
-        var controller = new PlayerController(settings.Controls);
+        var controller = new PlayerController(settings);
         var fighter = new Fighter(controller, 100, 100);
         _fighters.Enqueue(fighter);
         
@@ -35,7 +34,17 @@ public class ArenaGameController : GameController
 
     protected override void OnLoad()
     {
+        if (!_fighters.TryDequeue(out var fighterOne))
+        {
+            throw new Exception("There are not enough fighters");
+        }
+
+        if (!_fighters.TryDequeue(out var fighterTwo))
+        {
+            throw new Exception("There are not enough fighters");
+        }
         
+        _arena.BeginFight(fighterOne, fighterTwo);
     }
 
     protected override void OnPlayerConnected(Guid newPlayerId, IController controller)

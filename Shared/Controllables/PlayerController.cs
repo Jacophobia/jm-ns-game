@@ -1,18 +1,22 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
+using Shared.Configuration;
 
 namespace Shared.Controllables;
 
 // ReSharper disable once InvertIf
 public class PlayerController : IController
 {
+    private const int PlayerIndex = 0;
+    
     private readonly IDictionary<Buttons, Controls> _controllerMapping;
     private readonly IDictionary<Keys, Controls> _keyboardMapping;
 
-    public PlayerController(IDictionary<Keys, Controls> mapping)
+    public PlayerController(GameSettings settings)
     {
-        _keyboardMapping = mapping;
+        _keyboardMapping = settings.Controls;
         _controllerMapping = null;
     }
 
@@ -54,8 +58,7 @@ public class PlayerController : IController
             
             if (_controllerMapping != null)
             {
-                const int playerIndex = 0;
-                var controllerState = GamePad.GetState(playerIndex);
+                var controllerState = GamePad.GetState(PlayerIndex);
                 controls |= _controllerMapping.Keys
                     .Where(button => controllerState.IsButtonDown(button))
                     .Aggregate(Controls.None, (current, button) => current | _controllerMapping[button]);
@@ -64,4 +67,8 @@ public class PlayerController : IController
             return controls;
         }
     }
+
+    public Vector2 LeftJoystick => GamePad.GetState(PlayerIndex).ThumbSticks.Left;
+
+    public Vector2 RightJoystick => GamePad.GetState(PlayerIndex).ThumbSticks.Right;
 }

@@ -14,18 +14,14 @@ public abstract class GameController : Game
 {
     // graphics
     private readonly GraphicsDeviceManager _graphicsDeviceManager;
-    private readonly MonogameRenderPipeline _renderPipeline;
     
     // multiplayer
     private readonly Server _server;
-    private const int ServerPort = 1234;
     private readonly Dictionary<Guid, IRenderer> _renderers;
     
-    protected GameController(MonogameRenderPipeline renderPipeline, GameSettings settings)
+    protected GameController(GameSettings settings)
     {
         // graphics
-        _renderPipeline = renderPipeline;
-
         _graphicsDeviceManager = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         Window.AllowUserResizing = true;
@@ -50,7 +46,7 @@ public abstract class GameController : Game
         _graphicsDeviceManager.IsFullScreen = settings.Fullscreen;
 
         // multiplayer
-        _server = new Server(ServerPort);
+        _server = new Server(settings.HostPort);
         _renderers = new Dictionary<Guid, IRenderer>();
     }
 
@@ -72,12 +68,15 @@ public abstract class GameController : Game
 
     private void LoadGraphicsPipeline()
     {
-        _renderPipeline.GraphicsDeviceManager = _graphicsDeviceManager;
-        _renderPipeline.ContentManager = Content;
-        _renderPipeline.GraphicsDevice = GraphicsDevice;
+        var renderPipeline = new MonogameRenderPipeline
+        {
+            GraphicsDeviceManager = _graphicsDeviceManager,
+            ContentManager = Content,
+            GraphicsDevice = GraphicsDevice
+        };
 
         // add a new renderer with an empty id for the local renderer
-        var renderer = new LocalRenderer(_renderPipeline);
+        var renderer = new LocalRenderer(renderPipeline);
         _renderers.Add(Guid.Empty, renderer);
     }
     protected abstract void OnLoad();

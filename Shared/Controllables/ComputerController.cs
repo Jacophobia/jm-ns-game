@@ -1,4 +1,6 @@
-﻿namespace Shared.Controllables;
+﻿using Microsoft.Xna.Framework;
+
+namespace Shared.Controllables;
 
 /// <summary>
 /// This class is the basic control center for enemy players. It will
@@ -8,4 +10,6 @@
 public class ComputerController : IController
 {
     public Controls Controls => throw new System.NotImplementedException();
+    public Vector2 LeftJoystick => throw new System.NotImplementedException();
+    public Vector2 RightJoystick => throw new System.NotImplementedException();
 }
