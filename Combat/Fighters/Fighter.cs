@@ -8,7 +8,7 @@ using Shared.View;
 
 namespace Combat.Fighters;
 
-public class Fighter : Controllable, ICollidable, IViewable
+public class Fighter : Controllable, ICollidable, IRenderable, IViewable
 {
     private const int CombatLayer = 0;
     private readonly uint _totalHealth;
@@ -66,9 +66,19 @@ public class Fighter : Controllable, ICollidable, IViewable
         throw new System.NotImplementedException();
     }
 
-    public void Render(params IRenderer[] renderer)
+    public void Render(IRenderer renderer, Camera camera)
     {
-        throw new System.NotImplementedException();
+        renderer.Render(
+            camera, 
+            CurrentTexture, 
+            Bounds, 
+            CurrentTexture.Bounds, 
+            Color.White, 
+            0f, 
+            Vector2.Zero, 
+            SpriteEffects.None, 
+            Layer
+        );
     }
 
     public void Damage(uint amount)

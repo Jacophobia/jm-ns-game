@@ -68,15 +68,8 @@ public abstract class GameController : Game
 
     private void LoadGraphicsPipeline()
     {
-        var renderPipeline = new MonogameRenderPipeline
-        {
-            GraphicsDeviceManager = _graphicsDeviceManager,
-            ContentManager = Content,
-            GraphicsDevice = GraphicsDevice
-        };
-
         // add a new renderer with an empty id for the local renderer
-        var renderer = new LocalRenderer(renderPipeline);
+        var renderer = new LocalRenderer(GraphicsDevice, Content);
         _renderers.Add(Guid.Empty, renderer);
     }
     protected abstract void OnLoad();

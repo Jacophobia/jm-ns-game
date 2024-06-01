@@ -3,10 +3,11 @@ using Microsoft.Xna.Framework.Graphics;
 using Shared.Collision;
 using Shared.Rendering;
 using Shared.Updates;
+using Shared.View;
 
 namespace Combat.Arenas;
 
-public class Wall : ICollidable, IUpdatable
+public class Wall : ICollidable, IUpdatable, IRenderable
 {
     private Vector2 _velocity;
     private Vector2 _position;
@@ -47,13 +48,23 @@ public class Wall : ICollidable, IUpdatable
         throw new System.NotImplementedException();
     }
 
-    public void Render(params IRenderer[] renderer)
+    public void Update(GameTime gameTime)
     {
         throw new System.NotImplementedException();
     }
 
-    public void Update(GameTime gameTime)
+    public void Render(IRenderer renderer, Camera camera)
     {
-        throw new System.NotImplementedException();
+        renderer.Render(
+            camera, 
+            CurrentTexture, 
+            Bounds, 
+            CurrentTexture.Bounds, 
+            Color.White, 
+            0f, 
+            Vector2.Zero, 
+            SpriteEffects.None, 
+            Layer
+        );
     }
 }

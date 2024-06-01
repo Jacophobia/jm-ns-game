@@ -16,13 +16,10 @@ public class LocalRenderer : IRenderer
     private bool _graphicsAreRendered;
     private bool _shouldClear;
 
-    public LocalRenderer(MonogameRenderPipeline renderPipeline) 
-        : this(renderPipeline.GraphicsDevice, renderPipeline.SpriteBatch, renderPipeline.ContentManager) { }
-
-    public LocalRenderer(GraphicsDevice graphicsDevice, SpriteBatch spriteBatch, ContentManager contentManager)
+    public LocalRenderer(GraphicsDevice graphicsDevice, ContentManager contentManager)
     {
         _graphicsDevice = graphicsDevice;
-        _spriteBatch = spriteBatch;
+        _spriteBatch = new SpriteBatch(graphicsDevice);
         TextureManager.Initialize(contentManager);
         FontManager.Initialize(contentManager);
         _graphicsAreRendered = false;

@@ -1,5 +1,4 @@
 ﻿using Microsoft.Xna.Framework;
-using Microsoft.Xna.Framework.Graphics;
 using Shared.Configuration;
 using Shared.Controllables;
 using Shared.Networking;
@@ -27,8 +26,7 @@ public sealed class RemoteGameController : Game
         TextureManager.Initialize(Content);
         _textureManager = TextureManager.GetInstance();
         
-        var spriteBatch = new SpriteBatch(GraphicsDevice);
-        _renderer = new LocalRenderer(GraphicsDevice, spriteBatch, Content);
+        _renderer = new LocalRenderer(GraphicsDevice, Content);
         
         base.LoadContent();
     }
